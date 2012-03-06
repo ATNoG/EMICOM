@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 	DBus::BusDispatcher dispatcher;
 	DBus::default_dispatcher = &dispatcher;
 
-	DBus::Connection conn = DBus::Connection::SessionBus();
+	DBus::Connection conn = DBus::Connection::SystemBus();
 	conn.request_name(NetworkManager::NAME);
 
 	NetworkManager manager(conn);

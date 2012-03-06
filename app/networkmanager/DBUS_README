@@ -15,3 +15,6 @@ dbusxx-xml2cpp NetworkManager_introspect.xml \
 		--adaptor=NetworkManager_adaptor.h
 
 # The adaptor class is then inherited to implement the NetworkManager behaviour
+
+# To use the system bus, when needs to configure some permissions.
+# Just copy NetworkManager21.conf to /etc/dbus-1/system.d/
