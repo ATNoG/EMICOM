@@ -1,0 +1,17 @@
+#
+# Example
+#
+
+# Existing NetworkManager dbus interface is introspected with
+gdbus introspect -x --system \
+		  -d org.freedesktop.NetworkManager \
+		  -o /org/freedesktop/NetworkManager \
+		  > NetworkManager_introspect.xml
+
+# Introspect information is then used to generate a c++ adapter (for "server")
+# and proxy (for "client"):
+dbusxx-xml2cpp NetworkManager_introspect.xml \
+		--proxy=NetworkManager_proxy.h \
+		--adaptor=NetworkManager_adaptor.h
+
+# The adaptor class is then inherited to implement the NetworkManager behaviour
