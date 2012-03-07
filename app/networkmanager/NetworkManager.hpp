@@ -23,6 +23,7 @@
 class NetworkManager :
 	public org::freedesktop::NetworkManager_adaptor,
 	public DBus::IntrospectableAdaptor,
+	public DBus::PropertiesAdaptor,
 	public DBus::ObjectAdaptor
 {
 public:

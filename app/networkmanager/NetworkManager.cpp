@@ -23,6 +23,17 @@ const char* const NetworkManager::PATH = "/org/freedesktop/NetworkManager21";
 NetworkManager::NetworkManager(DBus::Connection &connection)
 	: DBus::ObjectAdaptor(connection, PATH)
 {
+	// FIXME
+	State = 0;
+	Version = "0.0";
+	ActiveConnections = std::vector< ::DBus::Path >();
+	WimaxHardwareEnabled = false;
+	WimaxEnabled = false;
+	WwanHardwareEnabled = false;
+	WwanEnabled = false;
+	WirelessHardwareEnabled = false;
+	WirelessEnabled = false;
+	NetworkingEnabled = false;
 }
 
 NetworkManager::~NetworkManager()
