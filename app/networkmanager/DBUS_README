@@ -5,11 +5,17 @@
 # Existing NetworkManager dbus interface is introspected with
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager > NetworkManager_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/AccessPoint/#valid object# > AccessPoint_introspect.xml
+gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Devices/#wired object# > DeviceWired_introspect.xml
+gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Devices/#wireless object# > DeviceWireless_introspect.xml
+
+# for Device, manually split the "Device", "Wired" and "Wireless" interfaces to different files!
 
 # Introspect information is then used to generate a c++ adapter (for "server")
 # and proxy (for "client"):
 dbusxx-xml2cpp NetworkManager_introspect.xml --proxy=/dev/null --adaptor=NetworkManager_adaptor.h
 dbusxx-xml2cpp AccessPoint_introspect.xml --proxy=/dev/null --adaptor=AccessPoint_adaptor.h
+dbusxx-xml2cpp DeviceWired_introspect.xml --proxy=/dev/null --adaptor=DeviceWired_adaptor.h
+dbusxx-xml2cpp DeviceWireless_introspect.xml --proxy=/dev/null --adaptor=DeviceWireless_adaptor.h
 
 # The adaptor class is then inherited to implement the NetworkManager behaviour
 
@@ -34,3 +40,7 @@ dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/fr
 # AccessPoint
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager /org/freedesktop/NetworkManager/AccessPoint/#valid object# org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.AccessPoint' string:'Flags'
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/AccessPoint/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.AccessPoint' string:'Flags'
+
+# Device
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/Devices/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.Device.Wireless' string:'PermHwAddress'
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/Devices/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.Device' string:'Interface'
