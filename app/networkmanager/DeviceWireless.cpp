@@ -16,7 +16,6 @@
 //==============================================================================
 
 #include "DeviceWireless.hpp"
-#include "DeviceWireless_adaptor.h"
 
 const char* const DeviceWireless::NAME = "org.freedesktop.NetworkManager21.Device.Wireless";
 //const char* const DeviceWireless::PATH; // varies
