@@ -25,6 +25,7 @@ exe networkmanager
 	  NetworkManager.cpp
 	  AccessPoint.cpp
 	  DeviceWireless.cpp
+	  DeviceWired.cpp
 	;
 
 install install

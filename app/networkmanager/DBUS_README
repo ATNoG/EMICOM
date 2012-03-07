@@ -42,5 +42,10 @@ dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager /org/free
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/AccessPoint/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.AccessPoint' string:'Flags'
 
 # Device
-dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/Devices/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.Device.Wireless' string:'PermHwAddress'
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/Devices/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.Device' string:'Interface'
+
+# Wireless
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/Devices/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.Device.Wireless' string:'PermHwAddress'
+
+# Wired
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/Devices/1 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.Device.Wired' string:'Carrier'
