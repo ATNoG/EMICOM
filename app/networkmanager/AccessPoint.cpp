@@ -1,5 +1,5 @@
 //==============================================================================
-// Brief   : NetworkManager Application
+// Brief   : NetworkManager AccessPoint interface implementation
 // Authors : André Prata <andreprata@av.it.pt>
 //------------------------------------------------------------------------------
 // ODTONE - Open Dot Twenty One
@@ -15,27 +15,26 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#include "NetworkManager.hpp"
 #include "AccessPoint.hpp"
 
-#include <dbus-c++/dbus.h>
-#include <cstdlib> // for EXIT_{SUCCESS,FAILURE}
+const char* const AccessPoint::NAME = "org.freedesktop.NetworkManager21.AccessPoint";
+//const char* const AccessPoint::PATH = "/org/freedesktop/NetworkManager21"; // varies
 
-int main(int argc, char *argv[])
+AccessPoint::AccessPoint(DBus::Connection &connection, const char* path)
+	: DBus::ObjectAdaptor(connection, path)
 {
-	DBus::BusDispatcher dispatcher;
-	DBus::default_dispatcher = &dispatcher;
+	// FIXME
+	Strength = 0;
+	MaxBitrate = 0;
+	Mode = 0;
+	HwAddress = "00:11:22:33:44:55";
+	Frequency = 0;
+	Ssid = std::vector< uint8_t >();
+	RsnFlags = 0;
+	WpaFlags = 0;
+	Flags = 0;
+}
 
-	// setup NetworkManager
-	DBus::Connection conn = DBus::Connection::SystemBus();
-	conn.request_name(NetworkManager::NAME);
-
-	NetworkManager manager(conn);
-
-	// setup an example AccessPoint
-	AccessPoint point(conn, "/org/freedesktop/NetworkManager21/AccessPoint/0");
-
-	dispatcher.enter();
-
-	return EXIT_SUCCESS;
+AccessPoint::~AccessPoint()
+{
 }

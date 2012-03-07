@@ -3,18 +3,34 @@
 #
 
 # Existing NetworkManager dbus interface is introspected with
-gdbus introspect -x --system \
-		  -d org.freedesktop.NetworkManager \
-		  -o /org/freedesktop/NetworkManager \
-		  > NetworkManager_introspect.xml
+gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager > NetworkManager_introspect.xml
+gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/AccessPoint/#valid object# > AccessPoint_introspect.xml
 
 # Introspect information is then used to generate a c++ adapter (for "server")
 # and proxy (for "client"):
-dbusxx-xml2cpp NetworkManager_introspect.xml \
-		--proxy=NetworkManager_proxy.h \
-		--adaptor=NetworkManager_adaptor.h
+dbusxx-xml2cpp NetworkManager_introspect.xml --proxy=/dev/null --adaptor=NetworkManager_adaptor.h
+dbusxx-xml2cpp AccessPoint_introspect.xml --proxy=/dev/null --adaptor=AccessPoint_adaptor.h
 
 # The adaptor class is then inherited to implement the NetworkManager behaviour
 
 # To use the system bus, when needs to configure some permissions.
 # Just copy NetworkManager21.conf to /etc/dbus-1/system.d/
+
+
+#
+# Test commands
+#
+
+# NetworkManager
+qdbus --system org.freedesktop.NetworkManager
+qdbus --system org.freedesktop.NetworkManager21
+
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager --type=method_call /org/freedesktop/NetworkManager org.freedesktop.NetworkManager.state
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 --type=method_call /org/freedesktop/NetworkManager21 org.freedesktop.NetworkManager.state
+
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager /org/freedesktop/NetworkManager org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager' string:'State'
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager' string:'State'
+
+# AccessPoint
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager /org/freedesktop/NetworkManager/AccessPoint/#valid object# org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.AccessPoint' string:'Flags'
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/AccessPoint/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.AccessPoint' string:'Flags'

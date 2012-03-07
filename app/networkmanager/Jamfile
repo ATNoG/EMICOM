@@ -23,6 +23,7 @@ project networkmanager
 exe networkmanager
 	: main.cpp
 	  NetworkManager.cpp
+	  AccessPoint.cpp
 	;
 
 install install
