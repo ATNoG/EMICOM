@@ -20,6 +20,7 @@
 #include "DeviceWireless.hpp"
 #include "DeviceWired.hpp"
 #include "IP4Config.hpp"
+#include "IP6Config.hpp"
 #include "DHCP4Config.hpp"
 #include "DHCP6Config.hpp"
 #include "Settings.hpp"
@@ -53,6 +54,9 @@ int main(int argc, char *argv[])
 
 	// setup an example IP4Config
 	IP4Config config4(conn, "/org/freedesktop/NetworkManager21/IP4Config/0");
+
+	// setup an example IP6Config
+	IP6Config config6(conn, "/org/freedesktop/NetworkManager21/IP6Config/0");
 
 	// setup an example DHCP4Config
 	DHCP4Config configd4(conn, "/org/freedesktop/NetworkManager21/DHCP4Config/0");

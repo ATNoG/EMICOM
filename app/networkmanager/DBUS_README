@@ -8,6 +8,7 @@ gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedeskt
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Devices/#wired object# > DeviceWired_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Devices/#wireless object# > DeviceWireless_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/IP4Config/#object# > IP4Config_introspect.xml
+gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/IP6Config/#object# > IP6Config_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/DHCP4Config/#object# > DHCP4Config_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/DHCP6Config/#object# > DHCP6Config_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Settings > Settings_introspect.xml
@@ -24,6 +25,7 @@ dbusxx-xml2cpp AccessPoint_introspect.xml --proxy=/dev/null --adaptor=AccessPoin
 dbusxx-xml2cpp DeviceWired_introspect.xml --proxy=/dev/null --adaptor=DeviceWired_adaptor.h
 dbusxx-xml2cpp DeviceWireless_introspect.xml --proxy=/dev/null --adaptor=DeviceWireless_adaptor.h
 dbusxx-xml2cpp IP4Config_introspect.xml --proxy=/dev/null --adaptor=IP4Config_adaptor.h
+dbusxx-xml2cpp IP6Config_introspect.xml --proxy=/dev/null --adaptor=IP6Config_adaptor.h
 dbusxx-xml2cpp DHCP4Config_introspect.xml --proxy=/dev/null --adaptor=DHCP4Config_adaptor.h
 dbusxx-xml2cpp DHCP6Config_introspect.xml --proxy=/dev/null --adaptor=DHCP6Config_adaptor.h
 dbusxx-xml2cpp Connection_introspect.xml --proxy=/dev/null --adaptor=Connection_adaptor.h
@@ -65,6 +67,9 @@ dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/fr
 
 # IP4Config
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/IP4Config/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.IP4Config' string:'Nameservers'
+
+# IP6Config
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/IP6Config/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.IP6Config' string:'Nameservers'
 
 # DHCP4Config
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/DHCP4Config/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.DHCP4Config' string:'Options'
