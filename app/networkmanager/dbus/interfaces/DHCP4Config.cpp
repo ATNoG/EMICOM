@@ -20,6 +20,7 @@
 DHCP4Config::DHCP4Config(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {
+	// FIXME
 	Options = std::map< std::string, ::DBus::Variant >();
 }
 

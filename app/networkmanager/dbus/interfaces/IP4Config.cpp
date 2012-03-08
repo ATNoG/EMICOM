@@ -20,6 +20,7 @@
 IP4Config::IP4Config(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {
+	// FIXME
 	Routes = std::vector< std::vector< uint32_t > >();
 	Domains = std::vector< std::string >();
 	WinsServers = std::vector< uint32_t >();

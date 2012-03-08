@@ -20,6 +20,7 @@
 IP6Config::IP6Config(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {
+	// FIXME
 	Routes = std::vector< ::DBus::Struct< std::vector< uint8_t >, uint32_t, std::vector< uint8_t >, uint32_t > >();
 	Domains = std::vector< std::string >();
 	Nameservers = std::vector< std::vector< uint8_t > >();

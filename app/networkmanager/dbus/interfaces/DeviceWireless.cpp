@@ -20,6 +20,7 @@
 DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {
+	// FIXME
 	// inherited from Device adaptor
 	DeviceType = 0;
 	FirmwareMissing = false;
