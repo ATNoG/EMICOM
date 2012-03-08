@@ -1,5 +1,5 @@
 #==============================================================================
-# Brief   : NetworkManager Application
+# Brief   : NetworkManager D-Bus interface
 # Authors : André Prata <andreprata@av.it.pt>
 #------------------------------------------------------------------------------
 # ODTONE - Open Dot Twenty One
@@ -24,6 +24,7 @@ lib networkmanager-dbus
 	  interfaces/AccessPoint.cpp
 	  interfaces/DeviceWireless.cpp
 	  interfaces/DeviceWired.cpp
+	  interfaces/DeviceModem.cpp
 	  interfaces/IP4Config.cpp
 	  interfaces/IP6Config.cpp
 	  interfaces/DHCP4Config.cpp
@@ -34,10 +35,3 @@ lib networkmanager-dbus
 	  interfaces/AgentManager.cpp
 	: <link>static
 	;
-
-install install
-	: networkmanager
-#	  networkmanager.conf
-	: <location>../../dist
-	;
-
