@@ -9,6 +9,7 @@ gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedeskt
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Devices/#wireless object# > DeviceWireless_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/IP4Config/#object# > IP4Config_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/DHCP4Config/#object# > DHCP4Config_introspect.xml
+gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/DHCP6Config/#object# > DHCP6Config_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Settings > Settings_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Settings/#object# > Connection_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/ActiveConnection/#object# > ConnectionActive_introspect.xml
@@ -24,10 +25,10 @@ dbusxx-xml2cpp DeviceWired_introspect.xml --proxy=/dev/null --adaptor=DeviceWire
 dbusxx-xml2cpp DeviceWireless_introspect.xml --proxy=/dev/null --adaptor=DeviceWireless_adaptor.h
 dbusxx-xml2cpp IP4Config_introspect.xml --proxy=/dev/null --adaptor=IP4Config_adaptor.h
 dbusxx-xml2cpp DHCP4Config_introspect.xml --proxy=/dev/null --adaptor=DHCP4Config_adaptor.h
+dbusxx-xml2cpp DHCP6Config_introspect.xml --proxy=/dev/null --adaptor=DHCP6Config_adaptor.h
 dbusxx-xml2cpp Connection_introspect.xml --proxy=/dev/null --adaptor=Connection_adaptor.h
 dbusxx-xml2cpp Settings_introspect.xml --proxy=/dev/null --adaptor=Settings_adaptor.h
 dbusxx-xml2cpp ConnectionActive_introspect.xml --proxy=/dev/null --adaptor=ConnectionActive_adaptor.h
-dbusxx-xml2cpp AgentManager_introspect.xml --proxy=/dev/null --adaptor=AgentManager_adaptor.h
 
 # The adaptor class is then inherited to implement the NetworkManager behaviour
 
@@ -67,6 +68,9 @@ dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/fr
 
 # DHCP4Config
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/DHCP4Config/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.DHCP4Config' string:'Options'
+
+# DHCP6Config
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/DHCP6Config/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.DHCP6Config' string:'Options'
 
 # Connection settings
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 --type=method_call /org/freedesktop/NetworkManager21/Settings/0 org.freedesktop.NetworkManager.Settings.Connection.Delete
