@@ -47,6 +47,9 @@ dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/fr
 # WiMax
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/Devices/3 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.Device.WiMax' string:'Bsid'
 
+# WiMaxNsp
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/Nsp/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.WiMax.Nsp' string:'Name'
+
 # IP4Config
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/IP4Config/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.IP4Config' string:'Nameservers'
 
