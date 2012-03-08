@@ -9,6 +9,7 @@ gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedeskt
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Devices/#wireless object# > DeviceWireless_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/IP4Config/#object# > IP4Config_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/DHCP4Config/#object# > DHCP4Config_introspect.xml
+gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Settings > Settings_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Settings/#object# > Connection_introspect.xml
 
 # for Device, manually split the "Device", "Wired" and "Wireless" interfaces to different files!
@@ -22,6 +23,7 @@ dbusxx-xml2cpp DeviceWireless_introspect.xml --proxy=/dev/null --adaptor=DeviceW
 dbusxx-xml2cpp IP4Config_introspect.xml --proxy=/dev/null --adaptor=IP4Config_adaptor.h
 dbusxx-xml2cpp DHCP4Config_introspect.xml --proxy=/dev/null --adaptor=DHCP4Config_adaptor.h
 dbusxx-xml2cpp Connection_introspect.xml --proxy=/dev/null --adaptor=Connection_adaptor.h
+dbusxx-xml2cpp Settings_introspect.xml --proxy=/dev/null --adaptor=Settings_adaptor.h
 
 # The adaptor class is then inherited to implement the NetworkManager behaviour
 
@@ -64,3 +66,7 @@ dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/fr
 
 # Connection settings
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 --type=method_call /org/freedesktop/NetworkManager21/Settings/0 org.freedesktop.NetworkManager.Settings.Connection.Delete
+
+# Settings
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/Settings org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.Settings' string:'CanModify'
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 --type=method_call /org/freedesktop/NetworkManager21/Settings org.freedesktop.NetworkManager.Settings.ListConnections

@@ -21,6 +21,7 @@
 #include "DeviceWired.hpp"
 #include "IP4Config.hpp"
 #include "DHCP4Config.hpp"
+#include "Settings.hpp"
 #include "Connection.hpp"
 
 #include <dbus-c++/dbus.h>
@@ -51,6 +52,9 @@ int main(int argc, char *argv[])
 
 	// setup an example DHCP4Config
 	DHCP4Config configd4(conn, "/org/freedesktop/NetworkManager21/DHCP4Config/0");
+
+	// setup an example Settings
+	Settings tings(conn, "/org/freedesktop/NetworkManager21/Settings");
 
 	// setup an example Connection Settings
 	Connection ection(conn, "/org/freedesktop/NetworkManager21/Settings/0");

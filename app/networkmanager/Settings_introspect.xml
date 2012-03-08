@@ -1,0 +1,75 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="org.freedesktop.DBus.Introspectable">
+    <method name="Introspect">
+      <arg name="data" direction="out" type="s"/>
+    </method>
+  </interface>
+  <interface name="org.freedesktop.DBus.Properties">
+    <method name="Get">
+      <arg name="interface" direction="in" type="s"/>
+      <arg name="propname" direction="in" type="s"/>
+      <arg name="value" direction="out" type="v"/>
+    </method>
+    <method name="Set">
+      <arg name="interface" direction="in" type="s"/>
+      <arg name="propname" direction="in" type="s"/>
+      <arg name="value" direction="in" type="v"/>
+    </method>
+    <method name="GetAll">
+      <arg name="interface" direction="in" type="s"/>
+      <arg name="props" direction="out" type="a{sv}"/>
+    </method>
+  </interface>
+  <interface name="org.freedesktop.NetworkManager.Settings">
+    <method name="SaveHostname">
+      <arg name="hostname" type="s" direction="in"/>
+    </method>
+    <method name="AddConnection">
+      <arg name="connection" type="a{sa{sv}}" direction="in"/>
+      <arg name="path" type="o" direction="out"/>
+    </method>
+    <method name="GetConnectionByUuid">
+      <arg name="uuid" type="s" direction="in"/>
+      <arg name="connection" type="o" direction="out"/>
+    </method>
+    <method name="ListConnections">
+      <arg name="connections" type="ao" direction="out"/>
+    </method>
+    <signal name="NewConnection">
+      <arg type="o"/>
+    </signal>
+    <signal name="PropertiesChanged">
+      <arg type="a{sv}"/>
+    </signal>
+    <property name="CanModify" type="b" access="read"/>
+    <property name="Hostname" type="s" access="read"/>
+  </interface>
+  <node name="0"/>
+  <node name="1"/>
+  <node name="10"/>
+  <node name="11"/>
+  <node name="12"/>
+  <node name="13"/>
+  <node name="14"/>
+  <node name="15"/>
+  <node name="16"/>
+  <node name="17"/>
+  <node name="18"/>
+  <node name="19"/>
+  <node name="2"/>
+  <node name="20"/>
+  <node name="21"/>
+  <node name="22"/>
+  <node name="23"/>
+  <node name="24"/>
+  <node name="25"/>
+  <node name="3"/>
+  <node name="4"/>
+  <node name="5"/>
+  <node name="6"/>
+  <node name="7"/>
+  <node name="8"/>
+  <node name="9"/>
+</node>

@@ -28,6 +28,7 @@ exe networkmanager
 	  DeviceWired.cpp
 	  IP4Config.cpp
 	  DHCP4Config.cpp
+	  Settings.cpp
 	  Connection.cpp
 	;
 
