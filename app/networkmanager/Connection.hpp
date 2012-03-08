@@ -23,7 +23,6 @@
 class Connection :
 	public org::freedesktop::NetworkManager::Settings::Connection_adaptor,
 	public DBus::IntrospectableAdaptor,
-	public DBus::PropertiesAdaptor,
 	public DBus::ObjectAdaptor
 {
 public:
