@@ -15,18 +15,18 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#include "NetworkManager.hpp"
-#include "AccessPoint.hpp"
-#include "DeviceWireless.hpp"
-#include "DeviceWired.hpp"
-#include "IP4Config.hpp"
-#include "IP6Config.hpp"
-#include "DHCP4Config.hpp"
-#include "DHCP6Config.hpp"
-#include "Settings.hpp"
-#include "Connection.hpp"
-#include "ConnectionActive.hpp"
-#include "AgentManager.hpp"
+#include "dbus/interfaces/NetworkManager.hpp"
+#include "dbus/interfaces/AccessPoint.hpp"
+#include "dbus/interfaces/DeviceWireless.hpp"
+#include "dbus/interfaces/DeviceWired.hpp"
+#include "dbus/interfaces/IP4Config.hpp"
+#include "dbus/interfaces/IP6Config.hpp"
+#include "dbus/interfaces/DHCP4Config.hpp"
+#include "dbus/interfaces/DHCP6Config.hpp"
+#include "dbus/interfaces/Settings.hpp"
+#include "dbus/interfaces/Connection.hpp"
+#include "dbus/interfaces/ConnectionActive.hpp"
+#include "dbus/interfaces/AgentManager.hpp"
 
 #include <dbus-c++/dbus.h>
 #include <cstdlib> // for EXIT_{SUCCESS,FAILURE}

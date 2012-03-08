@@ -15,14 +15,24 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-project networkmanager
-	: requirements
-	  <linkflags>-ldbus-c++-1
+project networkmanager-dbus
+	:
 	;
 
-exe networkmanager
-	: main.cpp
-	  dbus//networkmanager-dbus
+lib networkmanager-dbus
+	: interfaces/NetworkManager.cpp
+	  interfaces/AccessPoint.cpp
+	  interfaces/DeviceWireless.cpp
+	  interfaces/DeviceWired.cpp
+	  interfaces/IP4Config.cpp
+	  interfaces/IP6Config.cpp
+	  interfaces/DHCP4Config.cpp
+	  interfaces/DHCP6Config.cpp
+	  interfaces/Settings.cpp
+	  interfaces/Connection.cpp
+	  interfaces/ConnectionActive.cpp
+	  interfaces/AgentManager.cpp
+	: <link>static
 	;
 
 install install

@@ -1,45 +1,21 @@
 #
-# Example
+# Some D-Bus code information
 #
 
-# Existing NetworkManager dbus interface is introspected with
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager > NetworkManager_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/AccessPoint/#valid object# > AccessPoint_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Devices/#wired object# > DeviceWired_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Devices/#wireless object# > DeviceWireless_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/IP4Config/#object# > IP4Config_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/IP6Config/#object# > IP6Config_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/DHCP4Config/#object# > DHCP4Config_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/DHCP6Config/#object# > DHCP6Config_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Settings > Settings_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Settings/#object# > Connection_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/ActiveConnection/#object# > ConnectionActive_introspect.xml
-gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/AgentManager > AgentManager_introspect.xml
+# Each interface of the existing NetworkManager's D-Bus API is available
+# from its source and included here in the "dbus/introspection" directory.
+# The dbus-c++ adaptors are created in the "dbus/adaptors" directory by running
+./dbus/introspection/adapt.sh
 
-# for Device, manually split the "Device", "Wired" and "Wireless" interfaces to different files!
+# Each adaptor class is then inherited to implement the
+# NetworkManager behaviour, in "dbus/interfaces"
 
-# Introspect information is then used to generate a c++ adapter (for "server")
-# and proxy (for "client"):
-dbusxx-xml2cpp NetworkManager_introspect.xml --proxy=/dev/null --adaptor=NetworkManager_adaptor.h
-dbusxx-xml2cpp AccessPoint_introspect.xml --proxy=/dev/null --adaptor=AccessPoint_adaptor.h
-dbusxx-xml2cpp DeviceWired_introspect.xml --proxy=/dev/null --adaptor=DeviceWired_adaptor.h
-dbusxx-xml2cpp DeviceWireless_introspect.xml --proxy=/dev/null --adaptor=DeviceWireless_adaptor.h
-dbusxx-xml2cpp IP4Config_introspect.xml --proxy=/dev/null --adaptor=IP4Config_adaptor.h
-dbusxx-xml2cpp IP6Config_introspect.xml --proxy=/dev/null --adaptor=IP6Config_adaptor.h
-dbusxx-xml2cpp DHCP4Config_introspect.xml --proxy=/dev/null --adaptor=DHCP4Config_adaptor.h
-dbusxx-xml2cpp DHCP6Config_introspect.xml --proxy=/dev/null --adaptor=DHCP6Config_adaptor.h
-dbusxx-xml2cpp Connection_introspect.xml --proxy=/dev/null --adaptor=Connection_adaptor.h
-dbusxx-xml2cpp Settings_introspect.xml --proxy=/dev/null --adaptor=Settings_adaptor.h
-dbusxx-xml2cpp ConnectionActive_introspect.xml --proxy=/dev/null --adaptor=ConnectionActive_adaptor.h
-
-# The adaptor class is then inherited to implement the NetworkManager behaviour
-
-# To use the system bus, when needs to configure some permissions.
-# Just copy NetworkManager21.conf to /etc/dbus-1/system.d/
+# To use the system bus, one needs to configure some permissions.
+# Just copy "dbus/NetworkManager21.conf" over to "/etc/dbus-1/system.d/"
 
 
 #
-# Test commands
+# Some test commands
 #
 
 # NetworkManager
