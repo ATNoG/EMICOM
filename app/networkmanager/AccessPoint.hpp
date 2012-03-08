@@ -27,9 +27,6 @@ class AccessPoint :
 	public DBus::ObjectAdaptor
 {
 public:
-	static const char* const NAME;
-	//static const char* const PATH; // varies
-
 	AccessPoint(DBus::Connection &connection, const char* path);
 	~AccessPoint();
 };

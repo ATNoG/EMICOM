@@ -29,9 +29,6 @@ class DeviceWireless :
 	public DBus::ObjectAdaptor
 {
 public:
-	static const char* const NAME;
-	//static const char* const PATH; // varies
-
 	DeviceWireless(DBus::Connection &connection, const char* path);
 	~DeviceWireless();
 

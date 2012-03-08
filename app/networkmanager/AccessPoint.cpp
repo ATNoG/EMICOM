@@ -17,9 +17,6 @@
 
 #include "AccessPoint.hpp"
 
-const char* const AccessPoint::NAME = "org.freedesktop.NetworkManager21.AccessPoint";
-//const char* const AccessPoint::PATH = "/org/freedesktop/NetworkManager21"; // varies
-
 AccessPoint::AccessPoint(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

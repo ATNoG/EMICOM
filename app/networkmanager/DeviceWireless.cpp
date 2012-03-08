@@ -17,9 +17,6 @@
 
 #include "DeviceWireless.hpp"
 
-const char* const DeviceWireless::NAME = "org.freedesktop.NetworkManager21.Device.Wireless";
-//const char* const DeviceWireless::PATH; // varies
-
 DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

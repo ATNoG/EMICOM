@@ -29,9 +29,6 @@ class DeviceWired :
 	public DBus::ObjectAdaptor
 {
 public:
-	static const char* const NAME;
-	//static const char* const PATH; // varies
-
 	DeviceWired(DBus::Connection &connection, const char* path);
 	~DeviceWired();
 
