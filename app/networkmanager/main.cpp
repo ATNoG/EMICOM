@@ -24,6 +24,7 @@
 #include "Settings.hpp"
 #include "Connection.hpp"
 #include "ConnectionActive.hpp"
+#include "AgentManager.hpp"
 
 #include <dbus-c++/dbus.h>
 #include <cstdlib> // for EXIT_{SUCCESS,FAILURE}
@@ -37,6 +38,7 @@ int main(int argc, char *argv[])
 	DBus::Connection conn = DBus::Connection::SystemBus();
 	conn.request_name(NetworkManager::NAME);
 
+	AgentManager agent(conn);
 	NetworkManager manager(conn);
 
 	// setup an example AccessPoint

@@ -31,6 +31,7 @@ exe networkmanager
 	  Settings.cpp
 	  Connection.cpp
 	  ConnectionActive.cpp
+	  AgentManager.cpp
 	;
 
 install install

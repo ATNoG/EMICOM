@@ -12,6 +12,7 @@ gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedeskt
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Settings > Settings_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Settings/#object# > Connection_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/ActiveConnection/#object# > ConnectionActive_introspect.xml
+gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/AgentManager > AgentManager_introspect.xml
 
 # for Device, manually split the "Device", "Wired" and "Wireless" interfaces to different files!
 
@@ -26,6 +27,7 @@ dbusxx-xml2cpp DHCP4Config_introspect.xml --proxy=/dev/null --adaptor=DHCP4Confi
 dbusxx-xml2cpp Connection_introspect.xml --proxy=/dev/null --adaptor=Connection_adaptor.h
 dbusxx-xml2cpp Settings_introspect.xml --proxy=/dev/null --adaptor=Settings_adaptor.h
 dbusxx-xml2cpp ConnectionActive_introspect.xml --proxy=/dev/null --adaptor=ConnectionActive_adaptor.h
+dbusxx-xml2cpp AgentManager_introspect.xml --proxy=/dev/null --adaptor=AgentManager_adaptor.h
 
 # The adaptor class is then inherited to implement the NetworkManager behaviour
 
@@ -75,3 +77,6 @@ dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 --type=
 
 # ActiveConnections
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/ActiveConnections/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.Connection.Active' string:'Devices'
+
+# AgentManager
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 --type=method_call /org/freedesktop/NetworkManager21/AgentManager org.freedesktop.NetworkManager.AgentManager.Unregister
