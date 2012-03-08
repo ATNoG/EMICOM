@@ -25,6 +25,7 @@ lib networkmanager-dbus
 	  interfaces/DeviceWireless.cpp
 	  interfaces/DeviceWired.cpp
 	  interfaces/DeviceModem.cpp
+	  interfaces/DeviceWiMax.cpp
 	  interfaces/IP4Config.cpp
 	  interfaces/IP6Config.cpp
 	  interfaces/DHCP4Config.cpp

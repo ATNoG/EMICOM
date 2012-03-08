@@ -20,6 +20,7 @@
 #include "dbus/interfaces/DeviceWireless.hpp"
 #include "dbus/interfaces/DeviceWired.hpp"
 #include "dbus/interfaces/DeviceModem.hpp"
+#include "dbus/interfaces/DeviceWiMax.hpp"
 #include "dbus/interfaces/IP4Config.hpp"
 #include "dbus/interfaces/IP6Config.hpp"
 #include "dbus/interfaces/DHCP4Config.hpp"
@@ -55,6 +56,9 @@ int main(int argc, char *argv[])
 
 	// setup an example DeviceModem
 	DeviceModem modem(conn, "/org/freedesktop/NetworkManager21/Devices/2");
+
+	// setup an example DeviceWiMax
+	DeviceWiMax wimax(conn, "/org/freedesktop/NetworkManager21/Devices/3");
 
 	// setup an example IP4Config
 	IP4Config config4(conn, "/org/freedesktop/NetworkManager21/IP4Config/0");
