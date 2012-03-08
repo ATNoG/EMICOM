@@ -7,6 +7,7 @@ gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedeskt
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/AccessPoint/#valid object# > AccessPoint_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Devices/#wired object# > DeviceWired_introspect.xml
 gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/Devices/#wireless object# > DeviceWireless_introspect.xml
+gdbus introspect -x --system -d org.freedesktop.NetworkManager -o /org/freedesktop/NetworkManager/IP4Config/#object# > IP4Config_introspect.xml
 
 # for Device, manually split the "Device", "Wired" and "Wireless" interfaces to different files!
 
@@ -16,6 +17,7 @@ dbusxx-xml2cpp NetworkManager_introspect.xml --proxy=/dev/null --adaptor=Network
 dbusxx-xml2cpp AccessPoint_introspect.xml --proxy=/dev/null --adaptor=AccessPoint_adaptor.h
 dbusxx-xml2cpp DeviceWired_introspect.xml --proxy=/dev/null --adaptor=DeviceWired_adaptor.h
 dbusxx-xml2cpp DeviceWireless_introspect.xml --proxy=/dev/null --adaptor=DeviceWireless_adaptor.h
+dbusxx-xml2cpp IP4Config_introspect.xml --proxy=/dev/null --adaptor=IP4Config_adaptor.h
 
 # The adaptor class is then inherited to implement the NetworkManager behaviour
 
@@ -49,3 +51,6 @@ dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/fr
 
 # Wired
 dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/Devices/1 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.Device.Wired' string:'Carrier'
+
+# IP4Config
+dbus-send --print-reply --system --dest=org.freedesktop.NetworkManager21 /org/freedesktop/NetworkManager21/IP4Config/0 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.NetworkManager.IP4Config' string:'Nameservers'

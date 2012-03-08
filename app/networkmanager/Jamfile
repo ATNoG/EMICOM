@@ -26,6 +26,7 @@ exe networkmanager
 	  AccessPoint.cpp
 	  DeviceWireless.cpp
 	  DeviceWired.cpp
+	  IP4Config.cpp
 	;
 
 install install

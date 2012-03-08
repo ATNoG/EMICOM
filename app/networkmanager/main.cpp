@@ -19,6 +19,7 @@
 #include "AccessPoint.hpp"
 #include "DeviceWireless.hpp"
 #include "DeviceWired.hpp"
+#include "IP4Config.hpp"
 
 #include <dbus-c++/dbus.h>
 #include <cstdlib> // for EXIT_{SUCCESS,FAILURE}
@@ -42,6 +43,9 @@ int main(int argc, char *argv[])
 
 	// setup an example DeviceWired
 	DeviceWired wired(conn, "/org/freedesktop/NetworkManager21/Devices/1");
+
+	// setup an example IP4Config
+	IP4Config config4(conn, "/org/freedesktop/NetworkManager21/IP4Config/0");
 
 	dispatcher.enter();
 
