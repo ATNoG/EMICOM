@@ -23,6 +23,7 @@
 #include "DHCP4Config.hpp"
 #include "Settings.hpp"
 #include "Connection.hpp"
+#include "ConnectionActive.hpp"
 
 #include <dbus-c++/dbus.h>
 #include <cstdlib> // for EXIT_{SUCCESS,FAILURE}
@@ -58,6 +59,9 @@ int main(int argc, char *argv[])
 
 	// setup an example Connection Settings
 	Connection ection(conn, "/org/freedesktop/NetworkManager21/Settings/0");
+
+	// setup an example Connection.Active
+	ConnectionActive active(conn, "/org/freedesktop/NetworkManager21/ActiveConnections/0");
 
 	dispatcher.enter();
 

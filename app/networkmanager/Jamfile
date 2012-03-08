@@ -30,6 +30,7 @@ exe networkmanager
 	  DHCP4Config.cpp
 	  Settings.cpp
 	  Connection.cpp
+	  ConnectionActive.cpp
 	;
 
 install install
