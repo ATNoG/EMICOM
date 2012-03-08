@@ -27,6 +27,7 @@ exe networkmanager
 	  DeviceWireless.cpp
 	  DeviceWired.cpp
 	  IP4Config.cpp
+	  DHCP4Config.cpp
 	;
 
 install install

@@ -20,6 +20,7 @@
 #include "DeviceWireless.hpp"
 #include "DeviceWired.hpp"
 #include "IP4Config.hpp"
+#include "DHCP4Config.hpp"
 
 #include <dbus-c++/dbus.h>
 #include <cstdlib> // for EXIT_{SUCCESS,FAILURE}
@@ -47,6 +48,8 @@ int main(int argc, char *argv[])
 	// setup an example IP4Config
 	IP4Config config4(conn, "/org/freedesktop/NetworkManager21/IP4Config/0");
 
+	// setup an example DHCP4Config
+	DHCP4Config configd4(conn, "/org/freedesktop/NetworkManager21/DHCP4Config/0");
 	dispatcher.enter();
 
 	return EXIT_SUCCESS;
