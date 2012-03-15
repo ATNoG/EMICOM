@@ -15,21 +15,7 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#include "dbus/interfaces/NetworkManager.hpp"
-#include "dbus/interfaces/AccessPoint.hpp"
-#include "dbus/interfaces/DeviceWireless.hpp"
-#include "dbus/interfaces/DeviceWired.hpp"
-#include "dbus/interfaces/DeviceModem.hpp"
-#include "dbus/interfaces/DeviceWiMax.hpp"
-#include "dbus/interfaces/WiMaxNsp.hpp"
-#include "dbus/interfaces/IP4Config.hpp"
-#include "dbus/interfaces/IP6Config.hpp"
-#include "dbus/interfaces/DHCP4Config.hpp"
-#include "dbus/interfaces/DHCP6Config.hpp"
-#include "dbus/interfaces/Settings.hpp"
-#include "dbus/interfaces/Connection.hpp"
-#include "dbus/interfaces/ConnectionActive.hpp"
-#include "dbus/interfaces/AgentManager.hpp"
+#include "dbus/nm-dbus.hpp"
 
 #include <dbus-c++/dbus.h>
 #include <cstdlib> // for EXIT_{SUCCESS,FAILURE}
