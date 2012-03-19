@@ -20,6 +20,10 @@
 
 #include "../adaptors/AccessPoint.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class AccessPoint :
 	public org::freedesktop::NetworkManager::AccessPoint_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -30,5 +34,7 @@ public:
 	AccessPoint(DBus::Connection &connection, const char* path);
 	~AccessPoint();
 };
+
+}; }; };
 
 #endif /* ACCESSPOINT__HPP_ */

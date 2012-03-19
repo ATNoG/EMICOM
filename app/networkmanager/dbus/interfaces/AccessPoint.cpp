@@ -17,6 +17,8 @@
 
 #include "AccessPoint.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 AccessPoint::AccessPoint(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

@@ -20,6 +20,10 @@
 
 #include "../adaptors/WiMaxNsp.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class WiMaxNsp :
 	public org::freedesktop::NetworkManager::WiMax::Nsp_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -30,5 +34,7 @@ public:
 	WiMaxNsp(DBus::Connection &connection, const char* path);
 	~WiMaxNsp();
 };
+
+}; }; };
 
 #endif /* WIMAXNSP__HPP_ */

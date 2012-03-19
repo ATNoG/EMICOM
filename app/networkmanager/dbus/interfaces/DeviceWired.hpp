@@ -21,6 +21,10 @@
 #include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceWired.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class DeviceWired :
 	public org::freedesktop::NetworkManager::Device_adaptor,
 	public org::freedesktop::NetworkManager::Device::Wired_adaptor,
@@ -35,5 +39,7 @@ public:
 	// inherited from Device adaptor
 	void Disconnect();
 };
+
+}; }; };
 
 #endif /* DEVICEWIRED__HPP_ */

@@ -17,6 +17,8 @@
 
 #include "DeviceWiMax.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 DeviceWiMax::DeviceWiMax(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

@@ -21,6 +21,10 @@
 #include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceModem.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class DeviceModem :
 	public org::freedesktop::NetworkManager::Device_adaptor,
 	public org::freedesktop::NetworkManager::Device::Modem_adaptor,
@@ -35,5 +39,7 @@ public:
 	// inherited from Device adaptor
 	void Disconnect();
 };
+
+}; }; };
 
 #endif /* DEVICEMODEM__HPP_ */

@@ -1,6 +1,6 @@
 #==============================================================================
-# Brief   : NetworkManager Application
-# Authors : André Prata <andreprata@av.it.pt>
+# Brief   : RAI wrappers for some netlink types
+# Authors : André Prata <andreprata@ua.pt>
 #------------------------------------------------------------------------------
 # ODTONE - Open Dot Twenty One
 #
@@ -15,27 +15,14 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-project networkmanager
-	: requirements
-	  <linkflags>-ldbus-c++-1
-	  <linkflags>-lnl-3
-	  <linkflags>-lnl-genl-3
-	  <linkflags>-lnl-route-3
-	  <include>/usr/include/libnl3
+project nlwrap
 	;
 
-exe networkmanager
-	: main.cpp
-	  dbus//networkmanager-dbus
-	  driver//if_80211
-	  ../../lib/odtone//odtone_base
-	  ../../lib/odtone/mih//odtone_mih
-	  ../../lib/odtone/sap//odtone_sap
+lib nlwrap
+	: genl_msg.cpp
+	  genl_socket.cpp
+	  genl_cb.cpp
+	  rtnl_socket.cpp
+	  rtnl_link.cpp
+	  rtnl_link_cache.cpp
 	;
-
-install install
-	: networkmanager
-#	  networkmanager.conf
-	: <location>../../dist
-	;
-

@@ -20,6 +20,13 @@
 
 #include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceWireless.hpp"
+#include "Device.hpp"
+
+#include "../../driver/if_80211.hpp"
+
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
 
 class DeviceWireless :
 	public org::freedesktop::NetworkManager::Device_adaptor,
@@ -28,8 +35,24 @@ class DeviceWireless :
 	public DBus::PropertiesAdaptor,
 	public DBus::ObjectAdaptor
 {
+	enum NM_802_11_MODE {
+		NM_802_11_MODE_UNKNOWN = 0,
+		NM_802_11_MODE_ADHOC   = 1,
+		NM_802_11_MODE_INFRA   = 2
+	};
+
+	enum NM_802_11_DEVICE_CAP {
+		NM_802_11_DEVICE_CAP_NONE          = 0x0,
+		NM_802_11_DEVICE_CAP_CIPHER_WEP40  = 0x1,
+		NM_802_11_DEVICE_CAP_CIPHER_WEP104 = 0x2,
+		NM_802_11_DEVICE_CAP_CIPHER_TKIP   = 0x4,
+		NM_802_11_DEVICE_CAP_CIPHER_CCMP   = 0x8,
+		NM_802_11_DEVICE_CAP_WPA           = 0x10,
+		NM_802_11_DEVICE_CAP_RSN           = 0x20
+	};
+
 public:
-	DeviceWireless(DBus::Connection &connection, const char* path);
+	DeviceWireless(DBus::Connection &connection, const char* path, if_80211 &fi);
 	~DeviceWireless();
 
 	// inherited from Device adaptor
@@ -38,5 +61,7 @@ public:
 	// inherited from Wireless adaptor
 	std::vector< ::DBus::Path > GetAccessPoints();
 };
+
+}; }; };
 
 #endif /* DEVICEWIRELESS__HPP_ */

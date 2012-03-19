@@ -16,9 +16,12 @@
 //==============================================================================
 
 #include "dbus/nm-dbus.hpp"
+#include "driver/if_80211.hpp"
 
 #include <dbus-c++/dbus.h>
 #include <cstdlib> // for EXIT_{SUCCESS,FAILURE}
+
+using namespace odtone;
 
 int main(int argc, char *argv[])
 {
@@ -27,49 +30,54 @@ int main(int argc, char *argv[])
 
 	// setup NetworkManager
 	DBus::Connection conn = DBus::Connection::SystemBus();
-	conn.request_name(NetworkManager::NAME);
+	conn.request_name(networkmanager::dbus::NetworkManager::NAME);
 
-	AgentManager agent(conn);
-	NetworkManager manager(conn);
+	networkmanager::dbus::AgentManager agent(conn);
+	networkmanager::dbus::NetworkManager manager(conn);
 
 	// setup an example AccessPoint
-	AccessPoint point(conn, "/org/freedesktop/NetworkManager21/AccessPoint/0");
+	networkmanager::dbus::AccessPoint point(conn, "/org/freedesktop/NetworkManager21/AccessPoint/0");
 
 	// setup an example DeviceWireless
-	DeviceWireless wireless(conn, "/org/freedesktop/NetworkManager21/Devices/0");
+	boost::asio::io_service ios;
+	odtone::mih::mac_addr mac;
+	mac.address("00:27:10:7d:5f:30");
+
+	if_80211 fi(ios, mac);
+	networkmanager::dbus::DeviceWireless wireless(conn, "/org/freedesktop/NetworkManager21/Devices/0", fi);
 
 	// setup an example DeviceWired
-	DeviceWired wired(conn, "/org/freedesktop/NetworkManager21/Devices/1");
+	networkmanager::dbus::DeviceWired wired(conn, "/org/freedesktop/NetworkManager21/Devices/1");
 
 	// setup an example DeviceModem
-	DeviceModem modem(conn, "/org/freedesktop/NetworkManager21/Devices/2");
+	networkmanager::dbus::DeviceModem modem(conn, "/org/freedesktop/NetworkManager21/Devices/2");
 
 	// setup an example DeviceWiMax
-	DeviceWiMax wimax(conn, "/org/freedesktop/NetworkManager21/Devices/3");
+	networkmanager::dbus::DeviceWiMax wimax(conn, "/org/freedesktop/NetworkManager21/Devices/3");
 
 	// setup an example WiMaxNsp
-	WiMaxNsp nsp(conn, "/org/freedesktop/NetworkManager21/Nsp/0");
+	networkmanager::dbus::WiMaxNsp nsp(conn, "/org/freedesktop/NetworkManager21/Nsp/0");
 
 	// setup an example IP4Config
-	IP4Config config4(conn, "/org/freedesktop/NetworkManager21/IP4Config/0");
+	networkmanager::dbus::IP4Config config4(conn, "/org/freedesktop/NetworkManager21/IP4Config/0");
 
 	// setup an example IP6Config
-	IP6Config config6(conn, "/org/freedesktop/NetworkManager21/IP6Config/0");
+	networkmanager::dbus::IP6Config config6(conn, "/org/freedesktop/NetworkManager21/IP6Config/0");
 
 	// setup an example DHCP4Config
-	DHCP4Config configd4(conn, "/org/freedesktop/NetworkManager21/DHCP4Config/0");
+	networkmanager::dbus::DHCP4Config configd4(conn, "/org/freedesktop/NetworkManager21/DHCP4Config/0");
 
 	// Setup an example DHCP6Config
-	DHCP6Config configd6(conn, "/org/freedesktop/NetworkManager21/DHCP6Config/0");
+	networkmanager::dbus::DHCP6Config configd6(conn, "/org/freedesktop/NetworkManager21/DHCP6Config/0");
 
 	// setup an example Settings
-	Settings tings(conn, "/org/freedesktop/NetworkManager21/Settings");
+	networkmanager::dbus::Settings tings(conn, "/org/freedesktop/NetworkManager21/Settings");
 
 	// setup an example Connection Settings
-	Connection ection(conn, "/org/freedesktop/NetworkManager21/Settings/0");
+	networkmanager::dbus::Connection ection(conn, "/org/freedesktop/NetworkManager21/Settings/0");
 
 	// setup an example Connection.Active
-	ConnectionActive active(conn, "/org/freedesktop/NetworkManager21/ActiveConnections/0");
+	networkmanager::dbus::ConnectionActive active(conn, "/org/freedesktop/NetworkManager21/ActiveConnections/0");
 
 	dispatcher.enter();
 

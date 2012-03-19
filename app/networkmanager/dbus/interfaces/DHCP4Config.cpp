@@ -17,6 +17,8 @@
 
 #include "DHCP4Config.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 DHCP4Config::DHCP4Config(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

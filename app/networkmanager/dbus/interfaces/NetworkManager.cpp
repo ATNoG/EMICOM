@@ -17,6 +17,8 @@
 
 #include "NetworkManager.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 const char* const NetworkManager::NAME = "org.freedesktop.NetworkManager21";
 const char* const NetworkManager::PATH = "/org/freedesktop/NetworkManager21";
 

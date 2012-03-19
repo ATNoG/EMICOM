@@ -17,6 +17,8 @@
 
 #include "IP6Config.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 IP6Config::IP6Config(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

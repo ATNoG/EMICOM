@@ -20,6 +20,10 @@
 
 #include "../adaptors/DHCP6Config.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class DHCP6Config :
 	public org::freedesktop::NetworkManager::DHCP6Config_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -30,5 +34,7 @@ public:
 	DHCP6Config(DBus::Connection &connection, const char* path);
 	~DHCP6Config();
 };
+
+}; }; };
 
 #endif /* DHCP6CONFIG__HPP_ */

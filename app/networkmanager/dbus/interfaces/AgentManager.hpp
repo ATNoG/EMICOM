@@ -20,6 +20,10 @@
 
 #include "../adaptors/AgentManager.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class AgentManager :
 	public org::freedesktop::NetworkManager::AgentManager_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -35,5 +39,7 @@ public:
 	void Unregister();
 	void Register(const std::string& identifier);
 };
+
+}; }; };
 
 #endif /* AGENTMANAGER__HPP_ */

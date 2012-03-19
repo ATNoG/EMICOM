@@ -17,33 +17,38 @@
 
 #include "DeviceWireless.hpp"
 
-DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path)
+using namespace odtone::networkmanager::dbus;
+
+DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, if_80211 &fi)
 	: DBus::ObjectAdaptor(connection, path)
 {
 	// FIXME
 	// inherited from Device adaptor
-	DeviceType = 0;
-	FirmwareMissing = false;
-	Managed = false;
-	Dhcp6Config = "/";
-	Ip6Config = "/";
-	Dhcp4Config = "/";
-	ActiveConnection = "/";
-	State = 0;
-	Ip4Address = 0;
-	Capabilities = 0;
-	Driver = "";
-	IpInterface = "";
-	Device_adaptor::Interface = ""; // Interface is ambiguous
-	Udi = "";
+	DeviceType = Device::NM_DEVICE_TYPE_WIFI; 
+	FirmwareMissing = false; // by definition, if it got here...
+	Managed = true;          // by definition...
+
+	Dhcp6Config = "/";       // TODO
+	Ip6Config = "/";         // TODO
+	Dhcp4Config = "/";       // TODO
+	ActiveConnection = "/";  // TODO
+
+	State = Device::NM_DEVICE_STATE_UNKNOWN;
+	Capabilities = Device::NM_DEVICE_CAP_NM_SUPPORTED;
+
+	Ip4Address = 0;                 // TODO
+	Driver = "";                    // TODO
+	IpInterface = "";               // TODO
+	Device_adaptor::Interface = ""; // TODO
+	Udi = "";                       // TODO
 
 	// inherited from Wireless adaptor
-	WirelessCapabilities = 0;
-	ActiveAccessPoint = "/";
-	Bitrate = 0;
-	Mode = 0;
-	PermHwAddress = "00:11:22:33:44:55";
-	HwAddress = "00:11:22:33:44:55";
+	WirelessCapabilities = 0; // TODO
+	ActiveAccessPoint = "/";  // TODO
+	Bitrate = 0;              // TODO
+	Mode = NM_802_11_MODE_INFRA; // or NM_802_11_MODE_UNKNOWN ?
+	PermHwAddress = fi.mac_address().address(); //"00:11:22:33:44:55";
+	HwAddress = fi.mac_address().address(); //"00:11:22:33:44:55";
 }
 
 DeviceWireless::~DeviceWireless()

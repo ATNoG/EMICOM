@@ -17,6 +17,8 @@
 
 #include "DeviceWired.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 DeviceWired::DeviceWired(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

@@ -20,6 +20,10 @@
 
 #include "../adaptors/IP6Config.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class IP6Config :
 	public org::freedesktop::NetworkManager::IP6Config_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -30,5 +34,7 @@ public:
 	IP6Config(DBus::Connection &connection, const char* path);
 	~IP6Config();
 };
+
+}; }; };
 
 #endif /* IP4CONFIG__HPP_ */

@@ -17,6 +17,8 @@
 
 #include "WiMaxNsp.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 WiMaxNsp::WiMaxNsp(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

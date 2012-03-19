@@ -20,6 +20,10 @@
 
 #include "../adaptors/IP4Config.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class IP4Config :
 	public org::freedesktop::NetworkManager::IP4Config_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -30,5 +34,7 @@ public:
 	IP4Config(DBus::Connection &connection, const char* path);
 	~IP4Config();
 };
+
+}; }; };
 
 #endif /* IP4CONFIG__HPP_ */

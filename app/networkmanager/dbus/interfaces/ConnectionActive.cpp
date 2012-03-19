@@ -17,6 +17,8 @@
 
 #include "ConnectionActive.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 ConnectionActive::ConnectionActive(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

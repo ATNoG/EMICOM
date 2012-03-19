@@ -20,6 +20,10 @@
 
 #include "../adaptors/DHCP4Config.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class DHCP4Config :
 	public org::freedesktop::NetworkManager::DHCP4Config_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -30,5 +34,7 @@ public:
 	DHCP4Config(DBus::Connection &connection, const char* path);
 	~DHCP4Config();
 };
+
+}; }; };
 
 #endif /* DHCP4CONFIG__HPP_ */

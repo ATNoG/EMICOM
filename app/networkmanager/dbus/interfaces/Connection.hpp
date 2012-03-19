@@ -20,6 +20,10 @@
 
 #include "../adaptors/Connection.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class Connection :
 	public org::freedesktop::NetworkManager::Settings::Connection_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -34,5 +38,7 @@ public:
 	void Delete();
 	void Update(const std::map< std::string, std::map< std::string, ::DBus::Variant > >& properties);
 };
+
+}; }; };
 
 #endif /* CONNECTION__HPP_ */

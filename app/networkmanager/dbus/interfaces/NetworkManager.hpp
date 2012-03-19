@@ -20,6 +20,10 @@
 
 #include "../adaptors/NetworkManager.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class NetworkManager :
 	public org::freedesktop::NetworkManager_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -58,5 +62,7 @@ public:
 
 	std::vector< ::DBus::Path > GetDevices();
 };
+
+}; }; };
 
 #endif /* NETWORKMANAGER__HPP_ */

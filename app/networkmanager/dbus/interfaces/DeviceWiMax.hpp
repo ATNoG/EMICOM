@@ -21,6 +21,10 @@
 #include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceWiMax.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class DeviceWiMax :
 	public org::freedesktop::NetworkManager::Device_adaptor,
 	public org::freedesktop::NetworkManager::Device::WiMax_adaptor,
@@ -38,5 +42,7 @@ public:
 	// inherited from WiMax adaptor
 	std::vector< ::DBus::Path > GetNspList();
 };
+
+}; }; };
 
 #endif /* DEVICEWIMAX__HPP_ */

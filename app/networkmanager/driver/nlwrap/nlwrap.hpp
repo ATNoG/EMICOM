@@ -1,7 +1,7 @@
-//==============================================================================
-// Brief   : NetworkManager DHCP6Config interface implementation
+//=============================================================================
+// Brief   : Include files for nlwrap namespace
 // Authors : André Prata <andreprata@av.it.pt>
-//------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // ODTONE - Open Dot Twenty One
 //
 // Copyright (C) 2009-2012 Universidade Aveiro
@@ -15,17 +15,11 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#include "DHCP6Config.hpp"
+#include "genl_socket.hpp"
+#include "genl_msg.hpp"
+#include "genl_cb.hpp"
+#include "rtnl_socket.hpp"
+#include "rtnl_link.hpp"
+#include "rtnl_link_cache.hpp"
 
-using namespace odtone::networkmanager::dbus;
-
-DHCP6Config::DHCP6Config(DBus::Connection &connection, const char* path)
-	: DBus::ObjectAdaptor(connection, path)
-{
-	// FIXME
-	Options = std::map< std::string, ::DBus::Variant >();
-}
-
-DHCP6Config::~DHCP6Config()
-{
-}
+// EOF ////////////////////////////////////////////////////////////////////////

@@ -20,6 +20,10 @@
 
 #include "../adaptors/Settings.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class Settings :
 	public org::freedesktop::NetworkManager::Settings_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -35,5 +39,7 @@ public:
 	::DBus::Path GetConnectionByUuid(const std::string& uuid);
 	std::vector< ::DBus::Path > ListConnections();
 };
+
+}; }; };
 
 #endif /* SETTINGS__HPP_ */

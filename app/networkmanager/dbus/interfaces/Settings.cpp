@@ -17,6 +17,8 @@
 
 #include "Settings.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 Settings::Settings(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

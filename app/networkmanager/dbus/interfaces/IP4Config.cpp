@@ -17,6 +17,8 @@
 
 #include "IP4Config.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 IP4Config::IP4Config(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {

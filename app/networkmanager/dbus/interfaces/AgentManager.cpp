@@ -17,6 +17,8 @@
 
 #include "AgentManager.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 const char* const AgentManager::PATH = "/org/freedesktop/NetworkManager21/AgentManager";
 
 AgentManager::AgentManager(DBus::Connection &connection)

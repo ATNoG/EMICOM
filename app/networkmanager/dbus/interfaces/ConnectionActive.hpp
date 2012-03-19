@@ -20,6 +20,10 @@
 
 #include "../adaptors/ConnectionActive.hpp"
 
+namespace odtone {
+namespace networkmanager {
+namespace dbus {
+
 class ConnectionActive :
 	public org::freedesktop::NetworkManager::Connection::Active_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -30,5 +34,7 @@ public:
 	ConnectionActive(DBus::Connection &connection, const char* path);
 	~ConnectionActive();
 };
+
+}; }; };
 
 #endif /* CONNECTIONACTIVE__HPP_ */

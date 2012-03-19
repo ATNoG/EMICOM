@@ -17,6 +17,8 @@
 
 #include "DeviceModem.hpp"
 
+using namespace odtone::networkmanager::dbus;
+
 DeviceModem::DeviceModem(DBus::Connection &connection, const char* path)
 	: DBus::ObjectAdaptor(connection, path)
 {
