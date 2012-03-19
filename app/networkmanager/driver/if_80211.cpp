@@ -140,6 +140,18 @@ int handle_operstate(nl_msg *msg, void *arg)
 	return NL_SKIP;
 }
 
+int handle_bitrate(nl_msg *msg, void *arg)
+{
+	nlwrap::genl_msg m(msg);
+	uint32 *bitrate = static_cast<uint32 *>(arg);
+
+	if (m.bitrate) {
+		*bitrate = m.bitrate.get();
+	}
+
+	return NL_SKIP;
+}
+
 int handle_scan_results(::nl_msg *msg, void *arg)
 {
 	try {
@@ -166,7 +178,7 @@ int handle_scan_results(::nl_msg *msg, void *arg)
 		if (m.bss_qos_capable) {
 			caps.set(mih::net_caps_qos_0); // can't assume classes!
 		}
-
+		
 		poa_info i;
 
 		i.network_id = m.ie_ssid.get();
@@ -174,6 +186,8 @@ int handle_scan_results(::nl_msg *msg, void *arg)
 		i.id.type = mih::link_type_802_11;
 		i.id.addr = d->_ctx._mac;
 		i.id.poa_addr = mih::mac_addr(m.bss_bssid.get());
+		mih::mac_addr mac;
+		mac.address(m.bss_bssid.get().c_str());
 		i.signal = m.bss_signal_mbm.get();
 		i.data_rate = m.ie_max_data_rate.get();
 		i.mih_capabilities = mih::link_mihcap_flag();
@@ -181,7 +195,6 @@ int handle_scan_results(::nl_msg *msg, void *arg)
 		//i.sinr = 0;
 		// SINR cannot be obtained, since we can only get the signal strength
 		// and the noise value (through NL80211_CMD_GET_SURVEY). (missing "interference")
-
 		d->l.push_back(i);
 	} catch(...) {
 		log_(0, "(command) Error parsing scan dump message");
@@ -500,6 +513,38 @@ mih::op_mode_enum if_80211::get_op_mode()
 	}
 
 	return mih::op_mode_normal;
+}
+
+uint32 if_80211::link_bitrate()
+{
+	log_(0, "(command) Getting bitrate info");
+
+	poa_info poa = get_poa_info(); // throws if not attached
+	mih::link_addr _poa_addr = boost::get<mih::link_addr>(poa.id.poa_addr);
+	mih::mac_addr poa_addr = boost::get<mih::mac_addr>(_poa_addr);
+
+	nlwrap::genl_socket s;
+	nlwrap::genl_msg m(_ctx._family_id, NL80211_CMD_GET_STATION, NLM_F_DUMP);
+	m.put_ifindex(_ctx._ifindex);
+	m.put_mac_address(poa_addr.address());
+
+	uint32 bitrate = 0;
+	nlwrap::genl_cb cb(handle_bitrate, &bitrate);
+
+	s.send(m);
+	while (!cb.finish()) {
+		s.receive(cb);
+	}
+
+	if (cb.error()) {
+		throw "Error getting STA info, code " + boost::lexical_cast<std::string>(cb.error_code());
+	}
+
+	if (bitrate == 0) {
+		throw "Unable to get bitrate for current link";
+	}
+
+	return bitrate;
 }
 
 void if_80211::set_op_mode(const mih::link_ac_type_enum &mode)

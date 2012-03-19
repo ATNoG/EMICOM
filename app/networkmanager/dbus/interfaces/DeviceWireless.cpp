@@ -22,6 +22,13 @@ using namespace odtone::networkmanager::dbus;
 DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, if_80211 &fi)
 	: DBus::ObjectAdaptor(connection, path)
 {
+	uint32 bitrate = 0;
+	try {
+		bitrate = fi.link_bitrate();
+	} catch (...) {
+		throw;
+	}
+
 	// FIXME
 	// inherited from Device adaptor
 	DeviceType = Device::NM_DEVICE_TYPE_WIFI; 
@@ -45,7 +52,7 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, i
 	// inherited from Wireless adaptor
 	WirelessCapabilities = 0; // TODO
 	ActiveAccessPoint = "/";  // TODO
-	Bitrate = 0;              // TODO
+	Bitrate = bitrate;
 	Mode = NM_802_11_MODE_INFRA; // or NM_802_11_MODE_UNKNOWN ?
 	PermHwAddress = fi.mac_address().address(); //"00:11:22:33:44:55";
 	HwAddress = fi.mac_address().address(); //"00:11:22:33:44:55";

@@ -128,6 +128,13 @@ public:
 	mih::op_mode_enum get_op_mode();
 
 	/**
+	 * Get the current link bitrate, in kilobits/second.
+	 *
+	 * @return The current link bitrate, in kilobits/second.
+	 */
+	uint32 link_bitrate();
+
+	/**
 	 * Change the device's operating mode.
 	 *
 	 * @param mode The new operating mode.

@@ -24,7 +24,8 @@
 
 namespace nlwrap {
 
-#define ETH_ALEN 18
+#define ETH_NLEN 6
+#define ETH_ALEN (3 * ETH_NLEN)
 
 #define IE_ARRAY_SIZE 128
 #define IE_WIFI_SIZE 4
@@ -47,7 +48,18 @@ struct bss_parse_policy {
 	bss_parse_policy();
 } bss_policy;
 
+struct station_parse_policy {
+	::nla_policy pol[NL80211_STA_INFO_MAX + 1];
+	station_parse_policy();
+} station_policy;
+
+struct rate_parse_policy {
+	::nla_policy pol[NL80211_RATE_INFO_MAX + 1];
+	rate_parse_policy();
+} rate_policy;
+
 void mac_addr_n2a(char *mac_addr, unsigned char *arg);
+void mac_addr_a2n(unsigned char *mac_addr, char *arg);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -87,24 +99,37 @@ genl_msg::genl_msg(::nl_msg *msg)
 	parse_attr(tb);
 
 	// parse bss
-	if (!tb[NL80211_ATTR_BSS]) {
-		return;
+	if (tb[NL80211_ATTR_BSS]) {
+		::nlattr *bss[NL80211_BSS_MAX + 1];
+		if (::nla_parse_nested(bss, NL80211_BSS_MAX, tb[NL80211_ATTR_BSS], bss_policy.pol)) {
+			throw "Error parsing nl_msg bss attributes";
+		}
+		parse_bss(bss);
+
+		// parse information elements
+		if (bss[NL80211_BSS_INFORMATION_ELEMENTS]) {
+			unsigned char *ie = static_cast<unsigned char *>(::nla_data(bss[NL80211_BSS_INFORMATION_ELEMENTS]));
+			int ielen = ::nla_len(bss[NL80211_BSS_INFORMATION_ELEMENTS]);
+			parse_information_elements(ie, ielen);
+		}
 	}
 
-	::nlattr *bss[NL80211_BSS_MAX + 1];
-	if (::nla_parse_nested(bss, NL80211_BSS_MAX, tb[NL80211_ATTR_BSS], bss_policy.pol)) {
-		throw "Error parsing nl_msg bss attributes";
-	}
-	parse_bss(bss);
+	// parse station info
+	if (tb[NL80211_ATTR_STA_INFO]) {
+		::nlattr *station[NL80211_STA_INFO_MAX];
+		if (::nla_parse_nested(station, NL80211_STA_INFO_MAX, tb[NL80211_ATTR_STA_INFO], station_policy.pol)) {
+			throw "Error parsing nl_msg STATION attributes";
+		}
 
-	// parse information elements
-	if (!bss[NL80211_BSS_INFORMATION_ELEMENTS]) {
-		return;
+		// parse station tx bitrate info
+		if (station[NL80211_STA_INFO_TX_BITRATE]) {
+			::nlattr *rate[NL80211_RATE_INFO_MAX + 1];
+			if(::nla_parse_nested(rate, NL80211_RATE_INFO_MAX, station[NL80211_STA_INFO_TX_BITRATE], rate_policy.pol)) {
+				throw "Error parsing nl_msg rate attributes";
+			}
+			parse_rate(rate);
+		}
 	}
-
-	unsigned char *ie = static_cast<unsigned char *>(::nla_data(bss[NL80211_BSS_INFORMATION_ELEMENTS]));
-	int ielen = ::nla_len(bss[NL80211_BSS_INFORMATION_ELEMENTS]);
-	parse_information_elements(ie, ielen);
 }
 
 genl_msg::~genl_msg()
@@ -140,6 +165,15 @@ void genl_msg::put_ps_state(int state)
 	}
 }
 
+void genl_msg::put_mac_address(std::string mac)
+{
+	unsigned char mac_addr[ETH_NLEN];
+	mac_addr_a2n(mac_addr, const_cast<char *>(mac.c_str()));
+
+	if (::nla_put(_msg, NL80211_ATTR_MAC, ETH_NLEN, mac_addr)) {
+		throw "Error putting MAC attribute in nl_msg";
+	}
+}
 
 int genl_msg::cmd()
 {
@@ -250,6 +284,14 @@ void genl_msg::parse_information_elements(unsigned char *ie, int ielen)
 	}
 }
 
+void genl_msg::parse_rate(::nlattr *rate[NL80211_RATE_INFO_MAX + 1])
+{
+	if (rate[NL80211_RATE_INFO_BITRATE]) {
+		int mb_rate = ::nla_get_u16(rate[NL80211_RATE_INFO_BITRATE]);
+		bitrate = (mb_rate / 10) * 1000;
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////
 
 void mac_addr_n2a(char *mac_addr, unsigned char *arg)
@@ -257,7 +299,7 @@ void mac_addr_n2a(char *mac_addr, unsigned char *arg)
 	int i, l;
 
 	l = 0;
-	for (i = 0; i < 6; i++) {
+	for (i = 0; i < ETH_NLEN; i++) {
 		if (i == 0) {
 			sprintf(mac_addr+l, "%02x", arg[i]);
 			l += 2;
@@ -265,6 +307,38 @@ void mac_addr_n2a(char *mac_addr, unsigned char *arg)
 			sprintf(mac_addr+l, ":%02x", arg[i]);
 			l += 3;
 		}
+	}
+}
+
+void mac_addr_a2n(unsigned char *mac_addr, char *arg)
+{
+	int i;
+
+	for (i = 0; i < ETH_NLEN; i++) {
+		int temp;
+		char *cp = strchr(arg, ':');
+		if (cp) {
+			*cp = 0;
+			cp++;
+		}
+
+		if (sscanf(arg, "%x", &temp) != 1) {
+			throw "Invalid MAC address";
+		}
+
+		if (temp < 0 || temp > 255) {
+			throw "Invalid MAC address";
+		}
+
+		mac_addr[i] = temp;
+		if (!cp) {
+			break;
+		}
+		arg = cp;
+	}
+
+	if (i < ETH_NLEN - 1) {
+		throw "Invalid MAC address";
 	}
 }
 
@@ -280,6 +354,29 @@ bss_parse_policy::bss_parse_policy() {
 	pol[NL80211_BSS_STATUS].type = NLA_U32;
 	pol[NL80211_BSS_SEEN_MS_AGO].type = NLA_U32;
 	pol[NL80211_BSS_BEACON_IES] = { };
+}
+
+station_parse_policy::station_parse_policy() {
+	pol[NL80211_STA_INFO_INACTIVE_TIME].type = NLA_U32;
+	pol[NL80211_STA_INFO_RX_BYTES].type = NLA_U32;
+	pol[NL80211_STA_INFO_TX_BYTES].type = NLA_U32;
+	pol[NL80211_STA_INFO_RX_PACKETS].type = NLA_U32;
+	pol[NL80211_STA_INFO_TX_PACKETS].type = NLA_U32;
+	pol[NL80211_STA_INFO_SIGNAL].type = NLA_U8;
+	pol[NL80211_STA_INFO_TX_BITRATE].type = NLA_NESTED;
+	pol[NL80211_STA_INFO_LLID].type = NLA_U16;
+	pol[NL80211_STA_INFO_PLID].type = NLA_U16;
+	pol[NL80211_STA_INFO_PLINK_STATE].type = NLA_U8;
+	pol[NL80211_STA_INFO_TX_RETRIES].type = NLA_U32;
+	pol[NL80211_STA_INFO_TX_FAILED].type = NLA_U32;
+//	pol[NL80211_STA_INFO_STA_FLAGS].minlen = sizeof(::nl80211_sta_flag_update);
+}
+
+rate_parse_policy::rate_parse_policy() {
+	pol[NL80211_RATE_INFO_BITRATE].type = NLA_U16;
+	pol[NL80211_RATE_INFO_MCS].type = NLA_U8;
+	pol[NL80211_RATE_INFO_40_MHZ_WIDTH].type = NLA_FLAG;
+	pol[NL80211_RATE_INFO_SHORT_GI].type = NLA_FLAG;
 }
 
 }
