@@ -140,13 +140,54 @@ int handle_operstate(nl_msg *msg, void *arg)
 	return NL_SKIP;
 }
 
-int handle_bitrate(nl_msg *msg, void *arg)
+int handle_get_station(nl_msg *msg, void *arg)
 {
 	nlwrap::genl_msg m(msg);
 	uint32 *bitrate = static_cast<uint32 *>(arg);
 
 	if (m.bitrate) {
 		*bitrate = m.bitrate.get();
+	}
+
+	return NL_SKIP;
+}
+
+int handle_get_interface(nl_msg *msg, void *arg)
+{
+	nlwrap::genl_msg m(msg);
+	if_80211::if_type *result = static_cast<if_80211::if_type *>(arg);
+
+	*result = if_80211::if_type::unspecified;
+	if (m.iftype) {
+		switch (m.iftype.get()) {
+		case NL80211_IFTYPE_ADHOC:
+			*result = if_80211::if_type::adhoc;
+			break;
+		case NL80211_IFTYPE_STATION:
+			*result = if_80211::if_type::station;
+			break;
+		case NL80211_IFTYPE_AP:
+			*result = if_80211::if_type::ap;
+			break;
+		case NL80211_IFTYPE_AP_VLAN:
+			*result = if_80211::if_type::ap_vlan;
+			break;
+		case NL80211_IFTYPE_WDS:
+			*result = if_80211::if_type::wds;
+			break;
+		case NL80211_IFTYPE_MONITOR:
+			*result = if_80211::if_type::monitor;
+			break;
+		case NL80211_IFTYPE_MESH_POINT:
+			*result = if_80211::if_type::mesh_point;
+			break;
+		case NL80211_IFTYPE_P2P_CLIENT:
+			*result = if_80211::if_type::p2p_client;
+			break;
+		case NL80211_IFTYPE_P2P_GO:
+			*result = if_80211::if_type::p2p_go;
+			break;
+		}
 	}
 
 	return NL_SKIP;
@@ -527,7 +568,7 @@ uint32 if_80211::link_bitrate()
 	m.put_mac_address(poa_addr.address());
 
 	uint32 bitrate = 0;
-	nlwrap::genl_cb cb(handle_bitrate, &bitrate);
+	nlwrap::genl_cb cb(handle_get_station, &bitrate);
 
 	s.send(m);
 	while (!cb.finish()) {
@@ -543,6 +584,29 @@ uint32 if_80211::link_bitrate()
 	}
 
 	return bitrate;
+}
+
+if_80211::if_type if_80211::get_if_type()
+{
+	log_(0, "(command) Getting interface info");
+
+	nlwrap::genl_socket s;
+	nlwrap::genl_msg m(_ctx._family_id, NL80211_CMD_GET_INTERFACE, 0);
+	m.put_ifindex(_ctx._ifindex);
+
+	if_type result;
+	nlwrap::genl_cb cb(handle_get_interface, &result);
+
+	s.send(m);
+	while (!cb.finish()) {
+		s.receive(cb);
+	}
+
+	if (cb.error()) {
+		throw "Error getting interface info, code " + boost::lexical_cast<std::string>(cb.error_code());
+	}
+
+	return result;
 }
 
 void if_80211::set_op_mode(const mih::link_ac_type_enum &mode)

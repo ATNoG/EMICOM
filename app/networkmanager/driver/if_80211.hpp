@@ -57,6 +57,19 @@ class if_80211 : boost::noncopyable {
 //	typedef boost::function<void()> link_pdu_transmit_status_handler;
 
 public:
+	enum if_type {
+		unspecified,
+		adhoc,
+		station,
+		ap,
+		ap_vlan,
+		wds,
+		monitor,
+		mesh_point,
+		p2p_client,
+		p2p_go
+	};
+
 	/**
 	 * Construct a new if_80211 object.
 	 * The object tries to associate with the given interface.
@@ -133,6 +146,13 @@ public:
 	 * @return The current link bitrate, in kilobits/second.
 	 */
 	uint32 link_bitrate();
+
+	/**
+	 * Get the interface type.
+	 *
+	 * @return The interface type.
+	 */
+	if_type get_if_type();
 
 	/**
 	 * Change the device's operating mode.

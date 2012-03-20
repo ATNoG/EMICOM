@@ -125,6 +125,8 @@ public:
 	 */
 	boost::optional<int> bitrate;
 
+	boost::optional<int> iftype;
+
 private:
 	void parse_attr(::nlattr *tb[NL80211_ATTR_MAX + 1]);
 	void parse_bss(::nlattr *bss[NL80211_BSS_MAX + 1]);

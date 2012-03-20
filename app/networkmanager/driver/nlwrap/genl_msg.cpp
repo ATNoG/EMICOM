@@ -207,6 +207,10 @@ void genl_msg::parse_attr(::nlattr *tb[NL80211_ATTR_MAX + 1])
 	if (tb[NL80211_ATTR_BSS]) {
 		attr_bss = true;
 	}
+
+	if (tb[NL80211_ATTR_IFTYPE]) {
+		iftype = nla_get_u32(tb[NL80211_ATTR_IFTYPE]);
+	}
 }
 
 void genl_msg::parse_bss(::nlattr *bss[NL80211_BSS_MAX + 1])
