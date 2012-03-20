@@ -16,15 +16,16 @@
 //==============================================================================
 
 #include "DeviceWireless.hpp"
+#include <iostream>
 
 using namespace odtone::networkmanager::dbus;
 
 DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, if_80211 &fi)
-	: DBus::ObjectAdaptor(connection, path)
+	: DBus::ObjectAdaptor(connection, path), _fi(fi)
 {
 	uint32 bitrate = 0;
 	try {
-		bitrate = fi.link_bitrate();
+		bitrate = _fi.link_bitrate();
 	} catch (...) {
 		throw;
 	}
@@ -72,4 +73,18 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 	std::vector< ::DBus::Path > r;
 	// TODO
 	return r;
+}
+
+void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
+{
+	std::cerr << "getting property " << property << std::endl;
+	if (property == "Bitrate") {
+		try {
+			Bitrate = _fi.link_bitrate();
+		} catch(...) {
+			Bitrate = 0;
+		}
+	}
+
+	PropertiesAdaptor::on_get_property(interface, property, value);
 }

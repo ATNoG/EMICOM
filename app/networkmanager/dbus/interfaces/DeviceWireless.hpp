@@ -60,6 +60,12 @@ public:
 
 	// inherited from Wireless adaptor
 	std::vector< ::DBus::Path > GetAccessPoints();
+
+	// override from PropertiesAdaptor
+	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
+
+private:
+	if_80211 &_fi;
 };
 
 }; }; };
