@@ -24,8 +24,8 @@ project networkmanager
 	  <include>/usr/include/libnl3
 	;
 
-exe networkmanager
-	: main.cpp
+exe dbus_dummy
+	: dbus_dummy.cpp
 	  dbus//networkmanager-dbus
 	  driver//if_80211
 	  ../../lib/odtone//odtone_base
@@ -34,7 +34,7 @@ exe networkmanager
 	;
 
 install install
-	: networkmanager
+	: dbus_dummy
 #	  networkmanager.conf
 	: <location>../../dist
 	;
