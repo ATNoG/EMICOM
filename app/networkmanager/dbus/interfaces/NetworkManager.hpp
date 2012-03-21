@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef NETWORKMANAGER__HPP_
-#define NETWORKMANAGER__HPP_
+#ifndef NETWORKMANAGER_DBUS_NETWORKMANAGER__HPP_
+#define NETWORKMANAGER_DBUS_NETWORKMANAGER__HPP_
 
 #include "../adaptors/NetworkManager.hpp"
 
@@ -65,4 +65,4 @@ public:
 
 }; }; };
 
-#endif /* NETWORKMANAGER__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_NETWORKMANAGER__HPP_ */

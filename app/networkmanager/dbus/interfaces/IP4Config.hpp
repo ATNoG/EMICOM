@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef IP4CONFIG__HPP_
-#define IP4CONFIG__HPP_
+#ifndef NETWORKMANAGER_DBUS_IP4CONFIG__HPP_
+#define NETWORKMANAGER_DBUS_IP4CONFIG__HPP_
 
 #include "../adaptors/IP4Config.hpp"
 
@@ -37,4 +37,4 @@ public:
 
 }; }; };
 
-#endif /* IP4CONFIG__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_IP4CONFIG__HPP_ */

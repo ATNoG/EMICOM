@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef WIMAXNSP__HPP_
-#define WIMAXNSP__HPP_
+#ifndef NETWORKMANAGER_DBUS_WIMAXNSP__HPP_
+#define NETWORKMANAGER_DBUS_WIMAXNSP__HPP_
 
 #include "../adaptors/WiMaxNsp.hpp"
 
@@ -37,4 +37,4 @@ public:
 
 }; }; };
 
-#endif /* WIMAXNSP__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_WIMAXNSP__HPP_ */

@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef CONNECTIONACTIVE__HPP_
-#define CONNECTIONACTIVE__HPP_
+#ifndef NETWORKMANAGER_DBUS_CONNECTIONACTIVE__HPP_
+#define NETWORKMANAGER_DBUS_CONNECTIONACTIVE__HPP_
 
 #include "../adaptors/ConnectionActive.hpp"
 
@@ -37,4 +37,4 @@ public:
 
 }; }; };
 
-#endif /* CONNECTIONACTIVE__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_CONNECTIONACTIVE__HPP_ */

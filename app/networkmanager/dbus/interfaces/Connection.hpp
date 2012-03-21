@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef CONNECTION__HPP_
-#define CONNECTION__HPP_
+#ifndef NETWORKMANAGER_DBUS_CONNECTION__HPP_
+#define NETWORKMANAGER_DBUS_CONNECTION__HPP_
 
 #include "../adaptors/Connection.hpp"
 
@@ -41,4 +41,4 @@ public:
 
 }; }; };
 
-#endif /* CONNECTION__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_CONNECTION__HPP_ */

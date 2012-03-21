@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef SETTINGS__HPP_
-#define SETTINGS__HPP_
+#ifndef NETWORKMANAGER_DBUS_SETTINGS__HPP_
+#define NETWORKMANAGER_DBUS_SETTINGS__HPP_
 
 #include "../adaptors/Settings.hpp"
 
@@ -42,4 +42,4 @@ public:
 
 }; }; };
 
-#endif /* SETTINGS__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_SETTINGS__HPP_ */

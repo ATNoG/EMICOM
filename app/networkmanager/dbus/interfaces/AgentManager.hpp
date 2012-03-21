@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef AGENTMANAGER__HPP_
-#define AGENTMANAGER__HPP_
+#ifndef NETWORKMANAGER_DBUS_AGENTMANAGER__HPP_
+#define NETWORKMANAGER_DBUS_AGENTMANAGER__HPP_
 
 #include "../adaptors/AgentManager.hpp"
 
@@ -42,4 +42,4 @@ public:
 
 }; }; };
 
-#endif /* AGENTMANAGER__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_AGENTMANAGER__HPP_ */

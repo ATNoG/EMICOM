@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef DEVICEWIRELESS__HPP_
-#define DEVICEWIRELESS__HPP_
+#ifndef NETWORKMANAGER_DBUS_DEVICEWIRELESS__HPP_
+#define NETWORKMANAGER_DBUS_DEVICEWIRELESS__HPP_
 
 #include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceWireless.hpp"
@@ -70,4 +70,4 @@ private:
 
 }; }; };
 
-#endif /* DEVICEWIRELESS__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_DEVICEWIRELESS__HPP_ */

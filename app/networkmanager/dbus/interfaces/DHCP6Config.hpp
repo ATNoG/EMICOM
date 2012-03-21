@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef DHCP6CONFIG__HPP_
-#define DHCP6CONFIG__HPP_
+#ifndef NETWORKMANAGER_DBUS_DHCP6CONFIG__HPP_
+#define NETWORKMANAGER_DBUS_DHCP6CONFIG__HPP_
 
 #include "../adaptors/DHCP6Config.hpp"
 
@@ -37,4 +37,4 @@ public:
 
 }; }; };
 
-#endif /* DHCP6CONFIG__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_DHCP6CONFIG__HPP_ */

@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef DEVICE__HPP_
-#define DEVICE__HPP_
+#ifndef NETWORKMANAGER_DBUS_DEVICE__HPP_
+#define NETWORKMANAGER_DBUS_DEVICE__HPP_
 
 namespace odtone {
 namespace networkmanager {
@@ -135,4 +135,4 @@ public:
 	void Disconnect();
 };*/
 
-#endif /* DEVICE__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_DEVICE__HPP_ */

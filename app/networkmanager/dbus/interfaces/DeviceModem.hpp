@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef DEVICEMODEM__HPP_
-#define DEVICEMODEM__HPP_
+#ifndef NETWORKMANAGER_DBUS_DEVICEMODEM__HPP_
+#define NETWORKMANAGER_DBUS_DEVICEMODEM__HPP_
 
 #include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceModem.hpp"
@@ -42,4 +42,4 @@ public:
 
 }; }; };
 
-#endif /* DEVICEMODEM__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_DEVICEMODEM__HPP_ */

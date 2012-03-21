@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef DEVICEWIRED__HPP_
-#define DEVICEWIRED__HPP_
+#ifndef NETWORKMANAGER_DBUS_DEVICEWIRED__HPP_
+#define NETWORKMANAGER_DBUS_DEVICEWIRED__HPP_
 
 #include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceWired.hpp"
@@ -42,4 +42,4 @@ public:
 
 }; }; };
 
-#endif /* DEVICEWIRED__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_DEVICEWIRED__HPP_ */

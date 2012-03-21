@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef DEVICEWIMAX__HPP_
-#define DEVICEWIMAX__HPP_
+#ifndef NETWORKMANAGER_DBUS_DEVICEWIMAX__HPP_
+#define NETWORKMANAGER_DBUS_DEVICEWIMAX__HPP_
 
 #include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceWiMax.hpp"
@@ -45,4 +45,4 @@ public:
 
 }; }; };
 
-#endif /* DEVICEWIMAX__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_DEVICEWIMAX__HPP_ */

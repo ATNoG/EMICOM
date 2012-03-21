@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef DHCP4CONFIG__HPP_
-#define DHCP4CONFIG__HPP_
+#ifndef NETWORKMANAGER_DBUS_DHCP4CONFIG__HPP_
+#define NETWORKMANAGER_DBUS_DHCP4CONFIG__HPP_
 
 #include "../adaptors/DHCP4Config.hpp"
 
@@ -37,4 +37,4 @@ public:
 
 }; }; };
 
-#endif /* DHCP4CONFIG__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_DHCP4CONFIG__HPP_ */

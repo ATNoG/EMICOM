@@ -15,8 +15,8 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef ACCESSPOINT__HPP_
-#define ACCESSPOINT__HPP_
+#ifndef NETWORKMANAGER_DBUS_ACCESSPOINT__HPP_
+#define NETWORKMANAGER_DBUS_ACCESSPOINT__HPP_
 
 #include "../adaptors/AccessPoint.hpp"
 
@@ -37,4 +37,4 @@ public:
 
 }; }; };
 
-#endif /* ACCESSPOINT__HPP_ */
+#endif /* NETWORKMANAGER_DBUS_ACCESSPOINT__HPP_ */
