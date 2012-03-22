@@ -267,150 +267,9 @@ void fetch_scan_results(scan_results_data &data)
 	log_(0, "(command) Dumped ", data.l.size(), " scan results");
 }
 
-void dispatch_strongest_scan_results(scan_results_data &d)
-{
-	std::sort(d.l.begin(), d.l.end(), // sort by strongest signal
-		[](const poa_info &a, const poa_info &b)
-		{
-			const sint8 *a_dbm = boost::get<sint8>(&a.signal);
-			const sint8 *b_dbm = boost::get<sint8>(&b.signal);
-			if (a_dbm && b_dbm) {
-				return *a_dbm > *b_dbm;
-			} else {
-				const mih::percentage *a_pct = boost::get<mih::percentage>(&a.signal);
-				const mih::percentage *b_pct = boost::get<mih::percentage>(&b.signal);
-				if (a_pct && b_pct) {
-					uint _a = *((const uint *)a_pct);
-					uint _b = *((const uint *)b_pct);
-					return _a > _b;
-				}
-			}
-			throw "SIG_STRENGTH info not available for sorting";
-		});
-
-	std::map<mih::octet_string, bool> announced;
-	if (d.associated_index) {
-		announced[d.l[d.associated_index.get()].network_id] = true;
-	}
-
-	BOOST_FOREACH(poa_info &i, d.l) {
-		if (!announced[i.network_id]) {
-			announced[i.network_id] = true;
-			d._ctx._ios.dispatch(boost::bind(d._ctx._detected_handler.get(), i));
-		}
-	}
-}
-
-int handle_nl_event(nl_msg *msg, void *arg)
-{
-	nlwrap::genl_msg m(msg);
-	if_80211::ctx_data *ctx = static_cast<if_80211::ctx_data *>(arg);
-
-	if(!m.attr_ifindex || m.attr_ifindex.get() != ctx->_ifindex) {
-		return NL_SKIP;
-	}
-
-	// Parse the event
-	switch (m.cmd()) {
-	case NL80211_CMD_TRIGGER_SCAN:
-		{
-			// This event is caught just to set this variable,
-			// and try to prevent overlapping ongoing scans
-			log_(0, "(event) Scan started");
-			ctx->_scanning = true;
-		}
-		break;
-	case NL80211_CMD_CONNECT: // LINK_UP
-		{
-			log_(0, "(event) Connect");
-			if (!ctx->_up_handler) { break; }
-
-			if (!m.attr_status_code) {
-				log_(0, "(event) Unknown connect status");
-			} else if (m.attr_status_code.get() == 0) {
-				log_(0, "(event) Connection success");
-				mih::link_tuple_id lid;
-				lid.type = mih::link_type_802_11;
-				lid.addr = ctx->_mac;
-
-				if (m.attr_mac) {
-					lid.poa_addr = mih::mac_addr(m.attr_mac.get().c_str());
-				}
-
-				boost::optional<mih::link_addr> old_router;
-				boost::optional<mih::link_addr> new_router;
-				boost::optional<bool> ip_renew;
-				boost::optional<mih::ip_mob_mgmt> mobility_management;
-				ctx->_ios.dispatch(boost::bind(ctx->_up_handler.get(), lid, old_router, new_router, ip_renew, mobility_management));
-			} else {
-				log_(0, "(event) Connection failure, code ", m.attr_status_code.get());
-			}
-		}
-		break;
-
-//	case NL80211_CMD_DEAUTHENTICATE:
-//	case NL80211_CMD_DISASSOCIATE:
-	case NL80211_CMD_DISCONNECT: // LINK_DOWN
-		{
-			log_(0, "(event) Disconnect");
-			if (!ctx->_down_handler) { break; }
-
-			unsigned short reason_code = 0; // "local request"
-			if (m.attr_reason_code) {
-				reason_code = m.attr_reason_code.get();
-			}
-
-			mih::link_tuple_id lid;
-			lid.type = mih::link_type_802_11;
-			lid.addr = ctx->_mac;
-
-			mih::link_dn_reason rs = reason_code_2_dn_reason(reason_code);
-
-			boost::optional<mih::link_addr> old_router;
-			ctx->_ios.dispatch(boost::bind(ctx->_down_handler.get(), lid, old_router, rs));
-		}
-		break;
-
-	case NL80211_CMD_SCAN_ABORTED: // LINK_DETECTED?
-		{
-			ctx->_scanning = false;
-			log_(0, "(event) Scan aborted");
-		}
-		break;
-	case NL80211_CMD_NEW_SCAN_RESULTS: // LINK DETECTED
-		{
-			ctx->_scanning = false;
-			log_(0, "(event) New scan results");
-			if (!ctx->_detected_handler) { break; }
-
-			// The multicast message just informs of new results.
-			// The complete information must be retrieved with a GET_SCAN.
-
-			scan_results_data d(*ctx);
-			fetch_scan_results(d);
-			dispatch_strongest_scan_results(d);
-		}
-		break;
-
-	default:
-		break;
-	}
-
-	return NL_SKIP;
-}
-
-void recv_forever(nlwrap::genl_socket &sock, nlwrap::genl_cb &cb)
-{
-	while (!cb.finish()) {
-		sock.receive(cb);
-	}
-
-	throw "Unexpected netlink error, code " + boost::lexical_cast<std::string>(cb.error_code());
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
-if_80211::if_80211(boost::asio::io_service &ios, mih::mac_addr mac) : _ctx(ios)
+if_80211::if_80211(mih::mac_addr mac)
 {
 	// set variables
 	_ctx._mac = mac;
@@ -421,13 +280,8 @@ if_80211::if_80211(boost::asio::io_service &ios, mih::mac_addr mac) : _ctx(ios)
 	_ctx._ifindex = link.ifindex();
 
 	// initalize socket
-	_ctx._family_id = _socket.family_id("nl80211");
-	_socket.join_multicast_group("scan");
-	_socket.join_multicast_group("mlme");
-
-	_callback.custom(handle_nl_event, &_ctx);
-
-	boost::thread rcv(boost::bind(recv_forever, boost::ref(_socket), boost::ref(_callback)));
+	nlwrap::genl_socket s;
+	_ctx._family_id = s.family_id("nl80211");
 }
 
 if_80211::~if_80211()
@@ -675,21 +529,6 @@ void if_80211::set_op_mode(const mih::link_ac_type_enum &mode)
 		throw "Mode not supported";
 		break;
 	}
-}
-
-void if_80211::link_up_callback(link_up_handler h)
-{
-	_ctx._up_handler = h;
-}
-
-void if_80211::link_down_callback(link_down_handler h)
-{
-	_ctx._down_handler = h;
-}
-
-void if_80211::link_detected_callback(link_detected_handler h)
-{
-	_ctx._detected_handler = h;
 }
 
 // EOF ////////////////////////////////////////////////////////////////////////

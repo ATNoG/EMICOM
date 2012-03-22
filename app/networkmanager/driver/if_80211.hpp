@@ -38,24 +38,6 @@ struct poa_info : mih::link_det_info {
 
 class if_80211 : boost::noncopyable {
 
-	typedef boost::function<void(mih::link_tuple_id &tuple_id,
-	                             boost::optional<mih::link_addr> &old_router,
-	                             boost::optional<mih::link_addr> &new_router,
-	                             boost::optional<bool> &ip_renew,
-	                             boost::optional<mih::ip_mob_mgmt> &mobility_management)> link_up_handler;
-
-	typedef boost::function<void(mih::link_tuple_id &tuple_id,
-	                             boost::optional<mih::link_addr> &old_router,
-	                             mih::link_dn_reason &dn_reason)> link_down_handler;
-
-	typedef boost::function<void(mih::link_det_info &det_info)> link_detected_handler;
-//
-//	typedef boost::function<void(mih::link_tuple_id &tuple_id,
-//	                             mih::link_param_rpt_list &rpt_list)> link_parameters_report_handler;
-//	typedef boost::function<void()> link_going_down_handler;
-//	typedef boost::function<void()> link_handover_imminent_handler;
-//	typedef boost::function<void()> link_pdu_transmit_status_handler;
-
 public:
 	enum if_type {
 		unspecified,
@@ -77,7 +59,7 @@ public:
 	 * @param ios An io_service instance
 	 * @param mac The MAC address of the underlying device.
 	 */
-	if_80211(boost::asio::io_service &ios, odtone::mih::mac_addr mac);
+	if_80211(odtone::mih::mac_addr mac);
 
 	/**
 	 * Destruct the object.
@@ -161,36 +143,7 @@ public:
 	 */
 	void set_op_mode(const mih::link_ac_type_enum &mode);
 
-	/**
-	 * Set the callback for LINK_UP events.
-	 *
-	 * @param h The callback.
-	 */
-	void link_up_callback(link_up_handler h);
-
-	/**
-	 * Set the callback for LINK_DOWN events.
-	 *
-	 * @param h The callback.
-	 */
-	void link_down_callback(link_down_handler h);
-
-	/**
-	 * Set the callback for LINK_DETECTED events.
-	 *
-	 * @param h The callback.
-	 */
-	void link_detected_callback(link_detected_handler h);
-
 	struct ctx_data {
-		ctx_data (boost::asio::io_service &ios) : _ios(ios) {}
-
-		boost::asio::io_service &_ios;
-
-		boost::optional<link_up_handler>       _up_handler;
-		boost::optional<link_down_handler>     _down_handler;
-		boost::optional<link_detected_handler> _detected_handler;
-
 		bool				  _scanning;
 		int                   _family_id;
 
@@ -201,8 +154,6 @@ public:
 
 private:
 	ctx_data _ctx;
-	nlwrap::genl_socket _socket;
-	nlwrap::genl_cb     _callback;
 };
 
 // EOF ////////////////////////////////////////////////////////////////////////
