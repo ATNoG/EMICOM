@@ -19,6 +19,7 @@
 #define NETWORKMANAGER_DBUS_NETWORKMANAGER__HPP_
 
 #include "../adaptors/NetworkManager.hpp"
+#include "Device.hpp"
 
 namespace odtone {
 namespace networkmanager {
@@ -61,6 +62,11 @@ public:
 	::DBus::Path GetDeviceByIpIface(const std::string& iface);
 
 	std::vector< ::DBus::Path > GetDevices();
+
+	void AddDevice(Device d);
+
+private:
+	std::vector<Device> _device_list;
 };
 
 }; }; };

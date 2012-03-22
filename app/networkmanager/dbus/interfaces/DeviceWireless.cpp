@@ -21,7 +21,7 @@
 using namespace odtone::networkmanager::dbus;
 
 DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, if_80211 &fi)
-	: DBus::ObjectAdaptor(connection, path), _fi(fi)
+	: Device(connection, path), _fi(fi)
 {
 	// FIXME
 	// inherited from Device adaptor

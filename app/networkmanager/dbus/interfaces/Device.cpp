@@ -1,5 +1,5 @@
 //==============================================================================
-// Brief   : NetworkManager Device.Wired interface implementation
+// Brief   : NetworkManager Device interface implementation
 // Authors : André Prata <andreprata@av.it.pt>
 //------------------------------------------------------------------------------
 // ODTONE - Open Dot Twenty One
@@ -15,29 +15,21 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#ifndef NETWORKMANAGER_DBUS_DEVICEWIRED__HPP_
-#define NETWORKMANAGER_DBUS_DEVICEWIRED__HPP_
-
-#include "../adaptors/Device.hpp"
-#include "../adaptors/DeviceWired.hpp"
 #include "Device.hpp"
+#include <iostream>
 
-namespace odtone {
-namespace networkmanager {
-namespace dbus {
+using namespace odtone::networkmanager::dbus;
 
-class DeviceWired :
-	public Device,
-	public org::freedesktop::NetworkManager::Device::Wired_adaptor
+Device::Device(DBus::Connection &connection, const char* path)
+	: DBus::ObjectAdaptor(connection, path)
 {
-public:
-	DeviceWired(DBus::Connection &connection, const char* path);
-	~DeviceWired();
+}
 
-	// inherited from Device adaptor
-	void Disconnect();
-};
+Device::~Device()
+{
+}
 
-}; }; };
-
-#endif /* NETWORKMANAGER_DBUS_DEVICEWIRED__HPP_ */
+void Device::Disconnect()
+{
+	// Nothing, each must implement
+}

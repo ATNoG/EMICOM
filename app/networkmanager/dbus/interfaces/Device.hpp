@@ -18,11 +18,17 @@
 #ifndef NETWORKMANAGER_DBUS_DEVICE__HPP_
 #define NETWORKMANAGER_DBUS_DEVICE__HPP_
 
+#include "../adaptors/Device.hpp"
+
 namespace odtone {
 namespace networkmanager {
 namespace dbus {
 
-class Device
+class Device :
+	public org::freedesktop::NetworkManager::Device_adaptor,
+	public DBus::IntrospectableAdaptor,
+	public DBus::PropertiesAdaptor,
+	public DBus::ObjectAdaptor
 {
 public:
 	enum NM_DEVICE_TYPE {
@@ -114,6 +120,11 @@ public:
 		NM_DEVICE_CAP_NM_SUPPORTED   = 0x1,
 		NM_DEVICE_CAP_CARRIER_DETECT = 0x2
 	};
+
+	Device(DBus::Connection &connection, const char* path);
+	~Device();
+
+	virtual void Disconnect();
 };
 
 }; }; };

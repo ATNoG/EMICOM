@@ -18,7 +18,6 @@
 #ifndef NETWORKMANAGER_DBUS_DEVICEWIRELESS__HPP_
 #define NETWORKMANAGER_DBUS_DEVICEWIRELESS__HPP_
 
-#include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceWireless.hpp"
 #include "Device.hpp"
 
@@ -29,11 +28,8 @@ namespace networkmanager {
 namespace dbus {
 
 class DeviceWireless :
-	public org::freedesktop::NetworkManager::Device_adaptor,
-	public org::freedesktop::NetworkManager::Device::Wireless_adaptor,
-	public DBus::IntrospectableAdaptor,
-	public DBus::PropertiesAdaptor,
-	public DBus::ObjectAdaptor
+	public Device,
+	public org::freedesktop::NetworkManager::Device::Wireless_adaptor
 {
 	enum NM_802_11_MODE {
 		NM_802_11_MODE_UNKNOWN = 0,

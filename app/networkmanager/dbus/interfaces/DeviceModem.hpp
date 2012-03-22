@@ -20,17 +20,15 @@
 
 #include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceModem.hpp"
+#include "Device.hpp"
 
 namespace odtone {
 namespace networkmanager {
 namespace dbus {
 
 class DeviceModem :
-	public org::freedesktop::NetworkManager::Device_adaptor,
-	public org::freedesktop::NetworkManager::Device::Modem_adaptor,
-	public DBus::IntrospectableAdaptor,
-	public DBus::PropertiesAdaptor,
-	public DBus::ObjectAdaptor
+	public Device,
+	public org::freedesktop::NetworkManager::Device::Modem_adaptor
 {
 public:
 	DeviceModem(DBus::Connection &connection, const char* path);

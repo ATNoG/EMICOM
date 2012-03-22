@@ -22,6 +22,7 @@ project networkmanager-dbus
 lib networkmanager-dbus
 	: interfaces/NetworkManager.cpp
 	  interfaces/AccessPoint.cpp
+	  interfaces/Device.cpp
 	  interfaces/DeviceWireless.cpp
 	  interfaces/DeviceWired.cpp
 	  interfaces/DeviceModem.cpp

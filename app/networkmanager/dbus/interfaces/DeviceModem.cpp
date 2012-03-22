@@ -20,7 +20,7 @@
 using namespace odtone::networkmanager::dbus;
 
 DeviceModem::DeviceModem(DBus::Connection &connection, const char* path)
-	: DBus::ObjectAdaptor(connection, path)
+	: Device(connection, path)
 {
 	// FIXME
 	// inherited from Device adaptor

@@ -20,17 +20,15 @@
 
 #include "../adaptors/Device.hpp"
 #include "../adaptors/DeviceWiMax.hpp"
+#include "Device.hpp"
 
 namespace odtone {
 namespace networkmanager {
 namespace dbus {
 
 class DeviceWiMax :
-	public org::freedesktop::NetworkManager::Device_adaptor,
-	public org::freedesktop::NetworkManager::Device::WiMax_adaptor,
-	public DBus::IntrospectableAdaptor,
-	public DBus::PropertiesAdaptor,
-	public DBus::ObjectAdaptor
+	public Device,
+	public org::freedesktop::NetworkManager::Device::WiMax_adaptor
 {
 public:
 	DeviceWiMax(DBus::Connection &connection, const char* path);

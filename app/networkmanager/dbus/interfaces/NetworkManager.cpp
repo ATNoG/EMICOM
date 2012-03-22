@@ -107,3 +107,8 @@ std::vector< ::DBus::Path > NetworkManager::GetDevices()
 	// TODO
 	return r;
 }
+
+void NetworkManager::AddDevice(Device d)
+{
+	_device_list.push_back(d);
+}
