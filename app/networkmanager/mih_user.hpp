@@ -21,6 +21,9 @@
 #include <odtone/logger.hpp>
 #include <odtone/sap/user.hpp>
 
+namespace odtone {
+namespace networkmanager {
+
 /**
  * This class provides an implementation of an IEEE 802.21 MIH-User.
  */
@@ -66,8 +69,10 @@ protected:
 	void event_handler(odtone::mih::message &msg, const boost::system::error_code &ec);
 
 private:
-	odtone::sap::user _mihf;	/**< User SAP helper.		*/
+	odtone::sap::user _mihf; /**< User SAP helper. */
 	odtone::logger    log_;
 };
+
+}; };
 
 #endif /* NETWORKMANAGER_MIH_USER__HPP_ */

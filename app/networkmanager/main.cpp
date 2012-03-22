@@ -15,7 +15,7 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#include "dbus/nm-dbus.hpp"
+#include "types/types.hpp"
 #include "mih_user.hpp"
 
 #include <odtone/logger.hpp>
@@ -57,14 +57,14 @@ int main(int argc, char *argv[])
 	DBus::default_dispatcher = &dispatcher;
 
 	DBus::Connection conn = DBus::Connection::SystemBus();
-	conn.request_name(networkmanager::dbus::NetworkManager::NAME);
+	conn.request_name(networkmanager::NetworkManager::NAME);
 
-	networkmanager::dbus::NetworkManager manager(conn);
+	networkmanager::NetworkManager manager(conn);
 
 	// launch the service
 	boost::asio::io_service ios;
 
-	mih_user usr(cfg, ios);
+	networkmanager::mih_user usr(cfg, ios);
 	boost::thread io(boost::bind(&boost::asio::io_service::run, &ios));
 
 	// start the D-Bus dispatcher

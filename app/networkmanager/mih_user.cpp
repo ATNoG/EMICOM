@@ -26,6 +26,8 @@
 #include <boost/bind.hpp>
 #include <iostream>
 
+using namespace odtone::networkmanager;
+
 mih_user::mih_user(const odtone::mih::config &cfg, boost::asio::io_service &io) :
 	_mihf(cfg, io, boost::bind(&mih_user::event_handler, this, _1, _2)),
 	log_("mih_usr", std::cout)

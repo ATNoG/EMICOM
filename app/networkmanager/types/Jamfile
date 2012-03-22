@@ -1,5 +1,5 @@
 #==============================================================================
-# Brief   : NetworkManager Application
+# Brief   : NetworkManager data types
 # Authors : André Prata <andreprata@av.it.pt>
 #------------------------------------------------------------------------------
 # ODTONE - Open Dot Twenty One
@@ -15,39 +15,26 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-project networkmanager
-	: requirements
-	  <linkflags>-ldbus-c++-1
-	  <linkflags>-lnl-3
-	  <linkflags>-lnl-genl-3
-	  <linkflags>-lnl-route-3
-	  <include>/usr/include/libnl3
+project networkmanager-types
+	:
 	;
 
-#exe dbus_dummy
-#	: dbus_dummy.cpp
-#	  types//networkmanager-types
-#	  driver//if_80211
-#	  ../../lib/odtone//odtone_base
-#	  ../../lib/odtone/mih//odtone_mih
-#	  ../../lib/odtone/sap//odtone_sap
-#	;
-#
-exe networkmanager
-	: main.cpp
-	  mih_user.cpp
-	  types//networkmanager-types
-	  driver//if_80211
-	  ../../lib/odtone//odtone_base
-	  ../../lib/odtone/mih//odtone_mih
-	  ../../lib/odtone/sap//odtone_sap
+lib networkmanager-types
+	: NetworkManager.cpp
+	  AccessPoint.cpp
+	  Device.cpp
+	  DeviceWireless.cpp
+	  DeviceWired.cpp
+	  DeviceModem.cpp
+	  DeviceWiMax.cpp
+	  WiMaxNsp.cpp
+	  IP4Config.cpp
+	  IP6Config.cpp
+	  DHCP4Config.cpp
+	  DHCP6Config.cpp
+	  Settings.cpp
+	  Connection.cpp
+	  ConnectionActive.cpp
+	  AgentManager.cpp
+	: <link>static
 	;
-
-install install
-	: networkmanager
-	  mih.conf
-#	  networkmanager.conf
-#	  dbus_dummy
-	: <location>../../dist
-	;
-
