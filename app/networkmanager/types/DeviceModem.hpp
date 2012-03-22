@@ -19,6 +19,8 @@
 #define NETWORKMANAGER_DEVICEMODEM__HPP_
 
 #include "../dbus/adaptors/DeviceModem.hpp"
+#include <boost/noncopyable.hpp>
+
 #include "Device.hpp"
 
 namespace odtone {

@@ -23,7 +23,7 @@ const char* const NetworkManager::NAME = "org.freedesktop.NetworkManager21";
 const char* const NetworkManager::PATH = "/org/freedesktop/NetworkManager21";
 
 NetworkManager::NetworkManager(DBus::Connection &connection)
-	: DBus::ObjectAdaptor(connection, PATH)
+	: DBus::ObjectAdaptor(connection, PATH), _connection(connection)
 {
 	// FIXME
 	State = 0;
@@ -108,7 +108,10 @@ std::vector< ::DBus::Path > NetworkManager::GetDevices()
 	return r;
 }
 
-void NetworkManager::AddDevice(Device d)
+void NetworkManager::add_wifi_device(if_80211 &fi)
 {
-	_device_list.push_back(d);
+	std::stringstream ss;
+	ss << PATH << "/Devices/" <<  fi.ifindex();
+	std::unique_ptr<Device> d(new DeviceWireless(_connection, ss.str().c_str(), fi));
+	_device_list.push_back(std::move(d));
 }

@@ -19,11 +19,12 @@
 #define NETWORKMANAGER_ACCESSPOINT__HPP_
 
 #include "../dbus/adaptors/AccessPoint.hpp"
+#include <boost/noncopyable.hpp>
 
 namespace odtone {
 namespace networkmanager {
 
-class AccessPoint :
+class AccessPoint : boost::noncopyable,
 	public org::freedesktop::NetworkManager::AccessPoint_adaptor,
 	public DBus::IntrospectableAdaptor,
 	public DBus::PropertiesAdaptor,

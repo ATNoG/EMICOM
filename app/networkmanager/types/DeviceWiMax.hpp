@@ -19,6 +19,8 @@
 #define NETWORKMANAGER_DEVICEWIMAX__HPP_
 
 #include "../dbus/adaptors/DeviceWiMax.hpp"
+#include <boost/noncopyable.hpp>
+
 #include "Device.hpp"
 
 namespace odtone {

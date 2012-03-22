@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	// launch the service
 	boost::asio::io_service ios;
 
-	networkmanager::mih_user usr(cfg, ios);
+	networkmanager::mih_user usr(cfg, ios, manager);
 	boost::thread io(boost::bind(&boost::asio::io_service::run, &ios));
 
 	// start the D-Bus dispatcher

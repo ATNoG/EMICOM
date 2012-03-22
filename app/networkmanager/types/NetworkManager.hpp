@@ -19,12 +19,15 @@
 #define NETWORKMANAGER_NETWORKMANAGER__HPP_
 
 #include "../dbus/adaptors/NetworkManager.hpp"
-#include "Device.hpp"
+#include <boost/noncopyable.hpp>
+
+#include "types.hpp"
+#include "../driver/if_80211.hpp"
 
 namespace odtone {
 namespace networkmanager {
 
-class NetworkManager :
+class NetworkManager : boost::noncopyable,
 	public org::freedesktop::NetworkManager_adaptor,
 	public DBus::IntrospectableAdaptor,
 	public DBus::PropertiesAdaptor,
@@ -62,12 +65,13 @@ public:
 
 	std::vector< ::DBus::Path > GetDevices();
 
-	void AddDevice(Device d);
+	void add_wifi_device(if_80211 &fi);
 
 private:
-	std::vector<Device> _device_list;
+	std::vector<std::unique_ptr<Device>> _device_list;
+	DBus::Connection   &_connection;
 };
 
 }; };
 
-#endif /* NETWORKMANAGER_DBUS_NETWORKMANAGER__HPP_ */
+#endif /* NETWORKMANAGER_NETWORKMANAGER__HPP_ */

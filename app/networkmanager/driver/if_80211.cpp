@@ -33,6 +33,7 @@
 #define _LINUX_IF_H // workaround
 #include <netlink/route/link.h>
 
+using namespace odtone::networkmanager;
 using namespace odtone;
 
 static logger log_("if_80211", std::cout);

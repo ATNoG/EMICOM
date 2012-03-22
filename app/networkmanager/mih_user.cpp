@@ -28,8 +28,9 @@
 
 using namespace odtone::networkmanager;
 
-mih_user::mih_user(const odtone::mih::config &cfg, boost::asio::io_service &io) :
+mih_user::mih_user(const odtone::mih::config &cfg, boost::asio::io_service &io, NetworkManager &nm) :
 	_mihf(cfg, io, boost::bind(&mih_user::event_handler, this, _1, _2)),
+	_nm(nm),
 	log_("mih_usr", std::cout)
 {
 	odtone::mih::message m;
@@ -93,6 +94,10 @@ void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boos
 	// TODO
 	// Add available links to the device list
 	//
+	mih::mac_addr mac;
+	mac.address("00:27:10:7d:5f:30");
+	if_80211 fi(mac);
+	_nm.add_wifi_device(fi);
 }
 
 void mih_user::event_handler(odtone::mih::message &msg, const boost::system::error_code &ec)

@@ -19,11 +19,12 @@
 #define NETWORKMANAGER_CONNECTIONACTIVE__HPP_
 
 #include "../dbus/adaptors/ConnectionActive.hpp"
+#include <boost/noncopyable.hpp>
 
 namespace odtone {
 namespace networkmanager {
 
-class ConnectionActive :
+class ConnectionActive : boost::noncopyable,
 	public org::freedesktop::NetworkManager::Connection::Active_adaptor,
 	public DBus::IntrospectableAdaptor,
 	public DBus::PropertiesAdaptor,

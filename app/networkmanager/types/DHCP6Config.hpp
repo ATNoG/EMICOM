@@ -19,11 +19,12 @@
 #define NETWORKMANAGER_DHCP6CONFIG__HPP_
 
 #include "../dbus/adaptors/DHCP6Config.hpp"
+#include <boost/noncopyable.hpp>
 
 namespace odtone {
 namespace networkmanager {
 
-class DHCP6Config :
+class DHCP6Config : boost::noncopyable,
 	public org::freedesktop::NetworkManager::DHCP6Config_adaptor,
 	public DBus::IntrospectableAdaptor,
 	public DBus::PropertiesAdaptor,

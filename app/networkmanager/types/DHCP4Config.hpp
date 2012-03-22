@@ -19,11 +19,12 @@
 #define NETWORKMANAGER_DHCP4CONFIG__HPP_
 
 #include "../dbus/adaptors/DHCP4Config.hpp"
+#include <boost/noncopyable.hpp>
 
 namespace odtone {
 namespace networkmanager {
 
-class DHCP4Config :
+class DHCP4Config : boost::noncopyable,
 	public org::freedesktop::NetworkManager::DHCP4Config_adaptor,
 	public DBus::IntrospectableAdaptor,
 	public DBus::PropertiesAdaptor,

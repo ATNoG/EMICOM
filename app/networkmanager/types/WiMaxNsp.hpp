@@ -19,11 +19,12 @@
 #define NETWORKMANAGER_WIMAXNSP__HPP_
 
 #include "../dbus/adaptors/WiMaxNsp.hpp"
+#include <boost/noncopyable.hpp>
 
 namespace odtone {
 namespace networkmanager {
 
-class WiMaxNsp :
+class WiMaxNsp : boost::noncopyable,
 	public org::freedesktop::NetworkManager::WiMax::Nsp_adaptor,
 	public DBus::IntrospectableAdaptor,
 	public DBus::PropertiesAdaptor,

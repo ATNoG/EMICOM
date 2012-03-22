@@ -21,6 +21,8 @@
 #include <odtone/logger.hpp>
 #include <odtone/sap/user.hpp>
 
+#include "types/types.hpp"
+
 namespace odtone {
 namespace networkmanager {
 
@@ -36,7 +38,7 @@ public:
 	 * @param io The io_service object that the MIH-User will use to
 	 * dispatch handlers for any asynchronous operations performed on the socket. 
 	 */
-	mih_user(const odtone::mih::config &cfg, boost::asio::io_service &io);
+	mih_user(const odtone::mih::config &cfg, boost::asio::io_service &io, NetworkManager &nm);
 
 	/**
 	 * Destruct the MIH-User.
@@ -70,6 +72,7 @@ protected:
 
 private:
 	odtone::sap::user _mihf; /**< User SAP helper. */
+	NetworkManager   &_nm;
 	odtone::logger    log_;
 };
 

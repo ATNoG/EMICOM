@@ -19,11 +19,12 @@
 #define NETWORKMANAGER_DEVICE__HPP_
 
 #include "../dbus/adaptors/Device.hpp"
+#include <boost/noncopyable.hpp>
 
 namespace odtone {
 namespace networkmanager {
 
-class Device :
+class Device : boost::noncopyable,
 	public org::freedesktop::NetworkManager::Device_adaptor,
 	public DBus::IntrospectableAdaptor,
 	public DBus::PropertiesAdaptor,

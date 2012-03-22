@@ -19,11 +19,12 @@
 #define NETWORKMANAGER_AGENTMANAGER__HPP_
 
 #include "../dbus/adaptors/AgentManager.hpp"
+#include <boost/noncopyable.hpp>
 
 namespace odtone {
 namespace networkmanager {
 
-class AgentManager :
+class AgentManager : boost::noncopyable,
 	public org::freedesktop::NetworkManager::AgentManager_adaptor,
 	public DBus::IntrospectableAdaptor,
 	public DBus::PropertiesAdaptor,

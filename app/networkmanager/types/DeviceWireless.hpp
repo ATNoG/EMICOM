@@ -19,8 +19,9 @@
 #define NETWORKMANAGER_DEVICEWIRELESS__HPP_
 
 #include "../dbus/adaptors/DeviceWireless.hpp"
-#include "Device.hpp"
+#include <boost/noncopyable.hpp>
 
+#include "Device.hpp"
 #include "../driver/if_80211.hpp"
 
 namespace odtone {

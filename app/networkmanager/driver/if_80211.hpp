@@ -30,7 +30,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-using namespace odtone;
+namespace odtone {
+namespace networkmanager {
 
 struct poa_info : mih::link_det_info {
 	uint channel_id;
@@ -155,6 +156,8 @@ public:
 private:
 	ctx_data _ctx;
 };
+
+}; };
 
 // EOF ////////////////////////////////////////////////////////////////////////
 

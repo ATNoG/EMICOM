@@ -24,15 +24,15 @@ project networkmanager
 	  <include>/usr/include/libnl3
 	;
 
-#exe dbus_dummy
-#	: dbus_dummy.cpp
-#	  types//networkmanager-types
-#	  driver//if_80211
-#	  ../../lib/odtone//odtone_base
-#	  ../../lib/odtone/mih//odtone_mih
-#	  ../../lib/odtone/sap//odtone_sap
-#	;
-#
+exe dbus_dummy
+	: dbus_dummy.cpp
+	  types//networkmanager-types
+	  driver//if_80211
+	  ../../lib/odtone//odtone_base
+	  ../../lib/odtone/mih//odtone_mih
+	  ../../lib/odtone/sap//odtone_sap
+	;
+
 exe networkmanager
 	: main.cpp
 	  mih_user.cpp
