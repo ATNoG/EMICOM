@@ -48,9 +48,83 @@ mih_user::~mih_user()
 void mih_user::user_reg_handler(const odtone::mih::config &cfg, const boost::system::error_code &ec)
 {
 	log_(0, "MIH-User registered, status: ", ec.message());
+
+	if (ec) {
+		throw "Error registering to local MIHF";
+	}
+
+	// get the local links
+	odtone::mih::message m;
+	m << odtone::mih::request(odtone::mih::request::capability_discover);
+	m.destination(odtone::mih::id("local-mihf"));
+
+	_mihf.async_send(m, boost::bind(&mih_user::capability_discover_confirm, this, _1, _2));
+}
+
+/**
+ * Capability Discover handler.
+ *
+ * @param msg Received message.
+ * @param ec Error Code.
+ */
+void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boost::system::error_code& ec)
+{
+	log_(0, "Received local MIHF capabilities, status: ", ec.message());
+
+	if (ec) {
+		return;
+	}
+
+	odtone::mih::status st;
+	boost::optional<odtone::mih::net_type_addr_list> ntal;
+	boost::optional<odtone::mih::mih_evt_list> evt;
+
+	msg >> odtone::mih::confirm()
+		& odtone::mih::tlv_status(st)
+		& odtone::mih::tlv_net_type_addr_list(ntal)
+		& odtone::mih::tlv_event_list(evt);
+
+	log_(0, "MIH-User has received a Capability_Discover.response with status ",
+			st.get(), " and the following capabilities:");
+
+	//
+	// TODO
+	// Add available links to the device list
+	//
 }
 
 void mih_user::event_handler(odtone::mih::message &msg, const boost::system::error_code &ec)
 {
 	log_(0, "Event received, status: ", ec.message());
+
+	if (ec) {
+		return;
+	}
+
+	switch (msg.mid()) {
+	case odtone::mih::indication::link_up:
+		log_(0, "Received a link_up event");
+		break;
+
+	case odtone::mih::indication::link_down:
+		log_(0, "Received a link_down event");
+		break;
+
+	case odtone::mih::indication::link_detected:
+		log_(0, "Received a link_detected event");
+		break;
+
+	case odtone::mih::indication::link_going_down:
+		log_(0, "Received a link_going_down event");
+		break;
+
+	case odtone::mih::indication::link_handover_imminent:
+		log_(0, "Received a link_handover_imminent event");
+		break;
+	case odtone::mih::indication::link_handover_complete:
+		log_(0, "Received a link_handover_complete event");
+		break;
+	default:
+		log_(0, "Received unknown/unsupported event");
+	}
 }

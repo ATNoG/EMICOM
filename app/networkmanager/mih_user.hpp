@@ -50,6 +50,14 @@ protected:
 	void user_reg_handler(const odtone::mih::config &cfg, const boost::system::error_code &ec);
 
 	/**
+	 * Capability Discover handler.
+	 *
+	 * @param msg Received message.
+	 * @param ec Error Code.
+	 */
+	void capability_discover_confirm(odtone::mih::message& msg, const boost::system::error_code& ec);
+
+	/**
 	 * Default MIH event handler.
 	 *
 	 * @param msg Received message.
@@ -59,7 +67,6 @@ protected:
 
 private:
 	odtone::sap::user _mihf;	/**< User SAP helper.		*/
-	odtone::mih::id   _mihfid;	/**< MIHF destination ID.	*/
 	odtone::logger    log_;
 };
 
