@@ -16,7 +16,6 @@
 //==============================================================================
 
 #include "DeviceWireless.hpp"
-#include <iostream>
 
 using namespace odtone::networkmanager;
 
@@ -68,7 +67,6 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
 {
-	std::cerr << "getting property " << property << std::endl;
 	if (property == "Bitrate") {
 		try {
 			Bitrate = _fi.link_bitrate();
