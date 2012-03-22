@@ -24,6 +24,7 @@
 #include <odtone/mih/tlv_types.hpp>
 
 #include <boost/bind.hpp>
+#include <boost/foreach.hpp>
 #include <iostream>
 
 using namespace odtone::networkmanager;
@@ -87,17 +88,29 @@ void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boos
 		& odtone::mih::tlv_net_type_addr_list(ntal)
 		& odtone::mih::tlv_event_list(evt);
 
-	log_(0, "MIH-User has received a Capability_Discover.response with status ",
-			st.get(), " and the following capabilities:");
+	// TODO fix to other technologies
+	if (ntal) {
+		BOOST_FOREACH(mih::net_type_addr &l, ntal.get()) {
+			mih::link_type *lt = boost::get<mih::link_type>(&l.nettype.link);
+			if (!lt) {
+				log_(0, "Link does not have a type");
+				break;
+			}
 
-	//
-	// TODO
-	// Add available links to the device list
-	//
-	mih::mac_addr mac;
-	mac.address("00:27:10:7d:5f:30");
-	if_80211 fi(mac);
-	_nm.add_wifi_device(fi);
+			if (*lt == mih::link_type_802_11) {
+				mih::mac_addr *mac = boost::get<mih::mac_addr>(&l.addr);
+				if (mac) {
+					log_(0, "Adding 802.11 link with address ", mac->address());
+					if_80211 fi(*mac);
+					_nm.add_wifi_device(fi);
+				} else {
+					log_(0, "Found 802.11, but no mac address");
+				}
+			} else {
+				log_(0, "Unsupported device type");
+			}
+		}
+	}
 }
 
 void mih_user::event_handler(odtone::mih::message &msg, const boost::system::error_code &ec)
