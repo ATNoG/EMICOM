@@ -114,4 +114,6 @@ void NetworkManager::add_wifi_device(if_80211 &fi)
 	ss << PATH << "/Devices/" <<  fi.ifindex();
 	std::unique_ptr<Device> d(new DeviceWireless(_connection, ss.str().c_str(), fi));
 	_device_list.push_back(std::move(d));
+
+	DeviceAdded(ss.str().c_str());
 }
