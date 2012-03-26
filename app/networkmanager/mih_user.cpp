@@ -89,28 +89,58 @@ void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boos
 		& odtone::mih::tlv_event_list(evt);
 
 	// TODO fix to other technologies
-	if (ntal) {
-		BOOST_FOREACH(mih::net_type_addr &l, ntal.get()) {
-			mih::link_type *lt = boost::get<mih::link_type>(&l.nettype.link);
-			if (!lt) {
-				log_(0, "Link does not have a type");
-				break;
-			}
-
-			if (*lt == mih::link_type_802_11) {
-				mih::mac_addr *mac = boost::get<mih::mac_addr>(&l.addr);
-				if (mac) {
-					log_(0, "Adding 802.11 link with address ", mac->address());
-					if_80211 fi(*mac);
-					_nm.add_wifi_device(fi);
-				} else {
-					log_(0, "Found 802.11, but no mac address");
-				}
-			} else {
-				log_(0, "Unsupported device type");
-			}
-		}
+	if (!ntal) {
+		return;
 	}
+
+	BOOST_FOREACH(mih::net_type_addr &l, ntal.get()) {
+		mih::link_tuple_id li;
+
+		mih::link_type *lt = boost::get<mih::link_type>(&l.nettype.link);
+		if (!lt) {
+			log_(0, "Link does not have a type");
+			break;
+		}
+
+		if (*lt == mih::link_type_802_11) {
+			mih::mac_addr *mac = boost::get<mih::mac_addr>(&l.addr);
+			if (mac) {
+				log_(0, "Adding 802.11 link with address ", mac->address());
+				if_80211 fi(*mac);
+				_nm.add_wifi_device(fi);
+
+				li.type = mih::link_type_802_11;
+				li.addr = *mac;
+			} else {
+				log_(0, "Found 802.11, but no mac address");
+			}
+		} else {
+			log_(0, "Unsupported device type");
+		}
+
+		mih::mih_evt_list wanted_evts;
+		wanted_evts.set(mih::mih_evt_link_detected);
+		wanted_evts.set(mih::mih_evt_link_down);
+		wanted_evts.set(mih::mih_evt_link_going_down);
+		wanted_evts.set(mih::mih_evt_link_parameters_report);
+		wanted_evts.set(mih::mih_evt_link_up);
+
+		// attempt to subscribe events of interest
+		odtone::mih::message m;
+		m << mih::request(mih::request::event_subscribe)
+			& mih::tlv_link_identifier(li)
+			& mih::tlv_event_list(wanted_evts);
+		m.destination(mih::id("local-mihf"));
+
+		_mihf.async_send(m, boost::bind(&mih_user::event_subscribe_response, this, _1, _2));
+	}
+}
+
+void mih_user::event_subscribe_response(odtone::mih::message &msg, const boost::system::error_code &ec)
+{
+	log_(0, "Receive event subscription response, status: ", ec.message());
+
+	
 }
 
 void mih_user::event_handler(odtone::mih::message &msg, const boost::system::error_code &ec)

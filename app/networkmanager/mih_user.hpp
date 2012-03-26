@@ -70,6 +70,14 @@ protected:
 	 */
 	void event_handler(odtone::mih::message &msg, const boost::system::error_code &ec);
 
+	/**
+	 * Event subscribe handler.
+	 *
+	 * @param msg Received message.
+	 * @param ec Error Code.
+	 */
+	void event_subscribe_response(odtone::mih::message &msg, const boost::system::error_code &ec);
+
 private:
 	odtone::sap::user _mihf; /**< User SAP helper. */
 	NetworkManager   &_nm;
