@@ -145,7 +145,13 @@ void NetworkManager::AddAndActivateConnection(
 std::vector< ::DBus::Path > NetworkManager::GetDevices()
 {
 	std::vector< ::DBus::Path > r;
-	// TODO
+
+	std::map<DBus::Path, std::unique_ptr<Device>>::iterator it = _device_map.begin();
+	while (it != _device_map.end()) {
+		r.push_back(it->first);
+		it++;
+	}
+
 	return r;
 }
 
