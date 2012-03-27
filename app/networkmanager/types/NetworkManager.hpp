@@ -20,6 +20,7 @@
 
 #include "../dbus/adaptors/NetworkManager.hpp"
 #include <boost/noncopyable.hpp>
+#include "odtone/logger.hpp"
 
 #include "types.hpp"
 #include "../driver/if_80211.hpp"
@@ -33,6 +34,18 @@ class NetworkManager : boost::noncopyable,
 	public DBus::PropertiesAdaptor,
 	public DBus::ObjectAdaptor
 {
+public:
+	enum NM_STATE {
+		NM_STATE_UNKNOWN          = 0,
+		NM_STATE_ASLEEP           = 10,
+		NM_STATE_DISCONNECTED     = 20,
+		NM_STATE_DISCONNECTING    = 30,
+		NM_STATE_CONNECTING       = 40,
+		NM_STATE_CONNECTED_LOCAL  = 50,
+		NM_STATE_CONNECTED_SITE   = 60,
+		NM_STATE_CONNECTED_GLOBAL = 70
+	};
+
 public:
 	static const char* const NAME;
 	static const char* const PATH;
@@ -68,8 +81,12 @@ public:
 	void add_wifi_device(if_80211 &fi);
 
 private:
+	void state(NM_STATE newstate);
+
+private:
 	std::vector<std::unique_ptr<Device>> _device_list;
-	DBus::Connection   &_connection;
+	DBus::Connection                    &_connection;
+	odtone::logger                       log_;
 };
 
 }; };

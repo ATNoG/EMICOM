@@ -20,6 +20,7 @@
 
 #include "../dbus/adaptors/DeviceWireless.hpp"
 #include <boost/noncopyable.hpp>
+#include "odtone/logger.hpp"
 
 #include "Device.hpp"
 #include "../driver/if_80211.hpp"
@@ -61,7 +62,8 @@ public:
 	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
 
 private:
-	if_80211 &_fi;
+	if_80211      &_fi;
+	odtone::logger log_;
 };
 
 }; };

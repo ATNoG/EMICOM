@@ -22,11 +22,12 @@ using namespace odtone::networkmanager;
 const char* const NetworkManager::NAME = "org.freedesktop.NetworkManager21";
 const char* const NetworkManager::PATH = "/org/freedesktop/NetworkManager21";
 
-NetworkManager::NetworkManager(DBus::Connection &connection)
-	: DBus::ObjectAdaptor(connection, PATH), _connection(connection)
+NetworkManager::NetworkManager(DBus::Connection &connection) :
+	DBus::ObjectAdaptor(connection, PATH), _connection(connection),
+	log_(PATH, std::cout)
 {
 	// FIXME
-	State = 0;
+	State = NM_STATE_UNKNOWN;
 	Version = "0.0";
 	ActiveConnections = std::vector< ::DBus::Path >();
 	WimaxHardwareEnabled = false;
@@ -44,8 +45,16 @@ NetworkManager::~NetworkManager()
 
 uint32_t NetworkManager::state()
 {
-	// TODO
-	return 0;
+	return State();
+}
+
+void NetworkManager::state(NM_STATE newstate)
+{
+	// store
+	State = newstate;
+
+	// signal
+	StateChanged(newstate);
 }
 
 void NetworkManager::SetLogging(const std::string& level, const std::string& domains)
@@ -110,10 +119,24 @@ std::vector< ::DBus::Path > NetworkManager::GetDevices()
 
 void NetworkManager::add_wifi_device(if_80211 &fi)
 {
-	std::stringstream ss;
-	ss << PATH << "/Devices/" <<  fi.ifindex();
-	std::unique_ptr<Device> d(new DeviceWireless(_connection, ss.str().c_str(), fi));
+	log_(0, "Adding WiFi device, address: ", fi.mac_address().address());
+
+	std::stringstream path;
+	path << PATH << "/Devices/" <<  fi.ifindex();
+	std::unique_ptr<Device> d(new DeviceWireless(_connection, path.str().c_str(), fi));
+
+	// if networking is disabled, shut this interface
+	if (!NetworkingEnabled()) {
+		d->Disconnect();
+	} else {
+		// TODO
+		// attempt to connect? if disconnected?
+	}
+
+	// save the device
 	_device_list.push_back(std::move(d));
 
-	DeviceAdded(ss.str().c_str());
+	// signal new device
+	DeviceAdded(path.str().c_str());
+	log_(0, "Device added");
 }

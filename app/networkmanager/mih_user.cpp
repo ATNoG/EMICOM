@@ -138,9 +138,9 @@ void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boos
 
 void mih_user::event_subscribe_response(odtone::mih::message &msg, const boost::system::error_code &ec)
 {
-	log_(0, "Receive event subscription response, status: ", ec.message());
+	log_(0, "Received event subscription response, status: ", ec.message());
 
-	
+	// do nothing
 }
 
 void mih_user::event_handler(odtone::mih::message &msg, const boost::system::error_code &ec)

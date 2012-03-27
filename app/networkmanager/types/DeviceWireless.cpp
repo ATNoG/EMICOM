@@ -19,8 +19,9 @@
 
 using namespace odtone::networkmanager;
 
-DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, if_80211 &fi)
-	: Device(connection, path), _fi(fi)
+DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, if_80211 &fi) :
+	Device(connection, path), _fi(fi),
+	log_(path, std::cout)
 {
 	// FIXME
 	// inherited from Device adaptor
@@ -55,7 +56,12 @@ DeviceWireless::~DeviceWireless()
 
 void DeviceWireless::Disconnect()
 {
-	// TODO
+	log_(0, "Disconnecting");
+	try {
+		_fi.set_op_mode(odtone::mih::link_ac_type_power_down);
+	} catch (...) {
+		log_(0, "Exception occurred, potentially not disconnected");
+	}
 }
 
 std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
