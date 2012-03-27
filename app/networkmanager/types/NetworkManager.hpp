@@ -84,9 +84,10 @@ private:
 	void state(NM_STATE newstate);
 
 private:
-	std::vector<std::unique_ptr<Device>> _device_list;
 	DBus::Connection                    &_connection;
 	odtone::logger                       log_;
+
+	std::map<DBus::Path, std::unique_ptr<Device>> _device_map;
 };
 
 }; };

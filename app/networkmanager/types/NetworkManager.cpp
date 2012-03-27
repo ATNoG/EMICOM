@@ -74,19 +74,41 @@ void NetworkManager::Enable(const bool& enable)
 	NetworkingEnabled = enable;
 
 	if (!enable) {
-		std::vector<std::unique_ptr<Device>>::iterator it = _device_list.begin();
-		while (it != _device_list.end()) {
-			(*it)->Disconnect();
+		log_(0, "Disabling");
+
+		state(NM_STATE_DISCONNECTING);
+
+		std::map<DBus::Path, std::unique_ptr<Device>>::iterator it = _device_map.begin();
+		while (it != _device_map.end()) {
+			it->second->Disconnect();
 			it++;
 		}
+
+		state(NM_STATE_DISCONNECTED);
 	} else {
+		log_(0, "Enabling");
 		// TODO trigger a "start managing"
 	}
 }
 
 void NetworkManager::Sleep(const bool& sleep)
 {
-	// TODO
+	if (sleep) {
+		log_(0, "Going to sleep");
+
+		state(NM_STATE_DISCONNECTING);
+
+		std::map<DBus::Path, std::unique_ptr<Device>>::iterator it = _device_map.begin();
+		while (it != _device_map.end()) {
+			it->second->Disconnect();
+			it++;
+		}
+
+		state(NM_STATE_ASLEEP);
+	} else {
+		log_(0, "Waking up");
+		// TODO trigger a "start managing"
+	}
 }
 
 void NetworkManager::DeactivateConnection(const ::DBus::Path& active_connection)
@@ -148,7 +170,7 @@ void NetworkManager::add_802_11_device(odtone::mih::mac_addr &address)
 		}
 
 		// save the device
-		_device_list.push_back(std::move(d));
+		_device_map[DBus::Path(path.str())] = std::move(d);
 
 		// signal new device
 		DeviceAdded(path.str().c_str());
