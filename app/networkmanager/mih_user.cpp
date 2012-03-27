@@ -93,7 +93,7 @@ void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boos
 		return;
 	}
 
-	BOOST_FOREACH(mih::net_type_addr &l, ntal.get()) {
+	BOOST_FOREACH (mih::net_type_addr &l, ntal.get()) {
 		mih::link_tuple_id li;
 
 		mih::link_type *lt = boost::get<mih::link_type>(&l.nettype.link);
@@ -107,7 +107,7 @@ void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boos
 			if (mac) {
 				log_(0, "Adding 802.11 link with address ", mac->address());
 				if_80211 fi(*mac);
-				_nm.add_wifi_device(fi);
+				_nm.add_802_11_device(*mac);
 
 				li.type = mih::link_type_802_11;
 				li.addr = *mac;

@@ -16,7 +16,6 @@
 //==============================================================================
 
 #include "types/types.hpp"
-#include "driver/if_80211.hpp"
 
 #include <dbus-c++/dbus.h>
 #include <cstdlib> // for EXIT_{SUCCESS,FAILURE}
@@ -42,8 +41,7 @@ int main(int argc, char *argv[])
 	mih::mac_addr mac;
 	mac.address("00:27:10:7d:5f:30");
 
-	networkmanager::if_80211 fi(mac);
-	networkmanager::DeviceWireless wireless(conn, "/org/freedesktop/NetworkManager21/Devices/0", fi);
+	networkmanager::DeviceWireless wireless(conn, "/org/freedesktop/NetworkManager21/Devices/0", mac);
 
 	// setup an example DeviceWired
 	networkmanager::DeviceWired wired(conn, "/org/freedesktop/NetworkManager21/Devices/1");

@@ -19,9 +19,11 @@
 
 using namespace odtone::networkmanager;
 
-DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, if_80211 &fi) :
-	Device(connection, path), _fi(fi),
-	log_(path, std::cout)
+DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, odtone::mih::mac_addr &address) :
+	Device(connection, path),
+	_fi(address),
+	_path(path),
+	log_(_path.c_str(), std::cout)
 {
 	// FIXME
 	// inherited from Device adaptor
@@ -46,12 +48,13 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, i
 	// inherited from Wireless adaptor
 	WirelessCapabilities = 0; // TODO
 	ActiveAccessPoint = "/";  // TODO
-	PermHwAddress = fi.mac_address().address(); //"00:11:22:33:44:55";
-	HwAddress = fi.mac_address().address(); //"00:11:22:33:44:55";
+	PermHwAddress = _fi.mac_address().address(); //"00:11:22:33:44:55";
+	HwAddress = _fi.mac_address().address(); //"00:11:22:33:44:55";
 }
 
 DeviceWireless::~DeviceWireless()
 {
+	log_(0, "Destroyed!! :S");
 }
 
 void DeviceWireless::Disconnect()

@@ -49,7 +49,7 @@ class DeviceWireless :
 	};
 
 public:
-	DeviceWireless(DBus::Connection &connection, const char* path, if_80211 &fi);
+	DeviceWireless(DBus::Connection &connection, const char* path, odtone::mih::mac_addr &address);
 	~DeviceWireless();
 
 	// inherited from Device adaptor
@@ -62,7 +62,9 @@ public:
 	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
 
 private:
-	if_80211      &_fi;
+	if_80211       _fi;
+
+	std::string    _path;
 	odtone::logger log_;
 };
 

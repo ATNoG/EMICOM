@@ -78,7 +78,7 @@ public:
 
 	std::vector< ::DBus::Path > GetDevices();
 
-	void add_wifi_device(if_80211 &fi);
+	void add_802_11_device(odtone::mih::mac_addr &address);
 
 private:
 	void state(NM_STATE newstate);

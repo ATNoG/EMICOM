@@ -71,7 +71,17 @@ std::map< std::string, std::string > NetworkManager::GetPermissions()
 
 void NetworkManager::Enable(const bool& enable)
 {
-	// TODO
+	NetworkingEnabled = enable;
+
+	if (!enable) {
+		std::vector<std::unique_ptr<Device>>::iterator it = _device_list.begin();
+		while (it != _device_list.end()) {
+			(*it)->Disconnect();
+			it++;
+		}
+	} else {
+		// TODO trigger a "start managing"
+	}
 }
 
 void NetworkManager::Sleep(const bool& sleep)
@@ -117,26 +127,33 @@ std::vector< ::DBus::Path > NetworkManager::GetDevices()
 	return r;
 }
 
-void NetworkManager::add_wifi_device(if_80211 &fi)
+void NetworkManager::add_802_11_device(odtone::mih::mac_addr &address)
 {
-	log_(0, "Adding WiFi device, address: ", fi.mac_address().address());
+	log_(0, "Adding WiFi device, address: ", address.address());
 
-	std::stringstream path;
-	path << PATH << "/Devices/" <<  fi.ifindex();
-	std::unique_ptr<Device> d(new DeviceWireless(_connection, path.str().c_str(), fi));
+	try {
+		// this is just to get the deviceindex, for a nicer D-Bus Device path
+		if_80211 fi(address);
 
-	// if networking is disabled, shut this interface
-	if (!NetworkingEnabled()) {
-		d->Disconnect();
-	} else {
-		// TODO
-		// attempt to connect? if disconnected?
+		std::stringstream path;
+		path << PATH << "/Devices/" << fi.ifindex();
+		std::unique_ptr<Device> d(new DeviceWireless(_connection, path.str().c_str(), address));
+
+		// if networking is disabled, shut this interface
+		if (!NetworkingEnabled()) {
+			d->Disconnect();
+		} else {
+			// TODO
+			// attempt to connect? if disconnected?
+		}
+
+		// save the device
+		_device_list.push_back(std::move(d));
+
+		// signal new device
+		DeviceAdded(path.str().c_str());
+		log_(0, "Device added");
+	} catch (...) {
+		log_(0, "Error adding device");
 	}
-
-	// save the device
-	_device_list.push_back(std::move(d));
-
-	// signal new device
-	DeviceAdded(path.str().c_str());
-	log_(0, "Device added");
 }
