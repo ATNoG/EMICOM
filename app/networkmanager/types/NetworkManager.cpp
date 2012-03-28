@@ -137,9 +137,15 @@ void NetworkManager::AddAndActivateConnection(
 
 ::DBus::Path NetworkManager::GetDeviceByIpIface(const std::string& iface)
 {
-	::DBus::Path r;
-	// TODO
-	return r;
+	std::map<DBus::Path, std::unique_ptr<Device>>::iterator it = _device_map.begin();
+	while (it != _device_map.end()) {
+		if (it->second->IpInterface() == iface) {
+			return it->first;
+		}
+		it++;
+	}
+
+	throw DBus::Error("org.freedesktop.NetworkManager.UnknownDevice", "No device found for the requested iface.");
 }
 
 std::vector< ::DBus::Path > NetworkManager::GetDevices()

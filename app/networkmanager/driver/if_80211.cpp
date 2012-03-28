@@ -279,6 +279,7 @@ if_80211::if_80211(mih::mac_addr mac)
 	nlwrap::rtnl_link link(cache.get_by_addr(mac.address()));
 
 	_ctx._ifindex = link.ifindex();
+	_ifname = link.ifname();
 
 	// initalize socket
 	nlwrap::genl_socket s;
@@ -292,6 +293,11 @@ if_80211::~if_80211()
 unsigned int if_80211::ifindex()
 {
 	return _ctx._ifindex;
+}
+
+std::string if_80211::ifname()
+{
+	return _ifname;
 }
 
 mih::mac_addr if_80211::mac_address()

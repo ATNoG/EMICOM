@@ -75,6 +75,13 @@ public:
 	unsigned int ifindex();
 
 	/**
+	 * Get the interface name.
+	 *
+	 * @return The interface name.
+	 */
+	std::string ifname();
+
+	/**
 	 * Get the MAC address of this device.
 	 *
 	 * @return the MAC address of the device.
@@ -155,6 +162,8 @@ public:
 
 private:
 	ctx_data _ctx;
+
+	std::string _ifname;
 };
 
 }; };

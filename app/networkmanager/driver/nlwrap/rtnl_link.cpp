@@ -93,6 +93,16 @@ int rtnl_link::ifindex()
 	return ifindex;
 }
 
+std::string rtnl_link::ifname()
+{
+	char *name = ::rtnl_link_get_name(_link);
+	if (name == NULL) {
+		return ""; // not specified
+	} else {
+		return std::string(name);
+	}
+}
+
 std::string rtnl_link::name()
 {
 	char *name = ::rtnl_link_get_name(_link);

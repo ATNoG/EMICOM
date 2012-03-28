@@ -40,8 +40,8 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 	Capabilities = Device::NM_DEVICE_CAP_NM_SUPPORTED;
 
 	Ip4Address = 0;                 // TODO
-	Driver = "";                    // TODO
-	IpInterface = "";               // TODO
+	Driver = "nl80211";             // by design
+	IpInterface = _fi.ifname();
 	Device_adaptor::Interface = ""; // TODO
 	Udi = "";                       // TODO
 

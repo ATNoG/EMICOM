@@ -90,6 +90,14 @@ public:
 	int ifindex();
 
 	/**
+	 * Get the name of this link.
+	 *
+	 * @return The name of this link.
+	 * @note Returns empty string if not specified.
+	 */
+	std::string ifname();
+
+	/**
 	 * Get the device name of this link.
 	 *
 	 * @return The device name of this link.
