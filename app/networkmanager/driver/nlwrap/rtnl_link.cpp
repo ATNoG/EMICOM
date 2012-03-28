@@ -17,9 +17,15 @@
 
 #include "rtnl_link.hpp"
 
+#include <netlink/route/addr.h>
+#include "rtnl_socket.hpp"
+
+#include <iostream>
+
 namespace nlwrap {
 
 #define ETH_ALEN 18
+#define IP_ALEN 64
 
 rtnl_link::rtnl_link()
 {
@@ -126,6 +132,50 @@ void rtnl_link::set_flags(unsigned int flags)
 void rtnl_link::unset_flags(unsigned int flags)
 {
 	::rtnl_link_unset_flags(_link, flags);
+}
+
+void get_addr_callback(nl_object *obj, void *arg)
+{
+	std::vector<std::string> *s = reinterpret_cast<std::vector<std::string> *>(arg);
+
+	::nl_addr *addr = ::rtnl_addr_get_local(reinterpret_cast< ::rtnl_addr * >(obj));
+
+	char buf[IP_ALEN];
+	s->push_back(std::string(::nl_addr2str(addr, buf, IP_ALEN)));
+}
+
+std::vector<std::string> rtnl_link::ip4addresses()
+{
+	rtnl_socket s;
+	::nl_cache *cache;
+	::rtnl_addr_alloc_cache(s, &cache);
+
+	::rtnl_addr *addr = ::rtnl_addr_alloc();
+	::rtnl_addr_set_ifindex(addr, ifindex());
+	::rtnl_addr_set_family(addr, AF_INET);
+
+	std::vector<std::string> result;
+	nl_cache_foreach_filter(cache, reinterpret_cast< ::nl_object * >(addr), get_addr_callback, &result);
+
+	::rtnl_addr_put(addr);
+	return result;
+}
+
+std::vector<std::string> rtnl_link::ip6addresses()
+{
+	rtnl_socket s;
+	::nl_cache *cache;
+	::rtnl_addr_alloc_cache(s, &cache);
+
+	::rtnl_addr *addr = ::rtnl_addr_alloc();
+	::rtnl_addr_set_ifindex(addr, ifindex());
+	::rtnl_addr_set_family(addr, AF_INET6);
+
+	std::vector<std::string> result;
+	nl_cache_foreach_filter(cache, reinterpret_cast< ::nl_object * >(addr), get_addr_callback, &result);
+
+	::rtnl_addr_put(addr);
+	return result;
 }
 
 }

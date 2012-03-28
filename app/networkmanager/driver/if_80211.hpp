@@ -151,6 +151,13 @@ public:
 	 */
 	void set_op_mode(const mih::link_ac_type_enum &mode);
 
+	/**
+	 * Get the addresses associated with this device.
+	 *
+	 * @return The list of addresses associated with this device.
+	 */
+	std::vector<boost::asio::ip::address> addresses();
+
 	struct ctx_data {
 		bool				  _scanning;
 		int                   _family_id;

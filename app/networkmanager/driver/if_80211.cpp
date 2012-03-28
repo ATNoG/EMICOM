@@ -372,7 +372,7 @@ mih::link_scan_rsp_list if_80211::get_scan_results()
 	fetch_scan_results(d);
 
 	mih::link_scan_rsp_list l;
-	BOOST_FOREACH(poa_info &poa, d.l) {
+	BOOST_FOREACH (poa_info &poa, d.l) {
 		mih::link_scan_rsp r;
 		r.id = boost::get<mih::link_addr>(poa.id.poa_addr);
 		r.net_id = poa.network_id;
@@ -536,6 +536,27 @@ void if_80211::set_op_mode(const mih::link_ac_type_enum &mode)
 		throw "Mode not supported";
 		break;
 	}
+}
+
+std::vector<boost::asio::ip::address> if_80211::addresses()
+{
+	nlwrap::rtnl_link_cache cache;
+	nlwrap::rtnl_link link(cache.get_by_ifindex(_ctx._ifindex));
+	std::vector<std::string> addr4 = link.ip4addresses();
+	std::vector<std::string> addr6 = link.ip6addresses();
+
+	std::vector<boost::asio::ip::address> addrs;
+	BOOST_FOREACH (std::string &a4, addr4) {
+		std::string stripped = a4.substr(0, a4.find('/'));
+		addrs.push_back(boost::asio::ip::address_v4::from_string(stripped));
+	}
+
+	BOOST_FOREACH (std::string &a6, addr6) {
+		std::string stripped = a6.substr(0, a6.find('/'));
+		addrs.push_back(boost::asio::ip::address_v6::from_string(stripped));
+	}
+
+	return addrs;
 }
 
 // EOF ////////////////////////////////////////////////////////////////////////

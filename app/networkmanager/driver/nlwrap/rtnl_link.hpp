@@ -19,6 +19,7 @@
 #define __NLWRAP_RTNL_LINK_
 
 #include <string>
+#include <vector>
 
 #define _LINUX_IF_H // workaround
 #include <netlink/route/link.h>
@@ -124,6 +125,20 @@ public:
 	 * @param flags The flags to unset on this link.
 	 */
 	void unset_flags(unsigned int flags);
+
+	/**
+	 * Get the IPv4 addresses of this interface.
+	 *
+	 * @return A list of the IPv4 addresses, in the form "127.0.0.1/8"
+	 */
+	std::vector<std::string> ip4addresses();
+
+	/**
+	 * Get the IPv6 addresses of this interface.
+	 *
+	 * @return A list of the IPv6 addresses in textual form (with netmask indication).
+	 */
+	std::vector<std::string> ip6addresses();
 
 private:
 	bool         _own;

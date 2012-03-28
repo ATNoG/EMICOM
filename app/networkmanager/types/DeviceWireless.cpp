@@ -17,6 +17,8 @@
 
 #include "DeviceWireless.hpp"
 
+#include <boost/foreach.hpp>
+
 using namespace odtone::networkmanager;
 
 DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, odtone::mih::mac_addr &address) :
@@ -39,7 +41,6 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 	State = Device::NM_DEVICE_STATE_UNKNOWN;
 	Capabilities = Device::NM_DEVICE_CAP_NM_SUPPORTED;
 
-	Ip4Address = 0;                 // TODO
 	Driver = "nl80211";             // by design
 	IpInterface = _fi.ifname();
 	Device_adaptor::Interface = ""; // TODO
@@ -50,11 +51,25 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 	ActiveAccessPoint = "/";  // TODO
 	PermHwAddress = _fi.mac_address().address(); //"00:11:22:33:44:55";
 	HwAddress = _fi.mac_address().address(); //"00:11:22:33:44:55";
+
+	// store ipv4address, in decimal format
+	BOOST_FOREACH (const boost::asio::ip::address &addr, _fi.addresses()) {
+		if (addr.is_v4()) {
+			// in reverse byte order!
+			std::array<unsigned char, 4> bytev4 = addr.to_v4().to_bytes();
+			std::reverse(bytev4.begin(), bytev4.end());
+
+			boost::asio::ip::address_v4 reversev4(bytev4);
+			Ip4Address = reversev4.to_ulong();
+
+			// store the first only
+			break;
+		}
+	}
 }
 
 DeviceWireless::~DeviceWireless()
 {
-	log_(0, "Destroyed!! :S");
 }
 
 void DeviceWireless::Disconnect()
