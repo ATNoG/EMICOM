@@ -33,3 +33,11 @@ void Device::Disconnect()
 {
 	// Nothing, each must implement
 }
+
+void Device::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)
+{
+	uint32_t oldstate = State();
+	State = newstate;
+
+	StateChanged(oldstate, newstate, reason);
+}

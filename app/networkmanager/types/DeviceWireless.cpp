@@ -77,6 +77,7 @@ void DeviceWireless::Disconnect()
 	log_(0, "Disconnecting");
 	try {
 		_fi.set_op_mode(odtone::mih::link_ac_type_power_down);
+		state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN); // TODO better reasons?
 	} catch (...) {
 		log_(0, "Exception occurred, potentially not disconnected");
 	}

@@ -125,6 +125,9 @@ public:
 	~Device();
 
 	virtual void Disconnect();
+
+protected:
+	void state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason);
 };
 
 }; };
