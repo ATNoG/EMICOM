@@ -85,8 +85,17 @@ void DeviceWireless::Disconnect()
 
 std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 {
+	log_(0, "Getting Access Points");
 	std::vector< ::DBus::Path > r;
-	// TODO
+
+	std::map<DBus::Path, AccessPoint>::iterator it = _access_points_map.begin();
+	while (it != _access_points_map.end()) {
+		r.push_back(it->first);
+		it++;
+	}
+
+	log_(0, "Done");
+
 	return r;
 }
 

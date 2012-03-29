@@ -64,6 +64,8 @@ public:
 private:
 	if_80211       _fi;
 
+	std::map<DBus::Path, AccessPoint> _access_points_map;
+
 	std::string    _path;
 	odtone::logger log_;
 };
