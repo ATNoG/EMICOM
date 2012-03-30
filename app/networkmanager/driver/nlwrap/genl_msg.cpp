@@ -22,8 +22,6 @@
 
 #include <iostream>
 
-namespace nlwrap {
-
 #define ETH_NLEN 6
 #define ETH_ALEN (3 * ETH_NLEN)
 
@@ -38,10 +36,14 @@ namespace nlwrap {
 #define IE_EXTENDED_SUPP_RATES_INDEX 50
 
 // for security features
-#define IE_RNS_INDEX 48
+#define IE_RSN_INDEX 48
 #define IE_VENDOR 221 // doesn't count for ARRAY_SIZE
+#define IE_WPA_INDEX 1
 
+#define WLAN_CAPABILITY_PRIVACY (1<<4)
 #define WLAN_CAPABILITY_QOS (1<<9)
+
+namespace nlwrap {
 
 struct bss_parse_policy {
 	::nla_policy pol[NL80211_BSS_MAX + 1];
@@ -62,6 +64,9 @@ void mac_addr_n2a(char *mac_addr, unsigned char *arg);
 void mac_addr_a2n(unsigned char *mac_addr, char *arg);
 
 ////////////////////////////////////////////////////////////////////////
+
+unsigned char genl_msg::ms_oui[3] = { 0x00, 0x50, 0xf2 };
+unsigned char genl_msg::ieee80211_oui[3] = { 0x00, 0x0f, 0xac };
 
 genl_msg::genl_msg()
 {
@@ -235,52 +240,167 @@ void genl_msg::parse_bss(::nlattr *bss[NL80211_BSS_MAX + 1])
 
 	if (bss[NL80211_BSS_CAPABILITY]) {
 		bss_qos_capable = ::nla_get_u16(bss[NL80211_BSS_CAPABILITY]) & WLAN_CAPABILITY_QOS;
+		bss_privacy_capable = ::nla_get_u16(bss[NL80211_BSS_CAPABILITY]) & WLAN_CAPABILITY_PRIVACY;
 	}
 }
 
-void genl_msg::parse_information_elements(unsigned char *ie, int ielen)
+std::vector<security_features> genl_msg::parse_security_features(
+	const uint8_t *data, unsigned int len, security_features default_pair_cipher, security_features default_group_cipher)
 {
-	static unsigned char ms_oui[3] = { 0x00, 0x50, 0xf2 };
+	std::vector<security_features> result;
 
+	// skip the "version" element
+	len -= 2;
+	data += 2;
+
+	// mixed ciphers
+	if (len < 4) {
+		result.push_back(default_group_cipher);
+		result.push_back(default_pair_cipher);
+	}
+
+	// group ciphers
+	if (::memcmp(data, ms_oui, 3) == 0) {
+		switch (data[3])
+		{
+			case 1: result.push_back(group_wep40); break;
+			case 2: result.push_back(group_tkip); break;
+			case 4: result.push_back(group_ccmp); break;
+			case 5: result.push_back(group_wep104); break;
+		}
+	} else if (::memcmp(data, ieee80211_oui, 3) == 0) {
+		switch (data[3])
+		{
+			case 1: result.push_back(group_wep40); break;
+			case 2: result.push_back(group_tkip); break;
+			case 4: result.push_back(group_ccmp); break;
+			case 5: result.push_back(group_wep104); break;
+//			case 6: break;// aes-128-cmac
+		}
+	}
+
+	len -= 4;
+	data += 4;
+
+	// pairwise ciphers
+	if (len < 2) {
+		result.push_back(default_pair_cipher);
+	}
+
+	unsigned int count = data[0] | (data[1] << 8);
+	if (2 + (count * 4) > len) {
+		return result; // bogus tail data
+	}
+
+	for (unsigned int r = 0; r < count; r++) {
+		const uint8_t *tmpdata = data + 2 + (r * 4);
+		if (::memcmp(tmpdata, ms_oui, 3) == 0) {
+			switch (tmpdata[3])
+			{
+				case 1: result.push_back(pairwise_wep40); break;
+				case 2: result.push_back(pairwise_tkip); break;
+				case 4: result.push_back(pairwise_ccmp); break;
+				case 5: result.push_back(pairwise_wep104); break;
+			}
+		} else if (::memcmp(tmpdata, ieee80211_oui, 3) == 0) {
+			switch (tmpdata[3])
+			{
+				case 1: result.push_back(pairwise_wep40); break;
+				case 2: result.push_back(pairwise_tkip); break;
+				case 4: result.push_back(pairwise_ccmp); break;
+				case 5: result.push_back(pairwise_wep104); break;
+				//case 6: break;// aes-128-cmac
+			}
+		}
+	}
+
+	len -= 2 + (count * 4);
+	data += 2 + (count * 4);
+
+	// authentication suites
+	if (len < 2) {
+		result.push_back(mgmt_802_1x);
+	}
+
+	count = data[0] | (data[1] << 8);
+	if (2 + (count * 4) > len) {
+		return result; // bogus data
+	}
+
+	for (unsigned int r = 0; r < count; r++) {
+		const uint8_t *tmpdata = data + 2 + (r * 4);
+		if (::memcmp(tmpdata, ms_oui, 3) == 0) {
+			switch (tmpdata[3])
+			{
+				case 1: result.push_back(mgmt_802_1x); break;
+				case 2: result.push_back(mgmt_psk); break;
+			}
+		} else if (::memcmp(tmpdata, ieee80211_oui, 3) == 0) {
+			switch (tmpdata[3])
+			{
+				case 1:
+				case 3:
+				case 5:
+					result.push_back(mgmt_802_1x);
+					break;
+				case 2:
+				case 4:
+				case 6:
+					result.push_back(mgmt_psk);
+					break;
+			}
+		}
+	}
+
+	return result;
+}
+
+void genl_msg::parse_information_elements(const uint8_t *ie, int ielen)
+{
 	unsigned int max_rate = 0;
 	unsigned int rate;
 
-	unsigned char* data;
+	const uint8_t* data;
 
 	while (ielen >= 2 && ielen >= ie[1]) {
-		if (ie[0] >= IE_ARRAY_SIZE) {
-			break;
-		}
 		data = ie + 2;
 
-		switch (ie[0]) {
-		case IE_SSID_INDEX:
-		    ie_ssid = std::string(reinterpret_cast<const char *>(data), ie[1]);
-		    break;
+		switch (ie[0])
+		{
+			case IE_SSID_INDEX:
+				ie_ssid = std::string(reinterpret_cast<const char *>(data), ie[1]);
+				break;
 
-		case IE_SUPP_RATES_INDEX:
-		case IE_EXTENDED_SUPP_RATES_INDEX:
-			for (unsigned int r = 0; r < ie[1]; r++) {
-				rate = (data[r] & 0x7f) / 2;
-				if (rate > max_rate) {
-					max_rate = rate;
-					ie_max_data_rate = max_rate;
+			case IE_SUPP_RATES_INDEX:
+			case IE_EXTENDED_SUPP_RATES_INDEX:
+				for (unsigned int r = 0; r < ie[1]; r++) {
+					rate = (data[r] & 0x7f) / 2;
+					if (rate > max_rate) {
+						max_rate = rate;
+						ie_max_data_rate = max_rate;
+					}
 				}
-			}
-			break;
+				break;
 
-		case IE_RNS_INDEX:
-			ie_has_security_features = true;
-			break;
-
-		case IE_VENDOR:
-			if (ie[1] >= 4 && ::memcmp(data, ms_oui, 3) == 0) {
+			case IE_RSN_INDEX:
 				ie_has_security_features = true;
-			}
-			break;
 
-		default:
-			break;
+				rsn = parse_security_features(data, ie[1], pairwise_ccmp, group_ccmp);
+
+				break;
+
+			case IE_VENDOR:
+				if (ie[1] >= 4 && ::memcmp(data, ms_oui, 3) == 0) {
+					if (data[3] == IE_WPA_INDEX) {
+						ie_has_security_features = true;
+						wpa = parse_security_features(data + 4, ie[1] - 4, pairwise_tkip, group_tkip);
+					}
+				}
+
+				break;
+
+			default:
+				break;
 		}
 
 		ielen -= ie[1] + 2;

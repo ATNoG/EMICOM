@@ -222,19 +222,31 @@ int handle_scan_results(::nl_msg *msg, void *arg)
 		}
 		
 		poa_info i;
-
 		i.network_id = m.ie_ssid.get();
 		i.channel_id = frequency_to_channel_id(m.bss_frequency.get());
 		i.id.type = mih::link_type_802_11;
 		i.id.addr = d->_ctx._mac;
 		i.id.poa_addr = mih::mac_addr(m.bss_bssid.get().c_str());
 		i.signal = m.bss_signal_mbm.get();
-		i.data_rate = m.ie_max_data_rate.get();
+		i.data_rate = m.ie_max_data_rate.get() * 1000;
 		i.mih_capabilities = mih::link_mihcap_flag();
 		i.net_capabilities = caps;
 		//i.sinr = 0;
 		// SINR cannot be obtained, since we can only get the signal strength
 		// and the noise value (through NL80211_CMD_GET_SURVEY). (missing "interference")
+
+		// privacy capability
+		i.bss_privacy_capable = m.bss_privacy_capable;
+
+		// save WPA and RSN capabilities as well
+		// WPA features
+		if (m.wpa) {
+			i.wpa = m.wpa.get();
+		}
+		if (m.rsn) {
+			i.rsn = m.rsn.get();
+		}
+
 		d->l.push_back(i);
 	} catch(...) {
 		log_(0, "(command) Error parsing scan dump message");
@@ -381,6 +393,14 @@ mih::link_scan_rsp_list if_80211::get_scan_results()
 	}
 
 	return l;
+}
+
+std::vector<poa_info> if_80211::get_detailed_scan_results()
+{
+	scan_results_data d(_ctx);
+	fetch_scan_results(d);
+
+	return d.l;
 }
 
 mih::op_mode_enum if_80211::get_op_mode()

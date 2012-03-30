@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	networkmanager::NetworkManager manager(conn);
 
 	// setup an example AccessPoint
-	networkmanager::AccessPoint point(conn, "/org/freedesktop/NetworkManager21/AccessPoint/0");
+	//networkmanager::AccessPoint point(conn, "/org/freedesktop/NetworkManager21/AccessPoint/0");
 
 	// setup an example DeviceWireless
 	mih::mac_addr mac;

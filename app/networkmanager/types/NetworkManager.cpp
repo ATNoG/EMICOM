@@ -34,9 +34,9 @@ NetworkManager::NetworkManager(DBus::Connection &connection) :
 	WimaxEnabled = false;
 	WwanHardwareEnabled = false;
 	WwanEnabled = false;
-	WirelessHardwareEnabled = false;
-	WirelessEnabled = false;
-	NetworkingEnabled = false;
+	WirelessHardwareEnabled = true;
+	WirelessEnabled = true;
+	NetworkingEnabled = true;
 }
 
 NetworkManager::~NetworkManager()

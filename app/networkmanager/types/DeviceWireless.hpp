@@ -23,6 +23,7 @@
 #include "odtone/logger.hpp"
 
 #include "Device.hpp"
+#include "AccessPoint.hpp"
 #include "../driver/if_80211.hpp"
 
 namespace odtone {
@@ -32,12 +33,7 @@ class DeviceWireless :
 	public Device,
 	public org::freedesktop::NetworkManager::Device::Wireless_adaptor
 {
-	enum NM_802_11_MODE {
-		NM_802_11_MODE_UNKNOWN = 0,
-		NM_802_11_MODE_ADHOC   = 1,
-		NM_802_11_MODE_INFRA   = 2
-	};
-
+public:
 	enum NM_802_11_DEVICE_CAP {
 		NM_802_11_DEVICE_CAP_NONE          = 0x0,
 		NM_802_11_DEVICE_CAP_CIPHER_WEP40  = 0x1,
@@ -46,6 +42,12 @@ class DeviceWireless :
 		NM_802_11_DEVICE_CAP_CIPHER_CCMP   = 0x8,
 		NM_802_11_DEVICE_CAP_WPA           = 0x10,
 		NM_802_11_DEVICE_CAP_RSN           = 0x20
+	};
+
+	enum NM_802_11_MODE {
+		NM_802_11_MODE_UNKNOWN = 0,
+		NM_802_11_MODE_ADHOC   = 1,
+		NM_802_11_MODE_INFRA   = 2
 	};
 
 public:
@@ -62,12 +64,13 @@ public:
 	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
 
 private:
-	if_80211       _fi;
+	DBus::Connection &_connection;
+	if_80211          _fi;
 
-	std::map<DBus::Path, AccessPoint> _access_points_map;
+	std::string      _path;
+	odtone::logger   log_;
 
-	std::string    _path;
-	odtone::logger log_;
+	std::map<DBus::Path, std::unique_ptr<AccessPoint>> _access_points_map;
 };
 
 }; };

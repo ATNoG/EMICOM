@@ -27,6 +27,21 @@
 
 namespace nlwrap {
 
+enum security_features {
+	pairwise_wep40,
+	pairwise_wep104,
+	pairwise_tkip,
+	pairwise_ccmp,
+
+	group_wep40,
+	group_wep104,
+	group_tkip,
+	group_ccmp,
+
+	mgmt_psk,
+	mgmt_802_1x
+};
+
 /**
  * This class provides a RAI wrapper for the nl_msg datatype
  */
@@ -120,6 +135,11 @@ public:
 	boost::optional<unsigned int> ie_max_data_rate;
 	boost::optional<bool> ie_has_security_features;
 
+	boost::optional<bool> bss_privacy_capable;
+
+	boost::optional<std::vector<security_features>> wpa;
+	boost::optional<std::vector<security_features>> rsn;
+	
 	/**
 	 * Current bitrate, in kilobits/second
 	 */
@@ -130,14 +150,23 @@ public:
 private:
 	void parse_attr(::nlattr *tb[NL80211_ATTR_MAX + 1]);
 	void parse_bss(::nlattr *bss[NL80211_BSS_MAX + 1]);
-	void parse_information_elements(unsigned char *ie, int ielen);
+	void parse_information_elements(const uint8_t *ie, int ielen);
 	void parse_rate(::nlattr *rate[NL80211_RATE_INFO_MAX + 1]);
+
+	std::vector<security_features> parse_security_features(
+		const uint8_t *data,
+		unsigned int len,
+		security_features default_pair_cipher,
+		security_features default_group_cipher);
 
 private:
 	bool      _own;
 	::nl_msg *_msg;
 
 	int       _cmd;
+
+	static unsigned char ms_oui[3];
+	static unsigned char ieee80211_oui[3];
 };
 
 }

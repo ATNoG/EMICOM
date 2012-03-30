@@ -35,6 +35,12 @@ namespace networkmanager {
 
 struct poa_info : mih::link_det_info {
 	uint channel_id;
+
+	// privacy features?
+	boost::optional<bool> bss_privacy_capable;
+
+	std::vector<nlwrap::security_features> wpa;
+	std::vector<nlwrap::security_features> rsn;
 };
 
 class if_80211 : boost::noncopyable {
@@ -119,9 +125,15 @@ public:
 	/**
 	 * Fetch the scan results.
 	 *
-	 * @return A lis of the available scan results.
+	 * @return A list of the available scan results.
 	 */
 	mih::link_scan_rsp_list get_scan_results();
+
+	/**
+	 * Fetch detailed scan results.
+	 * @return A list of the detailed scan results.
+	 */
+	std::vector<poa_info> get_detailed_scan_results();
 
 	/**
 	 * Get the current operating mode of the device.

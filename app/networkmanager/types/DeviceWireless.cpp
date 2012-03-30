@@ -23,6 +23,7 @@ using namespace odtone::networkmanager;
 
 DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, odtone::mih::mac_addr &address) :
 	Device(connection, path),
+	_connection(connection),
 	_fi(address),
 	_path(path),
 	log_(_path.c_str(), std::cout)
@@ -43,7 +44,7 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 
 	Driver = "nl80211";             // by design
 	IpInterface = _fi.ifname();
-	Device_adaptor::Interface = ""; // TODO
+	Device_adaptor::Interface = _fi.ifname();
 	Udi = "";                       // TODO
 
 	// inherited from Wireless adaptor
@@ -66,6 +67,8 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 			break;
 		}
 	}
+
+	
 }
 
 DeviceWireless::~DeviceWireless()
@@ -88,7 +91,7 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 	log_(0, "Getting Access Points");
 	std::vector< ::DBus::Path > r;
 
-	std::map<DBus::Path, AccessPoint>::iterator it = _access_points_map.begin();
+	std::map<DBus::Path, std::unique_ptr<AccessPoint>>::iterator it = _access_points_map.begin();
 	while (it != _access_points_map.end()) {
 		r.push_back(it->first);
 		it++;
