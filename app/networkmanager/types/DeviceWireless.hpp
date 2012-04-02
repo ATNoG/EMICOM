@@ -34,6 +34,9 @@ class DeviceWireless :
 	public org::freedesktop::NetworkManager::Device::Wireless_adaptor
 {
 public:
+	/**
+	 * Enumeration of possible DeviceWireless Capabilities.
+	 */
 	enum NM_802_11_DEVICE_CAP {
 		NM_802_11_DEVICE_CAP_NONE          = 0x0,
 		NM_802_11_DEVICE_CAP_CIPHER_WEP40  = 0x1,
@@ -44,6 +47,9 @@ public:
 		NM_802_11_DEVICE_CAP_RSN           = 0x20
 	};
 
+	/**
+	 * Enumeration of possible DeviceWireless Modes.
+	 */
 	enum NM_802_11_MODE {
 		NM_802_11_MODE_UNKNOWN = 0,
 		NM_802_11_MODE_ADHOC   = 1,
@@ -51,16 +57,37 @@ public:
 	};
 
 public:
+
+	/**
+	 * Construct a new DeviceWireless D-Bus interface data type.
+	 *
+	 * @param connection The D-Bus (system) connection.
+	 * @param path The D-Bus path of this object.
+	 * @param address The MAC Address of the underlying device.
+	 */
 	DeviceWireless(DBus::Connection &connection, const char* path, odtone::mih::mac_addr &address);
+
+	/**
+	 * Destroy this object.
+	 */
 	~DeviceWireless();
 
-	// inherited from Device adaptor
+	/**
+	 * @see Device::Disconnect()
+	 */
 	void Disconnect();
 
-	// inherited from Wireless adaptor
+	/**
+	 * Get the list of associated AccessPoint objects.
+	 *
+	 * @return The D-Bus path list of AccessPoint objects.
+	 */
 	std::vector< ::DBus::Path > GetAccessPoints();
 
 	// override from PropertiesAdaptor
+	/**
+	 * @see DBus::PropertyAdaptor
+	 */
 	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
 
 private:

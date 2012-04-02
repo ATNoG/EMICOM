@@ -31,6 +31,10 @@ class Device : boost::noncopyable,
 	public DBus::ObjectAdaptor
 {
 public:
+
+	/**
+	 * Enumeration of possible Device Types.
+	 */
 	enum NM_DEVICE_TYPE {
 		NM_DEVICE_TYPE_UNKNOWN   = 0,
 		NM_DEVICE_TYPE_ETHERNET  = 1,
@@ -43,6 +47,9 @@ public:
 		NM_DEVICE_TYPE_MODEM     = 8
 	};
 
+	/**
+	 * Enumeration of possible Device States.
+	 */
 	enum NM_DEVICE_STATE {
 		NM_DEVICE_STATE_UNKNOWN      = 0,
 		NM_DEVICE_STATE_UNMANAGED    = 10,
@@ -59,6 +66,9 @@ public:
 		NM_DEVICE_STATE_FAILED       = 120
 	};
 
+	/**
+	 * Enumeration of possible Device State Change reasons.
+	 */
 	enum NM_DEVICE_STATE_REASON {
 		NM_DEVICE_STATE_REASON_UNKNOWN            = 0,
 		NM_DEVICE_STATE_REASON_NONE               = 1,
@@ -115,18 +125,38 @@ public:
 		NM_DEVICE_STATE_REASON_BT_FAILED            = 44
 	};
 
+	/**
+	 * Enumeration of possible Device Capabilities.
+	 */
 	enum NM_DEVICE_CAP {
 		NM_DEVICE_CAP_NONE           = 0x0,
 		NM_DEVICE_CAP_NM_SUPPORTED   = 0x1,
 		NM_DEVICE_CAP_CARRIER_DETECT = 0x2
 	};
 
+	/**
+	 * Construct a new Device D-Bus interface data type.
+	 *
+	 * @param connection The D-Bus (system) connection to use.
+	 * @param path This object's D-Bus path.
+	 */
 	Device(DBus::Connection &connection, const char* path);
+
+	/**
+	 * Destroy this object.
+	 */
 	~Device();
 
+	/**
+	 * Call a Disconnect on this device. Not implemented at this level.
+	 */
 	virtual void Disconnect();
 
 protected:
+
+	/**
+	 * Auxiliary function to change and notify (signal) state changes on this object.
+	 */
 	void state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason);
 };
 

@@ -55,10 +55,35 @@ class AccessPoint : boost::noncopyable,
 	};
 
 public:
+
+	/**
+	 * Construct a new AccessPoint D-Bus interface data type.
+	 *
+	 * @param connection The D-Bus (system) connection.
+	 * @param path The D-Bus path for this object.
+	 * @param i The associated underlying point of access information.
+	 */
 	AccessPoint(DBus::Connection &connection, const char* path, poa_info i);
+
+	/**
+	 * Destroy this object.
+	 */
 	~AccessPoint();
 
+	/**
+	 * Convert a dBm signal value to a percentage
+	 *
+	 * @param dbm The current signal strength, in dBm.
+	 * @return The assumed percentage for the quality signal.
+	 */
 	static uint32_t dbm_to_percent(sint dbm);
+
+	/**
+	 * Convert a channel id value to frequency.
+	 *
+	 * @param channel The channel id.
+	 * @return The associated radio frequency.
+	 */
 	static uint32_t channel_to_frequency(uint channel);
 
 private:
