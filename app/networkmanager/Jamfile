@@ -24,10 +24,41 @@ project networkmanager
 	  <include>/usr/include/libnl3
 	;
 
+odtone.explicit-alias if_80211
+	: driver/if_80211.cpp
+	  driver/nlwrap/genl_msg.cpp
+	  driver/nlwrap/genl_socket.cpp
+	  driver/nlwrap/genl_cb.cpp
+	  driver/nlwrap/rtnl_socket.cpp
+	  driver/nlwrap/rtnl_link.cpp
+	  driver/nlwrap/rtnl_link_cache.cpp
+	;
+
+#odtone.runtime-lib boost_filesystem ;
+odtone.explicit-alias networkmanager-types
+	: types/NetworkManager.cpp
+	  types/AccessPoint.cpp
+	  types/Device.cpp
+	  types/DeviceWireless.cpp
+	  types/DeviceWired.cpp
+	  types/DeviceModem.cpp
+	  types/DeviceWiMax.cpp
+	  types/WiMaxNsp.cpp
+	  types/IP4Config.cpp
+	  types/IP6Config.cpp
+	  types/DHCP4Config.cpp
+	  types/DHCP6Config.cpp
+	  types/Settings.cpp
+	  types/Connection.cpp
+	  types/ConnectionActive.cpp
+	  types/AgentManager.cpp
+	;
+
+
 exe dbus_dummy
 	: dbus_dummy.cpp
-	  types//networkmanager-types
-	  driver//if_80211
+	  networkmanager-types
+	  if_80211
 	  ../../lib/odtone//odtone_base
 	  ../../lib/odtone/mih//odtone_mih
 	  ../../lib/odtone/sap//odtone_sap
@@ -36,8 +67,8 @@ exe dbus_dummy
 exe networkmanager
 	: main.cpp
 	  mih_user.cpp
-	  types//networkmanager-types
-	  driver//if_80211
+	  networkmanager-types
+	  if_80211
 	  ../../lib/odtone//odtone_base
 	  ../../lib/odtone/mih//odtone_mih
 	  ../../lib/odtone/sap//odtone_sap
