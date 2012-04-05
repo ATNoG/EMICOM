@@ -30,13 +30,20 @@ class Connection : boost::noncopyable,
 	public DBus::ObjectAdaptor
 {
 public:
-	Connection(DBus::Connection &connection, const char* path);
+	typedef std::map<std::string, std::map<std::string, ::DBus::Variant>> settings_map;
+	typedef std::map<std::string, ::DBus::Variant> setting_pairs;
+
+public:
+	Connection(DBus::Connection &connection, const char* path, const settings_map &settings);
 	~Connection();
 
-	std::map< std::string, std::map< std::string, ::DBus::Variant > > GetSecrets(const std::string& setting_name);
-	std::map< std::string, std::map< std::string, ::DBus::Variant > > GetSettings();
+	Connection::settings_map GetSecrets(const std::string& setting_name);
+	Connection::settings_map GetSettings();
 	void Delete();
-	void Update(const std::map< std::string, std::map< std::string, ::DBus::Variant > >& properties);
+	void Update(const settings_map &properties);
+
+private:
+	settings_map _settings;
 };
 
 }; };

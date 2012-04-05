@@ -62,6 +62,11 @@ public:
 	static const char* const PATH;
 
 	/**
+	 * Path for Settings saving.
+	 */
+	static const char* const SETTINGS_DIR;
+
+	/**
 	 * Construct a new NetworkManager D-Bus interface data type.
 	 *
 	 * @param connection The D-Bus connection to create on.
@@ -172,8 +177,9 @@ private:
 	void state(NM_STATE newstate);
 
 private:
-	DBus::Connection                    &_connection;
-	odtone::logger                       log_;
+	DBus::Connection &_connection;
+	Settings          _settings;
+	odtone::logger     log_;
 
 	std::map<DBus::Path, std::unique_ptr<Device>> _device_map;
 };

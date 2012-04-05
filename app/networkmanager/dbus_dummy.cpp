@@ -68,10 +68,10 @@ int main(int argc, char *argv[])
 	networkmanager::DHCP6Config configd6(conn, "/org/freedesktop/NetworkManager21/DHCP6Config/0");
 
 	// setup an example Settings
-	networkmanager::Settings tings(conn, "/org/freedesktop/NetworkManager21/Settings");
+	//networkmanager::Settings tings(conn, "/org/freedesktop/NetworkManager21/Settings");
 
 	// setup an example Connection Settings
-	networkmanager::Connection ection(conn, "/org/freedesktop/NetworkManager21/Settings/0");
+	//networkmanager::Connection ection(conn, "/org/freedesktop/NetworkManager21/Settings/0");
 
 	// setup an example Connection.Active
 	networkmanager::ConnectionActive active(conn, "/org/freedesktop/NetworkManager21/ActiveConnections/0");

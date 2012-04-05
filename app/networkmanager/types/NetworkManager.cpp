@@ -22,8 +22,12 @@ using namespace odtone::networkmanager;
 const char* const NetworkManager::NAME = "org.freedesktop.NetworkManager21";
 const char* const NetworkManager::PATH = "/org/freedesktop/NetworkManager21";
 
+const char* const NetworkManager::SETTINGS_DIR = "./settings/";
+
 NetworkManager::NetworkManager(DBus::Connection &connection) :
-	DBus::ObjectAdaptor(connection, PATH), _connection(connection),
+	DBus::ObjectAdaptor(connection, PATH),
+	_connection(connection),
+	_settings(_connection, "/org/freedesktop/NetworkManager21/Settings", SETTINGS_DIR),
 	log_(PATH, std::cout)
 {
 	// FIXME

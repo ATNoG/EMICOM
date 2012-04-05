@@ -19,8 +19,9 @@
 
 using namespace odtone::networkmanager;
 
-Connection::Connection(DBus::Connection &connection, const char* path)
-	: DBus::ObjectAdaptor(connection, path)
+Connection::Connection(DBus::Connection &connection, const char* path, const settings_map &settings) :
+	DBus::ObjectAdaptor(connection, path),
+	_settings(settings)
 {
 }
 
@@ -28,24 +29,27 @@ Connection::~Connection()
 {
 }
 
-std::map< std::string, std::map< std::string, ::DBus::Variant > > Connection::GetSecrets(const std::string& setting_name)
+Connection::settings_map Connection::GetSecrets(const std::string& setting_name)
 {
-	std::map< std::string, std::map< std::string, ::DBus::Variant > > r;
-	// TODO
+	settings_map r;
+	// TODO or empty?
 	return r;
 }
 
-std::map< std::string, std::map< std::string, ::DBus::Variant > > Connection::GetSettings()
+Connection::settings_map Connection::GetSettings()
 {
-	std::map< std::string, std::map< std::string, ::DBus::Variant > > r;
-	// TODO
-	return r;
+	return _settings;
 }
 
 void Connection::Delete()
 {
+	// TODO
+	// Bummer, we need a reference from the parent!
 }
 
-void Connection::Update(const std::map< std::string, std::map< std::string, ::DBus::Variant > >& properties)
+void Connection::Update(const settings_map &properties)
 {
+	_settings = properties;
+	// TODO
+	// This, too has to be redirected to the Settings object.
 }

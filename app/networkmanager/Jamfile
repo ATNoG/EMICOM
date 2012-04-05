@@ -21,6 +21,7 @@ project networkmanager
 	  <linkflags>-lnl-3
 	  <linkflags>-lnl-genl-3
 	  <linkflags>-lnl-route-3
+	  <linkflags>-lboost_filesystem
 	  <include>/usr/include/libnl3
 	;
 
