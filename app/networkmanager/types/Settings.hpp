@@ -48,7 +48,7 @@ private:
 
 	std::map<DBus::Path, std::unique_ptr<Connection>> _connections;
 	unsigned int            _connection_counter;
-	
+
 	boost::filesystem::path _working_dir;
 	std::string             _path;
 	odtone::logger           log_;

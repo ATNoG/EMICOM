@@ -37,9 +37,17 @@ public:
 	typedef std::map<std::string, ::DBus::Variant>                        setting_pairs;
 
 public:
-	Connection(DBus::Connection &connection, const char* path, const boost::filesystem::path &file_path);
-	Connection(DBus::Connection &connection, const char* path,
-	           const settings_map &settings, const boost::filesystem::path &file_path);
+	Connection(DBus::Connection &connection,
+	           const char* path,
+               std::map<DBus::Path, std::unique_ptr<Connection>> &container,
+	           const boost::filesystem::path &file_path);
+
+	Connection(DBus::Connection &connection,
+	           const char* path,
+	           std::map<DBus::Path, std::unique_ptr<Connection>> &container,
+	           const settings_map &settings,
+	           const boost::filesystem::path &file_path);
+
 	~Connection();
 
 	Connection::settings_map GetSecrets(const std::string& setting_name);
@@ -57,7 +65,9 @@ private:
 	boost::filesystem::path _file_path;
 	settings_map            _settings;
 
-	std::string             _path;
+	std::map<DBus::Path, std::unique_ptr<Connection>> &_container;
+
+	DBus::Path              _path;
 	odtone::logger           log_;
 };
 

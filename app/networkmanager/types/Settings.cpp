@@ -19,6 +19,7 @@
 
 #include "NetworkManager.hpp"
 
+// needed for boost::filesystem
 namespace boost {
 	void assertion_failed_msg(char const* a, char const* b, char const* c, char const* d, long e)
 	{
@@ -54,7 +55,8 @@ Settings::Settings(DBus::Connection &connection, const char *path, const char *w
 			ss << _path << "/" << ++_connection_counter;
 
 			::DBus::Path connection_path = ss.str();
-			std::unique_ptr<Connection> connection(new Connection(_connection, connection_path.c_str(), *dir_it));
+			std::unique_ptr<Connection> connection(
+				new Connection(_connection, connection_path.c_str(), _connections, *dir_it));
 			_connections[connection_path] = std::move(connection);
 		}
 		++ dir_it;
@@ -79,14 +81,15 @@ void Settings::SaveHostname(const std::string& hostname)
 	log_(0, "Adding new connection");
 
 	try {
-		std::string filename = properties.find("connection")->second.find("id")->second;//.reader().get_string();
-		std::string file_path_str = _working_dir.generic_string() + filename;
+		std::string filename = properties.find("connection")->second.find("uuid")->second;
+		std::string file_path_str = _working_dir.generic_string() + "/" + filename;
 		boost::filesystem::path file_path(file_path_str);
 
 		std::stringstream ss;
 		ss << _path << "/" << ++_connection_counter;
 		::DBus::Path connection_path = ss.str();
-		std::unique_ptr<Connection> connection(new Connection(_connection, connection_path.c_str(), properties, file_path));
+		std::unique_ptr<Connection> connection(
+			new Connection(_connection, connection_path.c_str(), _connections, properties, file_path));
 		_connections[connection_path] = std::move(connection);
 
 		log_(0, "Done");
@@ -99,10 +102,13 @@ void Settings::SaveHostname(const std::string& hostname)
 
 ::DBus::Path Settings::GetConnectionByUuid(const std::string& uuid)
 {
+	log_(0, "Getting connection by UUID");
+
 	try {
 		std::map<DBus::Path, std::unique_ptr<Connection>>::iterator it = _connections.begin();
 		while (it != _connections.end()) {
 			if(it->second->GetUuid() == uuid) {
+				log_(0, "Connection found at \"", it->first, "\"");
 				return it->first;
 			}
 			it++;
@@ -111,12 +117,15 @@ void Settings::SaveHostname(const std::string& hostname)
 		// TODO the connection probably has no uuid, so it should be deleted...
 	}
 
+	log_(0, "No such connection");
 	throw DBus::Error("org.freedesktop.NetworkManager.Error.UnknownConnection",
 	                  "Couldn't find a connection with given uuid");
 }
 
 std::vector< ::DBus::Path > Settings::ListConnections()
 {
+	log_(0, "Getting connection list");
+
 	std::vector< ::DBus::Path > r;
 
 	std::map<DBus::Path, std::unique_ptr<Connection>>::iterator it = _connections.begin();
@@ -124,6 +133,8 @@ std::vector< ::DBus::Path > Settings::ListConnections()
 		r.push_back(it->first);
 		it++;
 	}
+
+	log_(0, "Done");
 
 	return r;
 }

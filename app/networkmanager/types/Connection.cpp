@@ -23,24 +23,32 @@
 
 using namespace odtone::networkmanager;
 
-Connection::Connection(DBus::Connection &connection, const char* path, const boost::filesystem::path &file_path) :
+Connection::Connection(DBus::Connection &connection,
+                       const char* path,
+                       std::map<DBus::Path, std::unique_ptr<Connection>> &container,
+                       const boost::filesystem::path &file_path) :
 	DBus::ObjectAdaptor(connection, path),
 	_file_path(file_path),
+	_container(container),
 	_path(path),
 	log_(_path.c_str(), std::cout)
 {
 	read_settings();
 }
 
-Connection::Connection(DBus::Connection &connection, const char* path,
-                       const settings_map &settings, const boost::filesystem::path &file_path) :
+Connection::Connection(DBus::Connection &connection,
+                       const char* path,
+                       std::map<DBus::Path, std::unique_ptr<Connection>> &container,
+                       const settings_map &settings,
+                       const boost::filesystem::path &file_path) :
 	DBus::ObjectAdaptor(connection, path),
 	_file_path(file_path),
 	_settings(settings),
+	_container(container),
 	_path(path),
 	log_(_path.c_str(), std::cout)
 {
-	// TODO calculate uuid
+	// TODO calculate uuid?
 	write_settings();
 }
 
@@ -50,25 +58,46 @@ Connection::~Connection()
 
 Connection::settings_map Connection::GetSecrets(const std::string& setting_name)
 {
+	log_(0, "Getting connection secrets");
+
 	settings_map r;
-	// TODO or empty?
+	// not supported
+
+	log_(0, "Done");
+
 	return r;
 }
 
 Connection::settings_map Connection::GetSettings()
 {
+	log_(0, "Getting connection settings");
+
+	log_(0, "Done");
+
 	return _settings;
 }
 
 void Connection::Delete()
 {
-	// TODO we need a reference to the connections map!
+	log_(0, "Deleting myself...");
+
+	log_(0, "Removing file");
+	boost::filesystem::remove(_file_path);
+
+	log_(0, "Removing from container");
+	_container.erase(_container.find(_path));
+	// "this" doesn't exist, at this point!
 }
 
 void Connection::Update(const settings_map &properties)
 {
+	log_(0, "Updating settings locally");
+
 	_settings = properties; // does this include uuid??
+
 	write_settings();
+
+	log_(0, "Done");
 }
 
 std::string Connection::GetUuid()
@@ -87,7 +116,7 @@ void Connection::read_settings()
 		std::string group = v.first;
 		log_(0, "Parsing group \"", group, "\"");
 
-		Connection::setting_pairs pairs;
+		setting_pairs pairs;
 		BOOST_FOREACH (boost::property_tree::ptree::value_type &t, v.second) {
 			std::string key = t.first;
 			std::string value = t.second.get_value<std::string>();
@@ -105,4 +134,19 @@ void Connection::read_settings()
 
 void Connection::write_settings()
 {
+	log_(0, "Persisting settings at \"", _file_path.generic_string(), "\"");
+
+	boost::property_tree::ptree pt;
+
+	BOOST_FOREACH (settings_map::value_type &v, _settings) {
+		BOOST_FOREACH (setting_pairs::value_type &t, v.second) {
+			std::string key = v.first + "." + t.first;
+			std::string value = t.second;
+			pt.put(key, value);
+		}
+	}
+
+	boost::property_tree::ini_parser::write_ini(_file_path.generic_string(), pt);
+
+	log_(0, "Done");
 }
