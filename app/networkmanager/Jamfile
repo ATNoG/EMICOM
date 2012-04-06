@@ -77,8 +77,7 @@ exe networkmanager
 
 install install
 	: networkmanager
-	  mih.conf
-#	  networkmanager.conf
+	  networkmanager.conf
 #	  dbus_dummy
 	: <location>../../dist
 	;

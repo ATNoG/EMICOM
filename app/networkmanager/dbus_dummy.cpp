@@ -29,10 +29,11 @@ int main(int argc, char *argv[])
 
 	// setup NetworkManager
 	DBus::Connection conn = DBus::Connection::SystemBus();
-	conn.request_name(networkmanager::NetworkManager::NAME);
+	const char *name = "org.freedesktop.NetworkManager21";
+	conn.request_name(name);
 
 	networkmanager::AgentManager agent(conn);
-	networkmanager::NetworkManager manager(conn);
+	networkmanager::NetworkManager manager(conn, "/org/freedesktop/NetworkManager21", "./Settings");
 
 	// setup an example AccessPoint
 	//networkmanager::AccessPoint point(conn, "/org/freedesktop/NetworkManager21/AccessPoint/0");

@@ -52,26 +52,13 @@ public:
 
 public:
 	/**
-	 * Name for D-Bus NetworkManager interface.
-	 */
-	static const char* const NAME;
-
-	/**
-	 * Path for D-Bus NetworkManager object.
-	 */
-	static const char* const PATH;
-
-	/**
-	 * Path for Settings saving.
-	 */
-	static const char* const SETTINGS_DIR;
-
-	/**
 	 * Construct a new NetworkManager D-Bus interface data type.
 	 *
 	 * @param connection The D-Bus connection to create on.
+	 * @param dbus_name The path for the D-Bus object.
+	 * @param settings The filesystem location to load/store connection settings.
 	 */
-	NetworkManager(DBus::Connection &connection);
+	NetworkManager(DBus::Connection &connection, const char *dbus_path, const char *settings_path);
 
 	/**
 	 * Destroy this object.
@@ -178,6 +165,9 @@ private:
 
 private:
 	DBus::Connection &_connection;
+	std::string       _dbus_path;
+	std::string       _settings_path;
+
 	Settings          _settings;
 	odtone::logger     log_;
 

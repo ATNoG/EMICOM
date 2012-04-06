@@ -19,16 +19,13 @@
 
 using namespace odtone::networkmanager;
 
-const char* const NetworkManager::NAME = "org.freedesktop.NetworkManager21";
-const char* const NetworkManager::PATH = "/org/freedesktop/NetworkManager21";
-
-const char* const NetworkManager::SETTINGS_DIR = "./settings/";
-
-NetworkManager::NetworkManager(DBus::Connection &connection) :
-	DBus::ObjectAdaptor(connection, PATH),
+NetworkManager::NetworkManager(DBus::Connection &connection, const char *dbus_path, const char *settings_path) :
+	DBus::ObjectAdaptor(connection, dbus_path),
 	_connection(connection),
-	_settings(_connection, "/org/freedesktop/NetworkManager21/Settings", SETTINGS_DIR),
-	log_(PATH, std::cout)
+	_dbus_path(dbus_path),
+	_settings_path(settings_path),
+	_settings(_connection, _dbus_path.append("/Settings").c_str(), settings_path),
+	log_(_dbus_path.c_str(), std::cout)
 {
 	// FIXME
 	State = NM_STATE_UNKNOWN;
@@ -181,7 +178,7 @@ void NetworkManager::add_802_11_device(odtone::mih::mac_addr &address)
 		if_80211 fi(address);
 
 		std::stringstream path;
-		path << PATH << "/Devices/" << fi.ifindex();
+		path << _dbus_path << "/Devices/" << fi.ifindex();
 		std::unique_ptr<Device> d(new DeviceWireless(_connection, path.str().c_str(), address));
 
 		// if networking is disabled, shut this interface
