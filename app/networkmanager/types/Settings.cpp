@@ -99,11 +99,20 @@ void Settings::SaveHostname(const std::string& hostname)
 
 ::DBus::Path Settings::GetConnectionByUuid(const std::string& uuid)
 {
-	::DBus::Path r;
+	try {
+		std::map<DBus::Path, std::unique_ptr<Connection>>::iterator it = _connections.begin();
+		while (it != _connections.end()) {
+			if(it->second->GetUuid() == uuid) {
+				return it->first;
+			}
+			it++;
+		}
+	} catch (...) {
+		// TODO the connection probably has no uuid, so it should be deleted...
+	}
 
-	// TODO
-
-	return r;
+	throw DBus::Error("org.freedesktop.NetworkManager.Error.UnknownConnection",
+	                  "Couldn't find a connection with given uuid");
 }
 
 std::vector< ::DBus::Path > Settings::ListConnections()

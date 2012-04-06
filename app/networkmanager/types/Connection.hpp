@@ -47,6 +47,8 @@ public:
 	void Delete();
 	void Update(const settings_map &properties);
 
+	std::string GetUuid();
+
 private:
 	void read_settings();
 	void write_settings();

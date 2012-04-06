@@ -71,6 +71,11 @@ void Connection::Update(const settings_map &properties)
 	write_settings();
 }
 
+std::string Connection::GetUuid()
+{
+	return _settings["connection"]["uuid"];
+}
+
 void Connection::read_settings()
 {
 	log_(0, "Loading connection at \"", _file_path.generic_string(), "\"");
