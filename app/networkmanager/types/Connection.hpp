@@ -20,6 +20,9 @@
 
 #include "../dbus/adaptors/Connection.hpp"
 #include <boost/noncopyable.hpp>
+#include "odtone/logger.hpp"
+
+#include <boost/filesystem.hpp>
 
 namespace odtone {
 namespace networkmanager {
@@ -31,10 +34,12 @@ class Connection : boost::noncopyable,
 {
 public:
 	typedef std::map<std::string, std::map<std::string, ::DBus::Variant>> settings_map;
-	typedef std::map<std::string, ::DBus::Variant> setting_pairs;
+	typedef std::map<std::string, ::DBus::Variant>                        setting_pairs;
 
 public:
-	Connection(DBus::Connection &connection, const char* path, const settings_map &settings);
+	Connection(DBus::Connection &connection, const char* path, const boost::filesystem::path &file_path);
+	Connection(DBus::Connection &connection, const char* path,
+	           const settings_map &settings, const boost::filesystem::path &file_path);
 	~Connection();
 
 	Connection::settings_map GetSecrets(const std::string& setting_name);
@@ -43,7 +48,15 @@ public:
 	void Update(const settings_map &properties);
 
 private:
-	settings_map _settings;
+	void read_settings();
+	void write_settings();
+
+private:
+	boost::filesystem::path _file_path;
+	settings_map            _settings;
+
+	std::string             _path;
+	odtone::logger           log_;
 };
 
 }; };

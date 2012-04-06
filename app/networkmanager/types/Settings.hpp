@@ -44,9 +44,6 @@ public:
 	std::vector< ::DBus::Path > ListConnections();
 
 private:
-	Connection::settings_map read_connection(const boost::filesystem::path &path);
-
-private:
 	::DBus::Connection     &_connection;
 
 	std::map<DBus::Path, std::unique_ptr<Connection>> _connections;
