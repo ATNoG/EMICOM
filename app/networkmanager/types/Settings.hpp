@@ -43,6 +43,8 @@ public:
 	::DBus::Path GetConnectionByUuid(const std::string &uuid);
 	std::vector< ::DBus::Path > ListConnections();
 
+	Connection::settings_map GetSettings(const DBus::Path &p);
+
 private:
 	::DBus::Connection     &_connection;
 

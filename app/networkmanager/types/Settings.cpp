@@ -105,7 +105,7 @@ void Settings::SaveHostname(const std::string& hostname)
 	log_(0, "Getting connection by UUID");
 
 	try {
-		std::map<DBus::Path, std::unique_ptr<Connection>>::iterator it = _connections.begin();
+		auto it = _connections.begin();
 		while (it != _connections.end()) {
 			if(it->second->GetUuid() == uuid) {
 				log_(0, "Connection found at \"", it->first, "\"");
@@ -128,7 +128,7 @@ std::vector< ::DBus::Path > Settings::ListConnections()
 
 	std::vector< ::DBus::Path > r;
 
-	std::map<DBus::Path, std::unique_ptr<Connection>>::iterator it = _connections.begin();
+	auto it = _connections.begin();
 	while (it != _connections.end()) {
 		r.push_back(it->first);
 		it++;
@@ -137,4 +137,17 @@ std::vector< ::DBus::Path > Settings::ListConnections()
 	log_(0, "Done");
 
 	return r;
+}
+
+Connection::settings_map Settings::GetSettings(const DBus::Path &p)
+{
+	log_(0, "Getting connection at \"", p, "\"");
+
+	auto it = _connections.find(p);
+	if (it != _connections.end()) {
+		return it->second->GetSettings();
+	}
+
+	throw DBus::Error("org.freedesktop.NetworkManager.Error.UnknownConnection",
+	                  "Couldn't find a connection at given DPath");
 }
