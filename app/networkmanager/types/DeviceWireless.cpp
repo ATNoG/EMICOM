@@ -25,6 +25,7 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 	Device(connection, path),
 	_connection(connection),
 	_fi(address),
+	_access_point_count(0),
 	_path(path),
 	log_(_path.c_str(), std::cout)
 {
@@ -66,9 +67,7 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 			// store the first only
 			break;
 		}
-	}
-
-	
+	}	
 }
 
 DeviceWireless::~DeviceWireless()
@@ -91,7 +90,7 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 	log_(0, "Getting Access Points");
 	std::vector< ::DBus::Path > r;
 
-	std::map<DBus::Path, std::unique_ptr<AccessPoint>>::iterator it = _access_points_map.begin();
+	auto it = _access_points_map.begin();
 	while (it != _access_points_map.end()) {
 		r.push_back(it->first);
 		it++;
@@ -125,4 +124,68 @@ void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const st
 	}
 
 	PropertiesAdaptor::on_get_property(interface, property, value);
+}
+
+void DeviceWireless::refresh_accesspoint_list()
+{
+	std::vector<poa_info> poa_list = _fi.get_detailed_scan_results();
+
+	// remove already announced AccessPoints (still in range) from the new list
+	// and, at the same time, remove old AccessPoints that are not in range anymore
+	bool found;
+	auto map_it = _access_points_map.begin();
+	while (map_it != _access_points_map.end()) {
+		found = false;
+
+		auto poa_it = poa_list.begin();
+		while (poa_it != poa_list.end() && !found) {
+			if (same_access_point(*map_it->second, *poa_it)) {
+				// already in the map, remove from list
+				poa_it = poa_list.erase(poa_it);
+				found = true;
+			}
+		}
+
+		if (!found) {
+			// announce removal
+			AccessPointRemoved(map_it->first);
+
+			// not in range anymore, so remove from map
+			map_it = _access_points_map.erase(map_it);
+		} else {
+			map_it++;
+		}
+	}
+
+	// add remaining AccessPoints (new in range) to the map
+	
+	BOOST_FOREACH (const poa_info &poa, poa_list) {
+		std::stringstream path_str;
+		path_str << _path << "/AccessPoints/" << ++_access_point_count;
+
+		DBus::Path path_dbus = path_str.str();
+		_access_points_map[path_dbus] = std::unique_ptr<AccessPoint>(
+			new AccessPoint(_connection, path_str.str().c_str(), poa));
+
+		// announce addition
+		AccessPointAdded(path_dbus);
+	}
+}
+
+bool DeviceWireless::same_access_point(AccessPoint &ap, poa_info &poa)
+{
+	std::string addr = "";
+	odtone::mih::link_addr *mac_ = boost::get<odtone::mih::link_addr>(&poa.id.poa_addr);
+	if (mac_) {
+		odtone::mih::mac_addr *mac = boost::get<odtone::mih::mac_addr>(mac_);
+		if (mac_) {
+			addr = mac->address();
+		}
+	}
+
+	if (ap.HwAddress() == addr) {
+		return true;
+	}
+
+	return false;
 }

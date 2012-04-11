@@ -140,7 +140,7 @@ void NetworkManager::AddAndActivateConnection(
 {
 	log_(0, "Getting device by name (IpIface): ", iface);
 
-	std::map<DBus::Path, std::unique_ptr<Device>>::iterator it = _device_map.begin();
+	auto it = _device_map.begin();
 	while (it != _device_map.end()) {
 		if (it->second->IpInterface() == iface) {
 			log_(0, iface, " found");
@@ -159,7 +159,7 @@ std::vector< ::DBus::Path > NetworkManager::GetDevices()
 
 	std::vector< ::DBus::Path > r;
 
-	std::map<DBus::Path, std::unique_ptr<Device>>::iterator it = _device_map.begin();
+	auto it = _device_map.begin();
 	while (it != _device_map.end()) {
 		r.push_back(it->first);
 		it++;
@@ -197,5 +197,19 @@ void NetworkManager::add_802_11_device(odtone::mih::mac_addr &address)
 		log_(0, "Device added");
 	} catch (...) {
 		log_(0, "Error adding device");
+	}
+}
+
+void NetworkManager::new_accesspoints_detected()
+{
+	log_(0, "Updating AP list on DeviceWireless devices");
+
+	// tell DeviceWireless devices to update their list
+	auto it = _device_map.begin();
+	while (it != _device_map.end()) {
+		if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
+			reinterpret_cast<DeviceWireless *>(it->second.get())->refresh_accesspoint_list();
+		}
+		it++;
 	}
 }

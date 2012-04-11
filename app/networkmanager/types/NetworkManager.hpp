@@ -160,6 +160,12 @@ public:
 	 */
 	void add_802_11_device(odtone::mih::mac_addr &address);
 
+public:
+	/**
+	 * Method to inform the NetworkManager that new AccessPoints were detected.
+	 */
+	void new_accesspoints_detected();
+
 private:
 	void state(NM_STATE newstate);
 

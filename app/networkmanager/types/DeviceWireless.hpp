@@ -90,9 +90,28 @@ public:
 	 */
 	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
 
+	/**
+	 * Refresh the access point list.
+	 * Invoke this when new scan results show up.
+	 */
+	void refresh_accesspoint_list();
+
+private:
+	/**
+	 * Auxiliary function to compare access points.
+	 *
+	 * @param ap The AccessPoint to compare with.
+	 * @param poa The poa_info to compare with.
+	 *
+	 * @return True if they share the same mac address, false otherwise.
+	 */
+	bool same_access_point(AccessPoint &ap, poa_info &poa);
+
 private:
 	DBus::Connection &_connection;
 	if_80211          _fi;
+
+	unsigned int     _access_point_count;
 
 	std::string      _path;
 	odtone::logger   log_;
