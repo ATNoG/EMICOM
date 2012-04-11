@@ -143,6 +143,8 @@ void DeviceWireless::refresh_accesspoint_list()
 				// already in the map, remove from list
 				poa_it = poa_list.erase(poa_it);
 				found = true;
+			} else {
+				poa_it++;
 			}
 		}
 
