@@ -162,6 +162,7 @@ void mih_user::event_handler(odtone::mih::message &msg, const boost::system::err
 
 	case odtone::mih::indication::link_detected:
 		log_(0, "Received a link_detected event");
+		_nm.new_accesspoints_detected();
 		break;
 
 	case odtone::mih::indication::link_going_down:
