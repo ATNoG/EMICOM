@@ -24,7 +24,7 @@ NetworkManager::NetworkManager(DBus::Connection &connection, const char *dbus_pa
 	_connection(connection),
 	_dbus_path(dbus_path),
 	_settings_path(settings_path),
-	_settings(_connection, _dbus_path.append("/Settings").c_str(), settings_path),
+	_settings(_connection, std::string(_dbus_path).append("/Settings").c_str(), settings_path),
 	log_(_dbus_path.c_str(), std::cout)
 {
 	// FIXME
