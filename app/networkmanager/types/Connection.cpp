@@ -21,6 +21,10 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <algorithm>
+
 using namespace odtone::networkmanager;
 
 Connection::Connection(DBus::Connection &connection,
@@ -123,7 +127,31 @@ void Connection::read_settings()
 			log_(0, "Adding pair \"", key, ":", value, "\"");
 
 			::DBus::Variant val;
-			val.writer().append_string(value.c_str());
+
+			// ssid and mac_address are not strings, but char arrays!
+			if (key == "ssid") {
+				::DBus::MessageIter ait = val.writer();
+				ait << std::vector<uint8_t>(value.begin(), value.end());
+			} else if (key == "mac-address") {
+				std::vector<std::string> str_mac;
+				boost::split(str_mac, value, boost::is_any_of(":"));
+
+				// this array size should be 6, but with .size() no segfault occurs
+				std::vector<uint8_t> mac(str_mac.size());
+				std::transform(str_mac.begin(), str_mac.end(), mac.begin(),
+					[](const std::string &s) {
+						std::stringstream ss(s);
+						ss << std::hex;
+						int n;
+						ss >> n;
+						return n;
+					});
+
+				::DBus::MessageIter ait = val.writer();
+				ait << mac;
+			} else {
+				val.writer().append_string(value.c_str());
+			}
 
 			pairs[key] = val;
 			
