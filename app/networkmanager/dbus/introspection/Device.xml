@@ -241,6 +241,21 @@
           wireline data network.
         </tp:docstring>
       </tp:enumvalue>
+      <tp:enumvalue suffix="INFINIBAND" value="9">
+        <tp:docstring>
+          The device is an IP-capable InfiniBand interface.
+        </tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="BOND" value="10">
+        <tp:docstring>
+          The device is a bond master interface.
+        </tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="VLAN" value="11">
+        <tp:docstring>
+          The device is a VLAN interface.
+        </tp:docstring>
+      </tp:enumvalue>
     </tp:enum>
 
     <tp:flags name="NM_DEVICE_CAP" value-prefix="NM_DEVICE_CAP" type="u">
@@ -503,7 +518,12 @@
       </tp:enumvalue>
       <tp:enumvalue suffix="INFINIBAND_MODE" value="49">
         <tp:docstring>
-          Infiniband device does not support connected mode.
+          InfiniBand device does not support connected mode.
+        </tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="DEPENDENCY_FAILED" value="50">
+        <tp:docstring>
+          A dependency of the connection failed.
         </tp:docstring>
       </tp:enumvalue>
     </tp:enum>

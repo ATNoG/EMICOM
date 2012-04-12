@@ -63,7 +63,7 @@ Settings::Settings(DBus::Connection &connection, const char *path, const char *w
 	}
 
 	// FIXME
-	CanModify = false;
+	CanModify = true;
 	Hostname = "";
 }
 

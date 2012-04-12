@@ -42,7 +42,7 @@ public:
 		bind_property(Default, "b", true, false);
 		bind_property(Default6, "b", true, false);
 		bind_property(Vpn, "b", true, false);
-		bind_property(Master, "s", true, false);
+		bind_property(Master, "o", true, false);
 	}
 
 	::DBus::IntrospectedInterface *introspect() const 
@@ -71,7 +71,7 @@ public:
 			{ "Default", "b", true, false },
 			{ "Default6", "b", true, false },
 			{ "Vpn", "b", true, false },
-			{ "Master", "s", true, false },
+			{ "Master", "o", true, false },
 			{ 0, 0, 0, 0 }
 		};
 		static ::DBus::IntrospectedInterface Active_adaptor_interface = 
@@ -97,7 +97,7 @@ public:
 	::DBus::PropertyAdaptor< bool > Default;
 	::DBus::PropertyAdaptor< bool > Default6;
 	::DBus::PropertyAdaptor< bool > Vpn;
-	::DBus::PropertyAdaptor< std::string > Master;
+	::DBus::PropertyAdaptor< ::DBus::Path > Master;
 
 public:
 

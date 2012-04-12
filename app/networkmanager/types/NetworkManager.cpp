@@ -28,8 +28,8 @@ NetworkManager::NetworkManager(DBus::Connection &connection, const char *dbus_pa
 	log_(_dbus_path.c_str(), std::cout)
 {
 	// FIXME
-	State = NM_STATE_UNKNOWN;
-	Version = "0.0";
+	State = NM_STATE_DISCONNECTED;//NM_STATE_UNKNOWN;
+	Version = "0.9.4.0";
 	ActiveConnections = std::vector< ::DBus::Path >();
 	WimaxHardwareEnabled = false;
 	WimaxEnabled = false;
@@ -79,7 +79,7 @@ void NetworkManager::Enable(const bool& enable)
 
 		state(NM_STATE_DISCONNECTING);
 
-		std::map<DBus::Path, std::unique_ptr<Device>>::iterator it = _device_map.begin();
+		auto it = _device_map.begin();
 		while (it != _device_map.end()) {
 			it->second->Disconnect();
 			it++;
