@@ -160,7 +160,7 @@ public:
 	/**
 	 * Call a Disconnect on this device. Not implemented at this level.
 	 */
-	virtual void Disconnect();
+	virtual void Disconnect() = 0;
 
 protected:
 
