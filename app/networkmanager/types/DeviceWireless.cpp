@@ -18,6 +18,7 @@
 #include "DeviceWireless.hpp"
 
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace odtone::networkmanager;
 
@@ -40,7 +41,8 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 	Dhcp4Config = "/";       // TODO
 	ActiveConnection = "/";  // TODO
 
-	State = Device::NM_DEVICE_STATE_UNKNOWN;
+	State = Device::NM_DEVICE_STATE_UNKNOWN; // Change at some point or find out here!
+
 	Capabilities = Device::NM_DEVICE_CAP_NM_SUPPORTED;
 
 	Driver = "nl80211";             // by design
@@ -103,13 +105,13 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
 {
-	if (property == "Bitrate") {
+	if (boost::iequals(property, "Bitrate")) {
 		try {
 			Bitrate = _fi.link_bitrate();
 		} catch(...) {
 			Bitrate = 0;
 		}
-	} else if (property == "Mode") {
+	} else if (boost::iequals(property, "Mode")) {
 		if_80211::if_type t = _fi.get_if_type();
 		switch (t) {
 		case if_80211::if_type::adhoc:

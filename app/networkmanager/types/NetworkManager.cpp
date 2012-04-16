@@ -17,6 +17,8 @@
 
 #include "NetworkManager.hpp"
 
+#include <boost/algorithm/string.hpp>
+
 using namespace odtone::networkmanager;
 
 NetworkManager::NetworkManager(DBus::Connection &connection, const char *dbus_path, const char *settings_path) :
@@ -212,4 +214,31 @@ void NetworkManager::new_accesspoints_detected()
 		}
 		it++;
 	}
+}
+
+void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
+                                     const std::string &property,
+                                     const DBus::Variant &value)
+{
+	log_(0, "Setting property \"", property, "\"");
+
+	if (boost::iequals(property, "WirelessEnabled")) {
+		auto it = _device_map.begin();
+		while (it != _device_map.end()) {
+			if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
+				if (!value) {
+					it->second.get()->Disconnect();
+				} else {
+					// TODO enable
+				}
+			}
+			it ++;
+		}
+	} else if (boost::iequals(property, "WwanEnabled")) {
+		// Unsupported
+	} else if (boost::iequals(property, "WimaxEnabled")) {
+		// Unsupported
+	}
+
+	PropertiesAdaptor::on_set_property(interface, property, value);
 }

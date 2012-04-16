@@ -166,6 +166,13 @@ public:
 	 */
 	void new_accesspoints_detected();
 
+protected:
+	// override from PropertiesAdaptor
+	/**
+	 * @see DBus::PropertyAdaptor
+	 */
+	void on_set_property(DBus::InterfaceAdaptor &interface, const std::string &property, const DBus::Variant &value);
+
 private:
 	void state(NM_STATE newstate);
 
