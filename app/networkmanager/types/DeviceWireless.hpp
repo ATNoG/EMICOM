@@ -84,17 +84,18 @@ public:
 	 */
 	std::vector< ::DBus::Path > GetAccessPoints();
 
-	// override from PropertiesAdaptor
-	/**
-	 * @see DBus::PropertyAdaptor
-	 */
-	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
-
 	/**
 	 * Refresh the access point list.
 	 * Invoke this when new scan results show up.
 	 */
 	void refresh_accesspoint_list();
+
+protected:
+	// override from PropertiesAdaptor
+	/**
+	 * @see DBus::PropertyAdaptor
+	 */
+	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
 
 private:
 	/**
