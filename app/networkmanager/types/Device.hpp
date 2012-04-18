@@ -162,6 +162,11 @@ public:
 	 */
 	virtual void Disconnect() = 0;
 
+	/**
+	 * Enable this device. Don't necessarily connect, just bring up!
+	 */
+	virtual void Enable() = 0;
+
 protected:
 
 	/**

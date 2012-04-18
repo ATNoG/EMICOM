@@ -54,3 +54,8 @@ void DeviceWired::Disconnect()
 {
 	// TODO
 }
+
+void DeviceWired::Enable()
+{
+	// TODO
+}

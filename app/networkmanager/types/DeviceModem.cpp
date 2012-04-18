@@ -52,3 +52,8 @@ void DeviceModem::Disconnect()
 {
 	// TODO
 }
+
+void DeviceModem::Enable()
+{
+	// TODO
+}

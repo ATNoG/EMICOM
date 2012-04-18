@@ -64,3 +64,8 @@ std::vector< ::DBus::Path > DeviceWiMax::GetNspList()
 	// TODO
 	return r;
 }
+
+void DeviceWiMax::Enable()
+{
+	// TODO
+}

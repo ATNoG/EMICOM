@@ -87,6 +87,18 @@ void DeviceWireless::Disconnect()
 	}
 }
 
+void DeviceWireless::Enable()
+{
+	log_(0, "Enabling");
+
+	try {
+		_fi.set_op_mode(odtone::mih::link_ac_type_power_up);
+		state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN); // TODO better reasons?
+	} catch (...) {
+		log_(0, "Exception occurred, potentially not enabled");
+	}
+}
+
 std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 {
 	log_(0, "Getting Access Points");

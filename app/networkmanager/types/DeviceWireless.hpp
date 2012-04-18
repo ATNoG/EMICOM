@@ -78,6 +78,11 @@ public:
 	void Disconnect();
 
 	/**
+	 * @see Device::Enable()
+	 */
+	void Enable();
+
+	/**
 	 * Get the list of associated AccessPoint objects.
 	 *
 	 * @return The D-Bus path list of AccessPoint objects.

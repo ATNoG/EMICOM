@@ -36,6 +36,7 @@ public:
 
 	// inherited from Device adaptor
 	void Disconnect();
+	void Enable();
 };
 
 }; };
