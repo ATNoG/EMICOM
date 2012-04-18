@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 		(sap::kConf_MIHF_Ip, po::value<std::string>()->default_value("127.0.0.1"), "Local MIHF IP address")			
 		(sap::kConf_MIHF_Local_Port, po::value<ushort>()->default_value(1025), "Local MIHF communication port")
 		(sap::kConf_MIH_SAP_dest, po::value<std::string>()->default_value(""), "MIHF destination")
-		(kConf_DBus_Name, po::value<std::string>()->default_value("org.freedesktop.NetworkManager21"),
+		(kConf_DBus_Name, po::value<std::string>()->default_value("org.freedesktop.NetworkManager"),
 		                  "DBus name for NetworkManager bus")
 		(kConf_DBus_Path, po::value<std::string>()->default_value("/org/freedesktop/NetworkManager21"),
 		                  "DBus path for NetworkManager object")

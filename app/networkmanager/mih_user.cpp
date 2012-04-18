@@ -154,9 +154,11 @@ void mih_user::event_handler(odtone::mih::message &msg, const boost::system::err
 	switch (msg.mid()) {
 	case odtone::mih::indication::link_up:
 		log_(0, "Received a link_up event");
+		// TODO: notify networkmanager
 		break;
 
 	case odtone::mih::indication::link_down:
+		// TODO: notify networkmanager
 		log_(0, "Received a link_down event");
 		break;
 
@@ -166,6 +168,7 @@ void mih_user::event_handler(odtone::mih::message &msg, const boost::system::err
 		break;
 
 	case odtone::mih::indication::link_going_down:
+		// TODO: notify networkmanager
 		log_(0, "Received a link_going_down event");
 		break;
 

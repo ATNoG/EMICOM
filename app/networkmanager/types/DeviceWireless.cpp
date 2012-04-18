@@ -19,6 +19,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
+#include <cstring>
 
 using namespace odtone::networkmanager;
 
@@ -41,7 +42,11 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 	Dhcp4Config = "/";       // TODO
 	ActiveConnection = "/";  // TODO
 
-	State = Device::NM_DEVICE_STATE_UNKNOWN; // Change at some point or find out here!
+	if (_fi.get_op_mode() == odtone::mih::op_mode_powered_down) {
+		State = Device::NM_DEVICE_STATE_UNAVAILABLE;
+	} else {
+		State = Device::NM_DEVICE_STATE_ACTIVATED; // maybe others?
+	}
 
 	Capabilities = Device::NM_DEVICE_CAP_NM_SUPPORTED;
 
@@ -69,7 +74,9 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 			// store the first only
 			break;
 		}
-	}	
+	}
+
+	// TODO: trigger wifi scan
 }
 
 DeviceWireless::~DeviceWireless()
@@ -157,6 +164,7 @@ void DeviceWireless::refresh_accesspoint_list()
 				// already in the map, remove from list
 				poa_it = poa_list.erase(poa_it);
 				found = true;
+				// TODO update properties from the map!
 			} else {
 				poa_it++;
 			}
@@ -174,7 +182,6 @@ void DeviceWireless::refresh_accesspoint_list()
 	}
 
 	// add remaining AccessPoints (new in range) to the map
-	
 	BOOST_FOREACH (const poa_info &poa, poa_list) {
 		std::stringstream path_str;
 		path_str << _path << "/AccessPoints/" << ++_access_point_count;

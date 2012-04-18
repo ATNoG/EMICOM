@@ -37,8 +37,8 @@ NetworkManager::NetworkManager(DBus::Connection &connection, const char *dbus_pa
 	WimaxEnabled = false;
 	WwanHardwareEnabled = false;
 	WwanEnabled = false;
-	WirelessHardwareEnabled = true;
-	WirelessEnabled = true;
+	WirelessHardwareEnabled = false;
+	WirelessEnabled = false;
 	NetworkingEnabled = true;
 }
 
@@ -60,15 +60,65 @@ void NetworkManager::state(NM_STATE newstate)
 	StateChanged(newstate);
 }
 
+template <class T>
+DBus::Variant NetworkManager::to_variant(T value)
+{
+	DBus::Variant v;
+	DBus::MessageIter iter = v.writer();
+	iter << value;
+	return v;
+}
+
+void NetworkManager::property(const std::string &property, const DBus::Variant &value)
+{
+	if (boost::iequals(property, "NetworkingEnabled")) {
+		NetworkingEnabled = static_cast<bool>(value);
+	} else if (boost::iequals(property, "WirelessEnabled")) {
+		WirelessEnabled = static_cast<bool>(value);
+	} else if (boost::iequals(property, "WirelessHardwareEnabled")) {
+		WirelessHardwareEnabled = static_cast<bool>(value);
+	} else if (boost::iequals(property, "WwanEnabled")) {
+		WwanEnabled = static_cast<bool>(value);
+	} else if (boost::iequals(property, "WwanHardwareEnabled")) {
+		WwanHardwareEnabled = static_cast<bool>(value);
+	} else if (boost::iequals(property, "WimaxEnabled")) {
+		WimaxEnabled = static_cast<bool>(value);
+	} else if (boost::iequals(property, "WimaxHardwareEnabled")) {
+		WimaxHardwareEnabled = static_cast<bool>(value);
+	} else if (boost::iequals(property, "ActiveConnections")) {
+		DBus::Path *ptr;
+		int length = value.reader().get_array(&ptr);
+
+		std::vector<DBus::Path> conns;
+		for (; length >= 0; length--, ptr++) {
+			conns.push_back(*ptr);
+		}
+
+		ActiveConnections = conns;
+	} else if (boost::iequals(property, "Version")) {
+		Version = value.reader().get_string();
+	} else if (boost::iequals(property, "State")) {
+		State = static_cast<uint32_t>(value);
+	//} else {
+	//	// fail
+	}
+
+	std::map<std::string, DBus::Variant> props;
+	props[property] = value;
+	PropertiesChanged(props);
+}
+
 void NetworkManager::SetLogging(const std::string& level, const std::string& domains)
 {
 	// TODO
+	// never?
 }
 
 std::map< std::string, std::string > NetworkManager::GetPermissions()
 {
 	std::map< std::string, std::string > r;
 	// TODO
+	// never?
 	return r;
 }
 
@@ -183,8 +233,13 @@ void NetworkManager::add_802_11_device(odtone::mih::mac_addr &address)
 		path << _dbus_path << "/Devices/" << fi.ifindex();
 		std::unique_ptr<Device> d(new DeviceWireless(_connection, path.str().c_str(), address));
 
+		// wireless network hardware is now enabled
+		if (!WirelessHardwareEnabled()) {
+			property("WirelessHardwareEnabled", to_variant<bool>(true));
+		}
+
 		// if networking is disabled, shut this interface
-		if (!NetworkingEnabled()) {
+		if (!NetworkingEnabled() || !WirelessEnabled()) {
 			d->Disconnect();
 		} else {
 			// TODO
@@ -229,7 +284,7 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 				if (!value) {
 					it->second.get()->Disconnect();
 				} else {
-					// TODO enable
+					it->second.get()->Enable();
 				}
 			}
 			it ++;
@@ -239,6 +294,8 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 	} else if (boost::iequals(property, "WimaxEnabled")) {
 		// Unsupported
 	}
+
+	NetworkManager::property(property, value);
 
 	PropertiesAdaptor::on_set_property(interface, property, value);
 }

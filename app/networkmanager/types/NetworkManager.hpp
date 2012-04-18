@@ -175,6 +175,16 @@ protected:
 
 private:
 	void state(NM_STATE newstate);
+	void property(const std::string &property, const DBus::Variant &value);
+
+	/**
+	 * Convert a given value to the Variant type.
+	 *
+	 * @param value The value to convert to Variant.
+	 * @return The result Variant value.
+	 */
+	template <class T>
+	DBus::Variant to_variant(T value);
 
 private:
 	DBus::Connection &_connection;
