@@ -221,7 +221,7 @@ std::vector< ::DBus::Path > NetworkManager::GetDevices()
 	return r;
 }
 
-void NetworkManager::add_802_11_device(odtone::mih::mac_addr &address)
+void NetworkManager::add_802_11_device(mih::mac_addr &address)
 {
 	log_(0, "Adding WiFi device, address: ", address.address());
 
@@ -271,7 +271,7 @@ void NetworkManager::new_accesspoints_detected()
 	}
 }
 
-void NetworkManager::link_up(const odtone::mih::mac_addr &dev, const odtone::mih::mac_addr &poa)
+void NetworkManager::link_up(const mih::mac_addr &dev, const mih::mac_addr &poa)
 {
 	log_(0, "New L2 completed for device ", dev.address(), " with poa ", poa.address());
 
@@ -324,7 +324,7 @@ void NetworkManager::link_up(const odtone::mih::mac_addr &dev, const odtone::mih
 	}
 }
 
-void NetworkManager::link_down(const odtone::mih::mac_addr &dev)
+void NetworkManager::link_down(const mih::mac_addr &dev)
 {
 	log_(0, "L2 connection dropped on device ", dev.address());
 

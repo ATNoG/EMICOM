@@ -214,7 +214,7 @@ void DeviceWireless::refresh_accesspoint_list()
 
 bool DeviceWireless::same_access_point(AccessPoint &ap, poa_info &poa)
 {
-	std::string addr = "";
+	std::string addr;
 	odtone::mih::link_addr *mac_ = boost::get<odtone::mih::link_addr>(&poa.id.poa_addr);
 	if (mac_) {
 		odtone::mih::mac_addr *mac = boost::get<odtone::mih::mac_addr>(mac_);

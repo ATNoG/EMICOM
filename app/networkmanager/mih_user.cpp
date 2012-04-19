@@ -29,18 +29,18 @@
 
 using namespace odtone::networkmanager;
 
-mih_user::mih_user(const odtone::mih::config &cfg, boost::asio::io_service &io, NetworkManager &nm) :
+mih_user::mih_user(const mih::config &cfg, boost::asio::io_service &io, NetworkManager &nm) :
 	_mihf(cfg, io, boost::bind(&mih_user::event_handler, this, _1, _2)),
 	_nm(nm),
 	log_("mih_usr", std::cout)
 {
-	odtone::mih::message m;
+	mih::message m;
 
-	boost::optional<odtone::mih::mih_cmd_list> supp_cmd;
+	boost::optional<mih::mih_cmd_list> supp_cmd;
 
-	m << odtone::mih::indication(odtone::mih::indication::user_register)
-	    & odtone::mih::tlv_command_list(supp_cmd);
-	m.destination(odtone::mih::id("local-mihf"));
+	m << mih::indication(mih::indication::user_register)
+	    & mih::tlv_command_list(supp_cmd);
+	m.destination(mih::id("local-mihf"));
 
 	_mihf.async_send(m, boost::bind(&mih_user::user_reg_handler, this, boost::cref(cfg), _2));
 }
@@ -49,7 +49,7 @@ mih_user::~mih_user()
 {
 }
 
-void mih_user::user_reg_handler(const odtone::mih::config &cfg, const boost::system::error_code &ec)
+void mih_user::user_reg_handler(const mih::config &cfg, const boost::system::error_code &ec)
 {
 	log_(0, "MIH-User registered, status: ", ec.message());
 
@@ -58,9 +58,9 @@ void mih_user::user_reg_handler(const odtone::mih::config &cfg, const boost::sys
 	}
 
 	// get the local links
-	odtone::mih::message m;
-	m << odtone::mih::request(odtone::mih::request::capability_discover);
-	m.destination(odtone::mih::id("local-mihf"));
+	mih::message m;
+	m << mih::request(mih::request::capability_discover);
+	m.destination(mih::id("local-mihf"));
 
 	_mihf.async_send(m, boost::bind(&mih_user::capability_discover_confirm, this, _1, _2));
 }
@@ -71,7 +71,7 @@ void mih_user::user_reg_handler(const odtone::mih::config &cfg, const boost::sys
  * @param msg Received message.
  * @param ec Error Code.
  */
-void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boost::system::error_code& ec)
+void mih_user::capability_discover_confirm(mih::message& msg, const boost::system::error_code& ec)
 {
 	log_(0, "Received local MIHF capabilities, status: ", ec.message());
 
@@ -79,14 +79,14 @@ void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boos
 		return;
 	}
 
-	odtone::mih::status st;
-	boost::optional<odtone::mih::net_type_addr_list> ntal;
-	boost::optional<odtone::mih::mih_evt_list> evt;
+	mih::status st;
+	boost::optional<mih::net_type_addr_list> ntal;
+	boost::optional<mih::mih_evt_list> evt;
 
-	msg >> odtone::mih::confirm()
-		& odtone::mih::tlv_status(st)
-		& odtone::mih::tlv_net_type_addr_list(ntal)
-		& odtone::mih::tlv_event_list(evt);
+	msg >> mih::confirm()
+		& mih::tlv_status(st)
+		& mih::tlv_net_type_addr_list(ntal)
+		& mih::tlv_event_list(evt);
 
 	// TODO fix to other technologies
 	if (!ntal) {
@@ -126,7 +126,7 @@ void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boos
 		wanted_evts.set(mih::mih_evt_link_up);
 
 		// attempt to subscribe events of interest
-		odtone::mih::message m;
+		mih::message m;
 		m << mih::request(mih::request::event_subscribe)
 			& mih::tlv_link_identifier(li)
 			& mih::tlv_event_list(wanted_evts);
@@ -136,14 +136,14 @@ void mih_user::capability_discover_confirm(odtone::mih::message& msg, const boos
 	}
 }
 
-void mih_user::event_subscribe_response(odtone::mih::message &msg, const boost::system::error_code &ec)
+void mih_user::event_subscribe_response(mih::message &msg, const boost::system::error_code &ec)
 {
 	log_(0, "Received event subscription response, status: ", ec.message());
 
 	// do nothing
 }
 
-void mih_user::event_handler(odtone::mih::message &msg, const boost::system::error_code &ec)
+void mih_user::event_handler(mih::message &msg, const boost::system::error_code &ec)
 {
 	log_(0, "Event received, status: ", ec.message());
 
@@ -152,21 +152,21 @@ void mih_user::event_handler(odtone::mih::message &msg, const boost::system::err
 	}
 
 	switch (msg.mid()) {
-	case odtone::mih::indication::link_up:
+	case mih::indication::link_up:
 	{
 		log_(0, "Received a link_up event");
 
-		odtone::mih::link_tuple_id up_link;
-		boost::optional<odtone::mih::link_addr> __old_rout, __new_rout;
+		mih::link_tuple_id up_link;
+		boost::optional<mih::link_addr> __old_rout, __new_rout;
 		boost::optional<bool> __ip_renew;
-		boost::optional<odtone::mih::ip_mob_mgmt> __ip_mob;
+		boost::optional<mih::ip_mob_mgmt> __ip_mob;
 
-		msg >> odtone::mih::indication()
-			& odtone::mih::tlv_link_identifier(up_link)
-			& odtone::mih::tlv_old_access_router(__old_rout)
-			& odtone::mih::tlv_new_access_router(__new_rout)
-			& odtone::mih::tlv_ip_renewal_flag(__ip_renew)
-			& odtone::mih::tlv_ip_mob_mgmt(__ip_mob);
+		msg >> mih::indication()
+			& mih::tlv_link_identifier(up_link)
+			& mih::tlv_old_access_router(__old_rout)
+			& mih::tlv_new_access_router(__new_rout)
+			& mih::tlv_ip_renewal_flag(__ip_renew)
+			& mih::tlv_ip_mob_mgmt(__ip_mob);
 
 		mih::mac_addr *dev = boost::get<mih::mac_addr>(&up_link.addr);
 		if (!dev) {
@@ -191,18 +191,18 @@ void mih_user::event_handler(odtone::mih::message &msg, const boost::system::err
 	}
 	break;
 
-	case odtone::mih::indication::link_down:
+	case mih::indication::link_down:
 	{
 		log_(0, "Received a link_down event");
 
-		odtone::mih::link_tuple_id down_link;
-		boost::optional<odtone::mih::link_addr> __old_rout;
-		odtone::mih::link_dn_reason __dn_reason;
+		mih::link_tuple_id down_link;
+		boost::optional<mih::link_addr> __old_rout;
+		mih::link_dn_reason __dn_reason;
 
-		msg >> odtone::mih::indication()
-			& odtone::mih::tlv_link_identifier(down_link)
-			& odtone::mih::tlv_old_access_router(__old_rout)
-			& odtone::mih::tlv_link_dn_reason(__dn_reason);
+		msg >> mih::indication()
+			& mih::tlv_link_identifier(down_link)
+			& mih::tlv_old_access_router(__old_rout)
+			& mih::tlv_link_dn_reason(__dn_reason);
 
 		mih::mac_addr *dev = boost::get<mih::mac_addr>(&down_link.addr);
 		if (!dev) {
@@ -214,20 +214,20 @@ void mih_user::event_handler(odtone::mih::message &msg, const boost::system::err
 	}
 	break;
 
-	case odtone::mih::indication::link_detected:
+	case mih::indication::link_detected:
 		log_(0, "Received a link_detected event");
 		_nm.new_accesspoints_detected();
 		break;
 
-	case odtone::mih::indication::link_going_down:
+	case mih::indication::link_going_down:
 		// TODO: notify networkmanager
 		log_(0, "Received a link_going_down event");
 		break;
 
-	case odtone::mih::indication::link_handover_imminent:
+	case mih::indication::link_handover_imminent:
 		log_(0, "Received a link_handover_imminent event");
 		break;
-	case odtone::mih::indication::link_handover_complete:
+	case mih::indication::link_handover_complete:
 		log_(0, "Received a link_handover_complete event");
 		break;
 	default:

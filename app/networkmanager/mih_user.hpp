@@ -38,7 +38,7 @@ public:
 	 * @param io The io_service object that the MIH-User will use to
 	 * dispatch handlers for any asynchronous operations performed on the socket. 
 	 */
-	mih_user(const odtone::mih::config &cfg, boost::asio::io_service &io, NetworkManager &nm);
+	mih_user(const mih::config &cfg, boost::asio::io_service &io, NetworkManager &nm);
 
 	/**
 	 * Destruct the MIH-User.
@@ -52,7 +52,7 @@ protected:
 	 * @param cfg Configuration options.
 	 * @param ec Error Code.
 	 */
-	void user_reg_handler(const odtone::mih::config &cfg, const boost::system::error_code &ec);
+	void user_reg_handler(const mih::config &cfg, const boost::system::error_code &ec);
 
 	/**
 	 * Capability Discover handler.
@@ -60,7 +60,7 @@ protected:
 	 * @param msg Received message.
 	 * @param ec Error Code.
 	 */
-	void capability_discover_confirm(odtone::mih::message& msg, const boost::system::error_code& ec);
+	void capability_discover_confirm(mih::message& msg, const boost::system::error_code& ec);
 
 	/**
 	 * Default MIH event handler.
@@ -68,7 +68,7 @@ protected:
 	 * @param msg Received message.
 	 * @param ec Error code.
 	 */
-	void event_handler(odtone::mih::message &msg, const boost::system::error_code &ec);
+	void event_handler(mih::message &msg, const boost::system::error_code &ec);
 
 	/**
 	 * Event subscribe handler.
@@ -76,12 +76,12 @@ protected:
 	 * @param msg Received message.
 	 * @param ec Error Code.
 	 */
-	void event_subscribe_response(odtone::mih::message &msg, const boost::system::error_code &ec);
+	void event_subscribe_response(mih::message &msg, const boost::system::error_code &ec);
 
 private:
-	odtone::sap::user _mihf; /**< User SAP helper. */
+	sap::user _mihf; /**< User SAP helper. */
 	NetworkManager   &_nm;
-	odtone::logger    log_;
+	logger    log_;
 };
 
 }; };
