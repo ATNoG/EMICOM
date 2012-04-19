@@ -19,7 +19,6 @@
 #include "AccessPoint.hpp"
 #include "DeviceWireless.hpp"
 #include "DeviceWired.hpp"
-#include "DeviceModem.hpp"
 #include "DeviceWiMax.hpp"
 #include "WiMaxNsp.hpp"
 #include "IP4Config.hpp"

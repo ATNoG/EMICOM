@@ -47,9 +47,6 @@ int main(int argc, char *argv[])
 	// setup an example DeviceWired
 	networkmanager::DeviceWired wired(conn, "/org/freedesktop/NetworkManager21/Devices/1");
 
-	// setup an example DeviceModem
-	networkmanager::DeviceModem modem(conn, "/org/freedesktop/NetworkManager21/Devices/2");
-
 	// setup an example DeviceWiMax
 	networkmanager::DeviceWiMax wimax(conn, "/org/freedesktop/NetworkManager21/Devices/3");
 

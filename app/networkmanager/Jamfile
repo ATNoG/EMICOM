@@ -42,7 +42,6 @@ odtone.explicit-alias networkmanager-types
 	  types/Device.cpp
 	  types/DeviceWireless.cpp
 	  types/DeviceWired.cpp
-	  types/DeviceModem.cpp
 	  types/DeviceWiMax.cpp
 	  types/WiMaxNsp.cpp
 	  types/IP4Config.cpp
