@@ -21,6 +21,8 @@
 #include "../dbus/adaptors/Device.hpp"
 #include <boost/noncopyable.hpp>
 
+#include "odtone/mih/types/address.hpp"
+
 namespace odtone {
 namespace networkmanager {
 
@@ -166,6 +168,16 @@ public:
 	 * Enable this device. Don't necessarily connect, just bring up!
 	 */
 	virtual void Enable() = 0;
+
+	/**
+	 * Inform this device that L2 connectivity was dropped.
+	 */
+	virtual void link_down() = 0;
+
+	/**
+	 * Inform this device that L2 connectivity is up.
+	 */
+	virtual void link_up(const odtone::mih::mac_addr &poa) = 0;
 
 protected:
 

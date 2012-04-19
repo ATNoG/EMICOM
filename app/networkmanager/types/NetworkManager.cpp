@@ -285,7 +285,7 @@ void NetworkManager::link_up(const odtone::mih::mac_addr &dev, const odtone::mih
 				DeviceWireless *d = reinterpret_cast<DeviceWireless *>(it->second.get());
 				if (d->HwAddress() == dev.address()) {
 					match = true;
-					// TODO
+					d->link_up(poa);
 				}
 			}
 			break;
@@ -295,7 +295,7 @@ void NetworkManager::link_up(const odtone::mih::mac_addr &dev, const odtone::mih
 				DeviceWired *d = reinterpret_cast<DeviceWired *>(it->second.get());
 				if (d->HwAddress() == dev.address()) {
 					match = true;
-					// TODO
+					d->link_up(poa);
 				}
 			}
 			break;
@@ -305,7 +305,7 @@ void NetworkManager::link_up(const odtone::mih::mac_addr &dev, const odtone::mih
 				DeviceWiMax *d = reinterpret_cast<DeviceWiMax *>(it->second.get());
 				if (d->HwAddress() == dev.address()) {
 					match = true;
-					// TODO
+					d->link_up(poa);
 				}
 			}
 			break;
@@ -338,7 +338,7 @@ void NetworkManager::link_down(const odtone::mih::mac_addr &dev)
 				DeviceWireless *d = reinterpret_cast<DeviceWireless *>(it->second.get());
 				if (d->HwAddress() == dev.address()) {
 					match = true;
-					// TODO
+					d->link_down();
 				}
 			}
 			break;
@@ -348,7 +348,7 @@ void NetworkManager::link_down(const odtone::mih::mac_addr &dev)
 				DeviceWired *d = reinterpret_cast<DeviceWired *>(it->second.get());
 				if (d->HwAddress() == dev.address()) {
 					match = true;
-					// TODO
+					d->link_down();
 				}
 			}
 			break;
@@ -358,7 +358,7 @@ void NetworkManager::link_down(const odtone::mih::mac_addr &dev)
 				DeviceWiMax *d = reinterpret_cast<DeviceWiMax *>(it->second.get());
 				if (d->HwAddress() == dev.address()) {
 					match = true;
-					// TODO
+					d->link_down();
 				}
 			}
 			break;

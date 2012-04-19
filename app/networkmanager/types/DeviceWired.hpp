@@ -37,6 +37,16 @@ public:
 	// inherited from Device adaptor
 	void Disconnect();
 	void Enable();
+
+	/**
+	 * see Device::link_down()
+	 */
+	void link_down();
+
+	/**
+	 * see Device::link_up()
+	 */
+	void link_up(const odtone::mih::mac_addr &poa);
 };
 
 }; };

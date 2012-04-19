@@ -122,6 +122,18 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 	return r;
 }
 
+void DeviceWireless::link_down()
+{
+	// TODO
+	// check if device is up, or just disconnected
+}
+
+void DeviceWireless::link_up(const odtone::mih::mac_addr &poa)
+{
+	// TODO
+	// change state
+}
+
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
 {
 	if (boost::iequals(property, "Bitrate")) {

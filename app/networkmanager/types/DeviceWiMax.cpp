@@ -69,3 +69,15 @@ void DeviceWiMax::Enable()
 {
 	// TODO
 }
+
+void DeviceWiMax::link_down()
+{
+	// TODO
+	// check if device is up, or just disconnected
+}
+
+void DeviceWiMax::link_up(const odtone::mih::mac_addr &poa)
+{
+	// TODO
+	// change state
+}

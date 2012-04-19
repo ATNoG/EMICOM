@@ -59,3 +59,15 @@ void DeviceWired::Enable()
 {
 	// TODO
 }
+
+void DeviceWired::link_down()
+{
+	// TODO
+	// check if device is up, or just disconnected
+}
+
+void DeviceWired::link_up(const odtone::mih::mac_addr &poa)
+{
+	// TODO
+	// change state
+}

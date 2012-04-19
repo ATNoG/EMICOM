@@ -95,6 +95,16 @@ public:
 	 */
 	void refresh_accesspoint_list();
 
+	/**
+	 * see Device::link_down()
+	 */
+	void link_down();
+
+	/**
+	 * see Device::link_up()
+	 */
+	void link_up(const odtone::mih::mac_addr &poa);
+
 protected:
 	// override from PropertiesAdaptor
 	/**
