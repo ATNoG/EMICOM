@@ -276,10 +276,52 @@ void NetworkManager::link_up(const odtone::mih::mac_addr &dev, const odtone::mih
 	log_(0, "New L2 completed for device ", dev.address(), " with poa ", poa.address());
 
 	// look for device and inform/check
-//	auto it = _device_map.begin();
-//	while (it != _device_map.end()) {
-//		
-//	}
+	bool match;
+	auto it = _device_map.begin();
+	while (it != _device_map.end() && !match) {
+		switch (it->second.get()->DeviceType()) {
+			case Device::NM_DEVICE_TYPE_WIFI:
+			{
+				DeviceWireless *d = reinterpret_cast<DeviceWireless *>(it->second.get());
+				if (d->HwAddress() == dev.address()) {
+					match = true;
+					// TODO
+				}
+			}
+			break;
+
+			case Device::NM_DEVICE_TYPE_ETHERNET:
+			{
+				DeviceWired *d = reinterpret_cast<DeviceWired *>(it->second.get());
+				if (d->HwAddress() == dev.address()) {
+					match = true;
+					// TODO
+				}
+			}
+			break;
+
+			case Device::NM_DEVICE_TYPE_WIMAX:
+			{
+				DeviceWiMax *d = reinterpret_cast<DeviceWiMax *>(it->second.get());
+				if (d->HwAddress() == dev.address()) {
+					match = true;
+					// TODO
+				}
+			}
+			break;
+
+/*			case Device::NM_DEVICE_TYPE_BT:
+			case Device::NM_DEVICE_TYPE_OLPC_MESH:
+			case Device::NM_DEVICE_TYPE_INFINIBAND:
+			case Device::NM_DEVICE_TYPE_BOND:
+			case Device::NM_DEVICE_TYPE_VLAN:*/
+			default:
+				// unsupported
+				break;
+		}
+
+		it++;
+	}
 }
 
 void NetworkManager::link_down(const odtone::mih::mac_addr &dev)
@@ -287,10 +329,52 @@ void NetworkManager::link_down(const odtone::mih::mac_addr &dev)
 	log_(0, "L2 connection dropped on device ", dev.address());
 
 	// look for device and inform/check
-//	auto it = _device_map.begin();
-//	while (it != _device_map.end()) {
-//
-//	}
+	bool match = false;
+	auto it = _device_map.begin();
+	while (it != _device_map.end() && !match) {
+		switch (it->second.get()->DeviceType()) {
+			case Device::NM_DEVICE_TYPE_WIFI:
+			{
+				DeviceWireless *d = reinterpret_cast<DeviceWireless *>(it->second.get());
+				if (d->HwAddress() == dev.address()) {
+					match = true;
+					// TODO
+				}
+			}
+			break;
+
+			case Device::NM_DEVICE_TYPE_ETHERNET:
+			{
+				DeviceWired *d = reinterpret_cast<DeviceWired *>(it->second.get());
+				if (d->HwAddress() == dev.address()) {
+					match = true;
+					// TODO
+				}
+			}
+			break;
+
+			case Device::NM_DEVICE_TYPE_WIMAX:
+			{
+				DeviceWiMax *d = reinterpret_cast<DeviceWiMax *>(it->second.get());
+				if (d->HwAddress() == dev.address()) {
+					match = true;
+					// TODO
+				}
+			}
+			break;
+
+/*			case Device::NM_DEVICE_TYPE_BT:
+			case Device::NM_DEVICE_TYPE_OLPC_MESH:
+			case Device::NM_DEVICE_TYPE_INFINIBAND:
+			case Device::NM_DEVICE_TYPE_BOND:
+			case Device::NM_DEVICE_TYPE_VLAN:*/
+			default:
+				// unsupported
+				break;
+		}
+
+		it++;
+	}
 }
 
 void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
