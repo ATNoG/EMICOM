@@ -166,6 +166,21 @@ public:
 	 */
 	void new_accesspoints_detected();
 
+	/**
+	 * Method to inform the NetworkManager that a new L2 connection was completed.
+	 *
+	 * @param dev The device's mac address.
+	 * @param poa The newly associated point of access' address.
+	 */
+	void link_up(const odtone::mih::mac_addr &dev, const odtone::mih::mac_addr &poa);
+
+	/**
+	 * Method to inform NetworkManager that an L2 connection was dropped.
+	 *
+	 * @param dev The device's mac address.
+	 */
+	void link_down(const odtone::mih::mac_addr &dev);
+
 protected:
 	// override from PropertiesAdaptor
 	/**

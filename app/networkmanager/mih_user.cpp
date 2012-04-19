@@ -153,14 +153,66 @@ void mih_user::event_handler(odtone::mih::message &msg, const boost::system::err
 
 	switch (msg.mid()) {
 	case odtone::mih::indication::link_up:
+	{
 		log_(0, "Received a link_up event");
-		// TODO: notify networkmanager
-		break;
+
+		odtone::mih::link_tuple_id up_link;
+		boost::optional<odtone::mih::link_addr> __old_rout, __new_rout;
+		boost::optional<bool> __ip_renew;
+		boost::optional<odtone::mih::ip_mob_mgmt> __ip_mob;
+
+		msg >> odtone::mih::indication()
+			& odtone::mih::tlv_link_identifier(up_link)
+			& odtone::mih::tlv_old_access_router(__old_rout)
+			& odtone::mih::tlv_new_access_router(__new_rout)
+			& odtone::mih::tlv_ip_renewal_flag(__ip_renew)
+			& odtone::mih::tlv_ip_mob_mgmt(__ip_mob);
+
+		mih::mac_addr *dev = boost::get<mih::mac_addr>(&up_link.addr);
+		if (!dev) {
+			log_(0, "Unable to determine device address.");
+			break;
+		}
+
+		mih::mac_addr *poa;
+		mih::link_addr *_poa = boost::get<mih::link_addr>(&up_link.poa_addr);
+		if (_poa) {
+			poa = boost::get<mih::mac_addr>(_poa);
+			if (!poa) {
+				log_(0, "Unable to determine poa address");
+				break;
+			}
+		} else {
+			log_(0, "Unable to determine poa address");
+			break;
+		}
+
+		_nm.link_up(*dev, *poa);
+	}
+	break;
 
 	case odtone::mih::indication::link_down:
-		// TODO: notify networkmanager
+	{
 		log_(0, "Received a link_down event");
-		break;
+
+		odtone::mih::link_tuple_id down_link;
+		boost::optional<odtone::mih::link_addr> __old_rout;
+		odtone::mih::link_dn_reason __dn_reason;
+
+		msg >> odtone::mih::indication()
+			& odtone::mih::tlv_link_identifier(down_link)
+			& odtone::mih::tlv_old_access_router(__old_rout)
+			& odtone::mih::tlv_link_dn_reason(__dn_reason);
+
+		mih::mac_addr *dev = boost::get<mih::mac_addr>(&down_link.addr);
+		if (!dev) {
+			log_(0, "Unable to determine device address.");
+			break;
+		}
+
+		_nm.link_down(*dev);
+	}
+	break;
 
 	case odtone::mih::indication::link_detected:
 		log_(0, "Received a link_detected event");

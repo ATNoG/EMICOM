@@ -271,6 +271,28 @@ void NetworkManager::new_accesspoints_detected()
 	}
 }
 
+void NetworkManager::link_up(const odtone::mih::mac_addr &dev, const odtone::mih::mac_addr &poa)
+{
+	log_(0, "New L2 completed for device ", dev.address(), " with poa ", poa.address());
+
+	// look for device and inform/check
+//	auto it = _device_map.begin();
+//	while (it != _device_map.end()) {
+//		
+//	}
+}
+
+void NetworkManager::link_down(const odtone::mih::mac_addr &dev)
+{
+	log_(0, "L2 connection dropped on device ", dev.address());
+
+	// look for device and inform/check
+//	auto it = _device_map.begin();
+//	while (it != _device_map.end()) {
+//
+//	}
+}
+
 void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
                                      const std::string &property,
                                      const DBus::Variant &value)
