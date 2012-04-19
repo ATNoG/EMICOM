@@ -375,6 +375,9 @@ void NetworkManager::link_down(const odtone::mih::mac_addr &dev)
 
 		it++;
 	}
+
+	// TODO
+	// if the device is available and a connection was active, attemp reconnection
 }
 
 void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,

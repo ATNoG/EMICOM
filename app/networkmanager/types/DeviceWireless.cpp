@@ -33,7 +33,7 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 {
 	// FIXME
 	// inherited from Device adaptor
-	DeviceType = Device::NM_DEVICE_TYPE_WIFI; 
+	DeviceType = NM_DEVICE_TYPE_WIFI; 
 	FirmwareMissing = false; // by definition, if it got here...
 	Managed = true;          // by definition...
 
@@ -43,12 +43,12 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, o
 	ActiveConnection = "/";  // TODO
 
 	if (_fi.get_op_mode() == odtone::mih::op_mode_powered_down) {
-		State = Device::NM_DEVICE_STATE_UNAVAILABLE;
+		State = NM_DEVICE_STATE_UNAVAILABLE;
 	} else {
-		State = Device::NM_DEVICE_STATE_ACTIVATED; // maybe others?
+		State = NM_DEVICE_STATE_ACTIVATED; // maybe others?
 	}
 
-	Capabilities = Device::NM_DEVICE_CAP_NM_SUPPORTED;
+	Capabilities = NM_DEVICE_CAP_NM_SUPPORTED;
 
 	Driver = "nl80211";             // by design
 	IpInterface = _fi.ifname();
@@ -124,14 +124,19 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 
 void DeviceWireless::link_down()
 {
-	// TODO
-	// check if device is up, or just disconnected
+	if (_fi.get_op_mode() == odtone::mih::op_mode_powered_down) {
+		log_(0, "Link down, device is now unavailable");
+		state(NM_DEVICE_STATE_UNAVAILABLE, NM_DEVICE_STATE_REASON_UNKNOWN);
+	} else {
+		log_(0, "Link down, device is now disconnected");
+		state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	}
 }
 
 void DeviceWireless::link_up(const odtone::mih::mac_addr &poa)
 {
-	// TODO
-	// change state
+	log_(0, "Link up, device is now preparing to connect");
+	state(NM_DEVICE_STATE_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN); // preparing to connect?
 }
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
