@@ -227,9 +227,11 @@ void mih_user::event_handler(mih::message &msg, const boost::system::error_code 
 	case mih::indication::link_handover_imminent:
 		log_(0, "Received a link_handover_imminent event");
 		break;
+
 	case mih::indication::link_handover_complete:
 		log_(0, "Received a link_handover_complete event");
 		break;
+
 	default:
 		log_(0, "Received unknown/unsupported event");
 	}
