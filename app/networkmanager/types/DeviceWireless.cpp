@@ -177,11 +177,13 @@ void DeviceWireless::refresh_accesspoint_list()
 
 		auto poa_it = poa_list.begin();
 		while (poa_it != poa_list.end() && !found) {
-			if (same_access_point(*map_it->second, *poa_it)) {
+			if (same_access_point(*map_it->second, *poa_it)) {				
+				// update AP
+				map_it->second->Update(*poa_it);
+
 				// already in the map, remove from list
 				poa_it = poa_list.erase(poa_it);
 				found = true;
-				// TODO update properties from the map!
 			} else {
 				poa_it++;
 			}

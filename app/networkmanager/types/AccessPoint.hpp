@@ -20,6 +20,7 @@
 
 #include "../dbus/adaptors/AccessPoint.hpp"
 #include <boost/noncopyable.hpp>
+#include "odtone/logger.hpp"
 
 #include "../driver/if_80211.hpp"
 
@@ -71,6 +72,11 @@ public:
 	~AccessPoint();
 
 	/**
+	 * Update this AP with new POA information
+	 */
+	void Update(poa_info i);
+
+	/**
 	 * Convert a dBm signal value to a percentage
 	 *
 	 * @param dbm The current signal strength, in dBm.
@@ -92,6 +98,7 @@ private:
 
 private:
 	std::string _path;
+	logger      log_;
 };
 
 }; };
