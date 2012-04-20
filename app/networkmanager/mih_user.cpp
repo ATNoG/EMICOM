@@ -118,6 +118,7 @@ void mih_user::capability_discover_confirm(mih::message& msg, const boost::syste
 			log_(0, "Unsupported device type");
 		}
 
+		// attempt to subscribe events of interest
 		mih::mih_evt_list wanted_evts;
 		wanted_evts.set(mih::mih_evt_link_detected);
 		wanted_evts.set(mih::mih_evt_link_down);
@@ -125,7 +126,6 @@ void mih_user::capability_discover_confirm(mih::message& msg, const boost::syste
 		wanted_evts.set(mih::mih_evt_link_parameters_report);
 		wanted_evts.set(mih::mih_evt_link_up);
 
-		// attempt to subscribe events of interest
 		mih::message m;
 		m << mih::request(mih::request::event_subscribe)
 			& mih::tlv_link_identifier(li)
@@ -133,12 +133,38 @@ void mih_user::capability_discover_confirm(mih::message& msg, const boost::syste
 		m.destination(mih::id("local-mihf"));
 
 		_mihf.async_send(m, boost::bind(&mih_user::event_subscribe_response, this, _1, _2));
+
+		// also configure periodic reports
+		mih::message p;
+
+		mih::link_cfg_param       lcp;
+		mih::link_cfg_param_list  lcpl;
+
+		mih::link_param_802_11 lp = mih::link_param_802_11_rssi;
+		lcp.type = lp;
+		lcp.timer_interval = 3000/*0*/; // every 30 sec?
+		lcp.action = mih::th_action_normal;
+		lcpl.push_back(lcp);
+
+		p << mih::request(mih::request::link_configure_thresholds)
+			& mih::tlv_link_identifier(li)
+			& mih::tlv_link_cfg_param_list(lcpl);
+		p.destination(mih::id("local-mihf"));
+
+		_mihf.async_send(p, boost::bind(&mih_user::configure_thresholds_response, this, _1, _2));
 	}
 }
 
 void mih_user::event_subscribe_response(mih::message &msg, const boost::system::error_code &ec)
 {
 	log_(0, "Received event subscription response, status: ", ec.message());
+
+	// do nothing
+}
+
+void mih_user::configure_thresholds_response(mih::message &msg, const boost::system::error_code &ec)
+{
+	log_(0, "Received configure thresholds response, status: ", ec.message());
 
 	// do nothing
 }
@@ -217,6 +243,10 @@ void mih_user::event_handler(mih::message &msg, const boost::system::error_code 
 	case mih::indication::link_detected:
 		log_(0, "Received a link_detected event");
 		_nm.new_accesspoints_detected();
+		break;
+
+	case mih::indication::link_parameters_report:
+		log_(0, "Received a link_parameters report");
 		break;
 
 	case mih::indication::link_going_down:

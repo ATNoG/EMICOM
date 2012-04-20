@@ -78,6 +78,14 @@ protected:
 	 */
 	void event_subscribe_response(mih::message &msg, const boost::system::error_code &ec);
 
+	/**
+	 * Configure thresholds response
+	 *
+	 * @param msg Received message.
+	 * @param ec Error Code.
+	 */
+	void configure_thresholds_response(mih::message &msg, const boost::system::error_code &ec);
+
 private:
 	sap::user _mihf; /**< User SAP helper. */
 	NetworkManager   &_nm;
