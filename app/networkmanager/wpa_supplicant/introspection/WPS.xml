@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="data" type="s" direction="out"/>
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg name="interface" type="s" direction="in"/>
+			<arg name="propname" type="s" direction="in"/>
+			<arg name="value" type="v" direction="out"/>
+		</method>
+		<method name="GetAll">
+			<arg name="interface" type="s" direction="in"/>
+			<arg name="props" type="a{sv}" direction="out"/>
+		</method>
+		<method name="Set">
+			<arg name="interface" type="s" direction="in"/>
+			<arg name="propname" type="s" direction="in"/>
+			<arg name="value" type="v" direction="in"/>
+		</method>
+	</interface>
+	<interface name="fi.w1.wpa_supplicant1.Interface.WPS">
+		<method name="Start">
+			<arg name="args" type="a{sv}" direction="in"/>
+			<arg name="output" type="a{sv}" direction="out"/>
+		</method>
+		<signal name="Event">
+			<arg name="name" type="s"/>
+			<arg name="args" type="a{sv}"/>
+		</signal>
+			<signal name="Credentials">
+			<arg name="credentials" type="a{sv}"/>
+		</signal>
+		<signal name="PropertiesChanged">
+			g name="properties" type="a{sv}"/>
+		</signal>
+		<property name="ProcessCredentials" type="b" access="readwrite"/>
+	</interface>
+</node>

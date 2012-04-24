@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg direction="out" name="data" type="s" />
+		</method>
+	</interface>
+	<interface name="org.freedesktop.DBus.Properties">
+		<method name="Get">
+			<arg direction="in" name="interface" type="s" />
+			<arg direction="in" name="propname" type="s" />
+			<arg direction="out" name="value" type="v" />
+		</method>
+		<method name="GetAll">
+			<arg direction="in" name="interface" type="s" />
+			<arg direction="out" name="props" type="a{sv}" />
+		</method>
+		<method name="Set">
+			<arg direction="in" name="interface" type="s" />
+			<arg direction="in" name="propname" type="s" />
+			<arg direction="in" name="value" type="v" />
+		</method>
+	</interface>
+	<interface name="fi.w1.wpa_supplicant1">
+		<method name="CreateInterface">
+			<arg direction="in" name="args" type="a{sv}" />
+			<arg direction="out" name="path" type="o" />
+		</method>
+		<method name="RemoveInterface">
+			<arg direction="in" name="path" type="o" />
+		</method>
+		<method name="GetInterface">
+			<arg direction="in" name="ifname" type="s" />
+			<arg direction="out" name="path" type="o" />
+		</method>
+		<signal name="InterfaceAdded">
+			<arg name="path" type="o" />
+			<arg name="properties" type="a{sv}" />
+		</signal>
+		<signal name="InterfaceRemoved">
+			<arg name="path" type="o" />
+		</signal>
+		<signal name="PropertiesChanged">
+			<arg name="properties" type="a{sv}" />
+		</signal>
+		<property access="readwrite" name="DebugLevel" type="s" />
+		<property access="readwrite" name="DebugTimestamp" type="b" />
+		<property access="readwrite" name="DebugShowKeys" type="b" />
+		<property access="read" name="Interfaces" type="ao" />
+		<property access="read" name="EapMethods" type="as" />
+	</interface>
+</node>
