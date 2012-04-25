@@ -21,13 +21,12 @@
 
 using namespace odtone::networkmanager;
 
-NetworkManager::NetworkManager(DBus::Connection &connection, const char *dbus_path, const char *settings_path,
-                               const mih::config &cfg, boost::asio::io_service &io) :
-	DBus::ObjectAdaptor(connection, dbus_path),
+NetworkManager::NetworkManager(DBus::Connection &connection, const mih::config &cfg, boost::asio::io_service &io) :
+	DBus::ObjectAdaptor(connection, cfg.get<std::string>(kConf_DBus_Path).c_str()),
 	_connection(connection),
-	_dbus_path(dbus_path),
-	_settings_path(settings_path),
-	_settings(_connection, std::string(_dbus_path).append("/Settings").c_str(), settings_path),
+	_dbus_path(cfg.get<std::string>(kConf_DBus_Path)),
+	_settings_path(cfg.get<std::string>(kConf_Settings_Path)),
+	_settings(_connection, std::string(_dbus_path).append("/Settings").c_str(), _settings_path.c_str()),
 	log_(_dbus_path.c_str(), std::cout),
 	_mih_user(cfg, io,
 	          boost::bind(&NetworkManager::event_handler, this, _1, _2),
@@ -35,7 +34,7 @@ NetworkManager::NetworkManager(DBus::Connection &connection, const char *dbus_pa
 {
 	// FIXME
 	State = NM_STATE_DISCONNECTED;//NM_STATE_UNKNOWN;
-	Version = "0.9.4.0";
+	Version = cfg.get<std::string>(kConf_Version);
 	ActiveConnections = std::vector< ::DBus::Path >();
 	WimaxHardwareEnabled = false;
 	WimaxEnabled = false;
@@ -227,13 +226,12 @@ std::vector< ::DBus::Path > NetworkManager::GetDevices()
 
 void NetworkManager::new_device(mih::network_type &type, mih::link_addr &address)
 {
-	log_(0, "Adding new device");
+	log_(0, "New device detected");
 
 	try {
 		mih::link_type ltype = boost::get<mih::link_type>(type.link);
 		if (ltype == mih::link_type_802_11) {
 			mih::mac_addr mac = boost::get<mih::mac_addr>(address);
-			log_(0, "Adding 802.11 link with address ", mac.address());
 
 			add_802_11_device(mac);
 		} else {

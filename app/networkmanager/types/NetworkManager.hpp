@@ -30,6 +30,14 @@
 namespace odtone {
 namespace networkmanager {
 
+/**
+ * Configuration parameters
+ */
+static const char* const kConf_DBus_Name     = "networkmanager.dbus_name";
+static const char* const kConf_DBus_Path     = "networkmanager.dbus_path";
+static const char* const kConf_Settings_Path = "networkmanager.settings_path";
+static const char* const kConf_Version       = "networkmanager.version";
+
 class NetworkManager : boost::noncopyable,
 	public org::freedesktop::NetworkManager_adaptor,
 	public DBus::IntrospectableAdaptor,
@@ -57,14 +65,10 @@ public:
 	 * Construct a new NetworkManager D-Bus interface data type.
 	 *
 	 * @param connection The D-Bus connection to create on.
-	 * @param dbus_name The path for the D-Bus object.
-	 * @param settings The filesystem location to load/store connection settings.
-	 *
-	 * @param cfg @see mih_user::mih_user()
+	 * @param cfg The NetworkManager configuration parameters
 	 * @param io @see mih_user::mih_user()
 	 */
-	NetworkManager(DBus::Connection &connection, const char *dbus_path, const char *settings_path,
-	               const mih::config &cfg, boost::asio::io_service &io);
+	NetworkManager(DBus::Connection &connection, const mih::config &cfg, boost::asio::io_service &io);
 
 	/**
 	 * Destroy this object.
