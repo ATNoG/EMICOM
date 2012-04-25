@@ -69,14 +69,14 @@ int main(int argc, char *argv[])
 	DBus::Connection conn = DBus::Connection::SystemBus();
 	conn.request_name(cfg.get<std::string>(kConf_DBus_Name).c_str());
 
-	networkmanager::NetworkManager manager(conn,
-	                                       cfg.get<std::string>(kConf_DBus_Path).c_str(),
-	                                       cfg.get<std::string>(kConf_Settings_Path).c_str());
-
 	// launch the service
 	boost::asio::io_service ios;
 
-	networkmanager::mih_user usr(cfg, ios, manager);
+	networkmanager::NetworkManager manager(conn,
+	                                       cfg.get<std::string>(kConf_DBus_Path).c_str(),
+	                                       cfg.get<std::string>(kConf_Settings_Path).c_str(),
+	                                       cfg, ios);
+
 	boost::thread io(boost::bind(&boost::asio::io_service::run, &ios));
 
 	// start the D-Bus dispatcher

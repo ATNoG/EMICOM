@@ -17,22 +17,18 @@
 
 #include "mih_user.hpp"
 
-#include <odtone/mih/request.hpp>
-#include <odtone/mih/response.hpp>
-#include <odtone/mih/indication.hpp>
-#include <odtone/mih/confirm.hpp>
-#include <odtone/mih/tlv_types.hpp>
-
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <iostream>
 
 using namespace odtone::networkmanager;
 
-mih_user::mih_user(const mih::config &cfg, boost::asio::io_service &io, NetworkManager &nm) :
-	_mihf(cfg, io, boost::bind(&mih_user::event_handler, this, _1, _2)),
-	_nm(nm),
-	log_("mih_usr", std::cout)
+mih_user::mih_user(const mih::config &cfg, boost::asio::io_service &io,
+                   const default_handler &h, const new_device_handler &d) :
+	_mihf(cfg, io, h),
+	log_("mih_usr", std::cout),
+	_device_handler(d),
+	_h(h)
 {
 	mih::message m;
 
@@ -42,14 +38,14 @@ mih_user::mih_user(const mih::config &cfg, boost::asio::io_service &io, NetworkM
 	    & mih::tlv_command_list(supp_cmd);
 	m.destination(mih::id("local-mihf"));
 
-	_mihf.async_send(m, boost::bind(&mih_user::user_reg_handler, this, boost::cref(cfg), _2));
+	_mihf.async_send(m, boost::bind(&mih_user::user_reg_handler, this, _2));
 }
 
 mih_user::~mih_user()
 {
 }
 
-void mih_user::user_reg_handler(const mih::config &cfg, const boost::system::error_code &ec)
+void mih_user::user_reg_handler(const boost::system::error_code &ec)
 {
 	log_(0, "MIH-User registered, status: ", ec.message());
 
@@ -95,28 +91,10 @@ void mih_user::capability_discover_confirm(mih::message& msg, const boost::syste
 
 	BOOST_FOREACH (mih::net_type_addr &l, ntal.get()) {
 		mih::link_tuple_id li;
+		li.type = boost::get<mih::link_type>(l.nettype.link);
+		li.addr = l.addr;
 
-		mih::link_type *lt = boost::get<mih::link_type>(&l.nettype.link);
-		if (!lt) {
-			log_(0, "Link does not have a type");
-			break;
-		}
-
-		if (*lt == mih::link_type_802_11) {
-			mih::mac_addr *mac = boost::get<mih::mac_addr>(&l.addr);
-			if (mac) {
-				log_(0, "Adding 802.11 link with address ", mac->address());
-				if_80211 fi(*mac);
-				_nm.add_802_11_device(*mac);
-
-				li.type = mih::link_type_802_11;
-				li.addr = *mac;
-			} else {
-				log_(0, "Found 802.11, but no mac address");
-			}
-		} else {
-			log_(0, "Unsupported device type");
-		}
+		_device_handler(l.nettype, l.addr);
 
 		// attempt to subscribe events of interest
 		mih::mih_evt_list wanted_evts;
@@ -142,7 +120,7 @@ void mih_user::capability_discover_confirm(mih::message& msg, const boost::syste
 
 		mih::link_param_802_11 lp = mih::link_param_802_11_rssi;
 		lcp.type = lp;
-		lcp.timer_interval = 3000/*0*/; // every 30 sec?
+		lcp.timer_interval = 30000; // every 30 sec
 		lcp.action = mih::th_action_normal;
 		lcpl.push_back(lcp);
 
@@ -167,102 +145,4 @@ void mih_user::configure_thresholds_response(mih::message &msg, const boost::sys
 	log_(0, "Received configure thresholds response, status: ", ec.message());
 
 	// do nothing
-}
-
-void mih_user::event_handler(mih::message &msg, const boost::system::error_code &ec)
-{
-	log_(0, "Event received, status: ", ec.message());
-
-	if (ec) {
-		return;
-	}
-
-	switch (msg.mid()) {
-	case mih::indication::link_up:
-	{
-		log_(0, "Received a link_up event");
-
-		mih::link_tuple_id up_link;
-		boost::optional<mih::link_addr> __old_rout, __new_rout;
-		boost::optional<bool> __ip_renew;
-		boost::optional<mih::ip_mob_mgmt> __ip_mob;
-
-		msg >> mih::indication()
-			& mih::tlv_link_identifier(up_link)
-			& mih::tlv_old_access_router(__old_rout)
-			& mih::tlv_new_access_router(__new_rout)
-			& mih::tlv_ip_renewal_flag(__ip_renew)
-			& mih::tlv_ip_mob_mgmt(__ip_mob);
-
-		mih::mac_addr *dev = boost::get<mih::mac_addr>(&up_link.addr);
-		if (!dev) {
-			log_(0, "Unable to determine device address.");
-			break;
-		}
-
-		mih::mac_addr *poa;
-		mih::link_addr *_poa = boost::get<mih::link_addr>(&up_link.poa_addr);
-		if (_poa) {
-			poa = boost::get<mih::mac_addr>(_poa);
-			if (!poa) {
-				log_(0, "Unable to determine poa address");
-				break;
-			}
-		} else {
-			log_(0, "Unable to determine poa address");
-			break;
-		}
-
-		_nm.link_up(*dev, *poa);
-	}
-	break;
-
-	case mih::indication::link_down:
-	{
-		log_(0, "Received a link_down event");
-
-		mih::link_tuple_id down_link;
-		boost::optional<mih::link_addr> __old_rout;
-		mih::link_dn_reason __dn_reason;
-
-		msg >> mih::indication()
-			& mih::tlv_link_identifier(down_link)
-			& mih::tlv_old_access_router(__old_rout)
-			& mih::tlv_link_dn_reason(__dn_reason);
-
-		mih::mac_addr *dev = boost::get<mih::mac_addr>(&down_link.addr);
-		if (!dev) {
-			log_(0, "Unable to determine device address.");
-			break;
-		}
-
-		_nm.link_down(*dev);
-	}
-	break;
-
-	case mih::indication::link_detected:
-		log_(0, "Received a link_detected event");
-		_nm.new_accesspoints_detected();
-		break;
-
-	case mih::indication::link_parameters_report:
-		log_(0, "Received a link_parameters report");
-		break;
-
-	case mih::indication::link_going_down:
-		// TODO: notify networkmanager
-		log_(0, "Received a link_going_down event");
-		break;
-
-	case mih::indication::link_handover_imminent:
-		log_(0, "Received a link_handover_imminent event");
-		break;
-
-	case mih::indication::link_handover_complete:
-		log_(0, "Received a link_handover_complete event");
-		break;
-
-	default:
-		log_(0, "Received unknown/unsupported event");
-	}
 }

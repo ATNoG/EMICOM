@@ -21,7 +21,11 @@
 #include <odtone/logger.hpp>
 #include <odtone/sap/user.hpp>
 
-#include "types/types.hpp"
+#include <odtone/mih/request.hpp>
+#include <odtone/mih/response.hpp>
+#include <odtone/mih/indication.hpp>
+#include <odtone/mih/confirm.hpp>
+#include <odtone/mih/tlv_types.hpp>
 
 namespace odtone {
 namespace networkmanager {
@@ -31,14 +35,18 @@ namespace networkmanager {
  */
 class mih_user : boost::noncopyable {
 public:
+	typedef boost::function<void(mih::message &pm, const boost::system::error_code &ec)> default_handler;
+	typedef boost::function<void(mih::network_type &type, mih::link_addr &link)> new_device_handler;
+
 	/**
 	 * Construct the MIH-User.
 	 *
 	 * @param cfg Configuration options.
-	 * @param io The io_service object that the MIH-User will use to
-	 * dispatch handlers for any asynchronous operations performed on the socket. 
+	 * @param io  The io_service object that the MIH-User will use to dispatch
+	 *            handlers for any asynchronous operations performed on the socket.
+	 * @param h   The handler for MIHF messages
 	 */
-	mih_user(const mih::config &cfg, boost::asio::io_service &io, NetworkManager &nm);
+	mih_user(const mih::config &cfg, boost::asio::io_service &io, const default_handler &h, const new_device_handler &d);
 
 	/**
 	 * Destruct the MIH-User.
@@ -49,10 +57,9 @@ protected:
 	/**
 	 * User registration handler.
 	 *
-	 * @param cfg Configuration options.
 	 * @param ec Error Code.
 	 */
-	void user_reg_handler(const mih::config &cfg, const boost::system::error_code &ec);
+	void user_reg_handler(const boost::system::error_code &ec);
 
 	/**
 	 * Capability Discover handler.
@@ -61,14 +68,6 @@ protected:
 	 * @param ec Error Code.
 	 */
 	void capability_discover_confirm(mih::message& msg, const boost::system::error_code& ec);
-
-	/**
-	 * Default MIH event handler.
-	 *
-	 * @param msg Received message.
-	 * @param ec Error code.
-	 */
-	void event_handler(mih::message &msg, const boost::system::error_code &ec);
 
 	/**
 	 * Event subscribe handler.
@@ -88,8 +87,10 @@ protected:
 
 private:
 	sap::user _mihf; /**< User SAP helper. */
-	NetworkManager   &_nm;
 	logger    log_;
+
+	default_handler    _h;
+	new_device_handler _device_handler;
 };
 
 }; };

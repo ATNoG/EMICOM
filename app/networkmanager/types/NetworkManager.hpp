@@ -25,6 +25,8 @@
 #include "types.hpp"
 #include "../driver/if_80211.hpp"
 
+#include "../mih_user.hpp"
+
 namespace odtone {
 namespace networkmanager {
 
@@ -57,8 +59,12 @@ public:
 	 * @param connection The D-Bus connection to create on.
 	 * @param dbus_name The path for the D-Bus object.
 	 * @param settings The filesystem location to load/store connection settings.
+	 *
+	 * @param cfg @see mih_user::mih_user()
+	 * @param io @see mih_user::mih_user()
 	 */
-	NetworkManager(DBus::Connection &connection, const char *dbus_path, const char *settings_path);
+	NetworkManager(DBus::Connection &connection, const char *dbus_path, const char *settings_path,
+	               const mih::config &cfg, boost::asio::io_service &io);
 
 	/**
 	 * Destroy this object.
@@ -73,7 +79,6 @@ public:
 	 * @see NetworkManager::NM_STATE.
 	 */
 	uint32_t state();
-
 
 	/**
 	 * Set the logging method of this NetworkManager instance.
@@ -153,6 +158,7 @@ public:
 	 */
 	std::vector< ::DBus::Path > GetDevices();
 
+private:
 	/**
 	 * Add a new 802.11 device, to be looked in the system by MAC Address.
 	 *
@@ -160,7 +166,6 @@ public:
 	 */
 	void add_802_11_device(odtone::mih::mac_addr &address);
 
-public:
 	/**
 	 * Method to inform the NetworkManager that new AccessPoints were detected.
 	 */
@@ -180,6 +185,20 @@ public:
 	 * @param dev The device's mac address.
 	 */
 	void link_down(const odtone::mih::mac_addr &dev);
+
+	/**
+	 * Default MIH event handler.
+	 *
+	 * @param msg Received message.
+	 * @param ec Error code.
+	 */
+	void event_handler(mih::message &msg, const boost::system::error_code &ec);
+
+	/**
+	 * MIH handler for capability discovery, to inform of new devices.
+	 *
+	 */
+	void new_device(mih::network_type &type, mih::link_addr &address);
 
 protected:
 	// override from PropertiesAdaptor
@@ -209,6 +228,7 @@ private:
 	Settings          _settings;
 	odtone::logger     log_;
 
+	mih_user          _mih_user;
 	std::map<DBus::Path, std::unique_ptr<Device>> _device_map;
 };
 

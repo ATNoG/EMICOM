@@ -21,13 +21,17 @@
 
 using namespace odtone::networkmanager;
 
-NetworkManager::NetworkManager(DBus::Connection &connection, const char *dbus_path, const char *settings_path) :
+NetworkManager::NetworkManager(DBus::Connection &connection, const char *dbus_path, const char *settings_path,
+                               const mih::config &cfg, boost::asio::io_service &io) :
 	DBus::ObjectAdaptor(connection, dbus_path),
 	_connection(connection),
 	_dbus_path(dbus_path),
 	_settings_path(settings_path),
 	_settings(_connection, std::string(_dbus_path).append("/Settings").c_str(), settings_path),
-	log_(_dbus_path.c_str(), std::cout)
+	log_(_dbus_path.c_str(), std::cout),
+	_mih_user(cfg, io,
+	          boost::bind(&NetworkManager::event_handler, this, _1, _2),
+	          boost::bind(&NetworkManager::new_device, this, _1, _2))
 {
 	// FIXME
 	State = NM_STATE_DISCONNECTED;//NM_STATE_UNKNOWN;
@@ -221,6 +225,25 @@ std::vector< ::DBus::Path > NetworkManager::GetDevices()
 	return r;
 }
 
+void NetworkManager::new_device(mih::network_type &type, mih::link_addr &address)
+{
+	log_(0, "Adding new device");
+
+	try {
+		mih::link_type ltype = boost::get<mih::link_type>(type.link);
+		if (ltype == mih::link_type_802_11) {
+			mih::mac_addr mac = boost::get<mih::mac_addr>(address);
+			log_(0, "Adding 802.11 link with address ", mac.address());
+
+			add_802_11_device(mac);
+		} else {
+			log_(0, "Unsupported device type");
+		}
+	} catch (...) {
+		log_(0, "MIH error adding device");
+	}
+}
+
 void NetworkManager::add_802_11_device(mih::mac_addr &address)
 {
 	log_(0, "Adding WiFi device, address: ", address.address());
@@ -407,4 +430,102 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 	NetworkManager::property(property, value);
 
 	PropertiesAdaptor::on_set_property(interface, property, value);
+}
+
+void NetworkManager::event_handler(mih::message &msg, const boost::system::error_code &ec)
+{
+	log_(0, "Event received, status: ", ec.message());
+
+	if (ec) {
+		return;
+	}
+
+	switch (msg.mid()) {
+	case mih::indication::link_up:
+	{
+		log_(0, "Received a link_up event");
+
+		mih::link_tuple_id up_link;
+		boost::optional<mih::link_addr> __old_rout, __new_rout;
+		boost::optional<bool> __ip_renew;
+		boost::optional<mih::ip_mob_mgmt> __ip_mob;
+
+		msg >> mih::indication()
+			& mih::tlv_link_identifier(up_link)
+			& mih::tlv_old_access_router(__old_rout)
+			& mih::tlv_new_access_router(__new_rout)
+			& mih::tlv_ip_renewal_flag(__ip_renew)
+			& mih::tlv_ip_mob_mgmt(__ip_mob);
+
+		mih::mac_addr *dev = boost::get<mih::mac_addr>(&up_link.addr);
+		if (!dev) {
+			log_(0, "Unable to determine device address.");
+			break;
+		}
+
+		mih::mac_addr *poa;
+		mih::link_addr *_poa = boost::get<mih::link_addr>(&up_link.poa_addr);
+		if (_poa) {
+			poa = boost::get<mih::mac_addr>(_poa);
+			if (!poa) {
+				log_(0, "Unable to determine poa address");
+				break;
+			}
+		} else {
+			log_(0, "Unable to determine poa address");
+			break;
+		}
+
+		link_up(*dev, *poa);
+	}
+	break;
+
+	case mih::indication::link_down:
+	{
+		log_(0, "Received a link_down event");
+
+		mih::link_tuple_id down_link;
+		boost::optional<mih::link_addr> __old_rout;
+		mih::link_dn_reason __dn_reason;
+
+		msg >> mih::indication()
+			& mih::tlv_link_identifier(down_link)
+			& mih::tlv_old_access_router(__old_rout)
+			& mih::tlv_link_dn_reason(__dn_reason);
+
+		mih::mac_addr *dev = boost::get<mih::mac_addr>(&down_link.addr);
+		if (!dev) {
+			log_(0, "Unable to determine device address.");
+			break;
+		}
+
+		link_down(*dev);
+	}
+	break;
+
+	case mih::indication::link_detected:
+		log_(0, "Received a link_detected event");
+		new_accesspoints_detected();
+		break;
+
+	case mih::indication::link_parameters_report:
+		log_(0, "Received a link_parameters report");
+		break;
+
+	case mih::indication::link_going_down:
+		// TODO: notify networkmanager
+		log_(0, "Received a link_going_down event");
+		break;
+
+	case mih::indication::link_handover_imminent:
+		log_(0, "Received a link_handover_imminent event");
+		break;
+
+	case mih::indication::link_handover_complete:
+		log_(0, "Received a link_handover_complete event");
+		break;
+
+	default:
+		log_(0, "Received unknown/unsupported event");
+	}
 }
