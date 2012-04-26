@@ -65,6 +65,8 @@ int main(int argc, char *argv[])
 	DBus::BusDispatcher dispatcher;
 	DBus::default_dispatcher = &dispatcher;
 
+	system("killall wpa_supplicant; wpa_supplicant -u -B");
+
 	DBus::Connection conn = DBus::Connection::SystemBus();
 	conn.request_name(cfg.get<std::string>(nm::kConf_DBus_Name).c_str());
 

@@ -22,7 +22,8 @@
 using namespace odtone::networkmanager;
 
 NetworkManager::NetworkManager(DBus::Connection &connection, const mih::config &cfg, boost::asio::io_service &io) :
-	DBus::ObjectAdaptor(connection, cfg.get<std::string>(kConf_DBus_Path).c_str()),
+	DBus::ObjectAdaptor(connection, cfg.get<std::string>(kConf_DBus_Path).c_str()),   // D-Bus NetworkManager
+	DBus::ObjectProxy(connection, "/fi/w1/wpa_supplicant1", "fi.w1.wpa_supplicant1"), // D-Bus WPASupplicant
 	_connection(connection),
 	_dbus_path(cfg.get<std::string>(kConf_DBus_Path)),
 	_settings_path(cfg.get<std::string>(kConf_Settings_Path)),
@@ -526,4 +527,21 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 	default:
 		log_(0, "Received unknown/unsupported event");
 	}
+}
+
+// WPASupplicant signal listeners ////////////////////////////////////
+void NetworkManager::InterfaceAdded(const ::DBus::Path& path,
+                                    const std::map< std::string, ::DBus::Variant >& properties)
+{
+	// TODO
+}
+
+void NetworkManager::InterfaceRemoved(const ::DBus::Path& path)
+{
+	// TODO
+}
+
+void NetworkManager::PropertiesChanged(const std::map< std::string, ::DBus::Variant >& properties)
+{
+	// TODO
 }

@@ -26,6 +26,7 @@
 #include "../driver/if_80211.hpp"
 
 #include "../mih_user.hpp"
+#include "../wpa_supplicant/wpa_supplicant.hpp"
 
 namespace odtone {
 namespace networkmanager {
@@ -39,10 +40,16 @@ static const char* const kConf_Settings_Path = "networkmanager.settings_path";
 static const char* const kConf_Version       = "networkmanager.version";
 
 class NetworkManager : boost::noncopyable,
+// NetworkManager D-Bus
 	public org::freedesktop::NetworkManager_adaptor,
 	public DBus::IntrospectableAdaptor,
 	public DBus::PropertiesAdaptor,
-	public DBus::ObjectAdaptor
+	public DBus::ObjectAdaptor,
+// WPASupplicant D-Bus
+	public fi::w1::wpa_supplicant1_proxy,
+	public DBus::IntrospectableProxy,
+	public DBus::PropertiesProxy,
+	public DBus::ObjectProxy
 {
 public:
 
@@ -162,6 +169,12 @@ public:
 	 */
 	std::vector< ::DBus::Path > GetDevices();
 
+// WPASupplicant signal listeners ////////////////////////////////////
+protected:
+	void InterfaceAdded(const ::DBus::Path& path, const std::map< std::string, ::DBus::Variant >& properties);
+	void InterfaceRemoved(const ::DBus::Path& path);
+	void PropertiesChanged(const std::map< std::string, ::DBus::Variant >& properties);
+
 private:
 	/**
 	 * Add a new 802.11 device, to be looked in the system by MAC Address.
@@ -212,7 +225,19 @@ protected:
 	void on_set_property(DBus::InterfaceAdaptor &interface, const std::string &property, const DBus::Variant &value);
 
 private:
+	/**
+	 * Change the NetworkManager state and notify with the associated signal.
+	 *
+	 * @param newstate The new state.
+	 */
 	void state(NM_STATE newstate);
+
+	/**
+	 * Change a NetworkManager property and notify with the associated signal.
+	 *
+	 * @param property The property that is to be changed.
+	 * @param value    The new value of the referred property.
+	 */
 	void property(const std::string &property, const DBus::Variant &value);
 
 	/**
