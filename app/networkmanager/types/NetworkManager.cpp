@@ -22,8 +22,7 @@
 using namespace odtone::networkmanager;
 
 NetworkManager::NetworkManager(DBus::Connection &connection, const mih::config &cfg, boost::asio::io_service &io) :
-	DBus::ObjectAdaptor(connection, cfg.get<std::string>(kConf_DBus_Path).c_str()),   // D-Bus NetworkManager
-	DBus::ObjectProxy(connection, "/fi/w1/wpa_supplicant1", "fi.w1.wpa_supplicant1"), // D-Bus WPASupplicant
+	DBus::ObjectAdaptor(connection, cfg.get<std::string>(kConf_DBus_Path).c_str()),
 	_connection(connection),
 	_dbus_path(cfg.get<std::string>(kConf_DBus_Path)),
 	_settings_path(cfg.get<std::string>(kConf_Settings_Path)),
@@ -34,16 +33,16 @@ NetworkManager::NetworkManager(DBus::Connection &connection, const mih::config &
 	          boost::bind(&NetworkManager::new_device, this, _1, _2))
 {
 	// FIXME
-	State = NM_STATE_DISCONNECTED;//NM_STATE_UNKNOWN;
-	Version = cfg.get<std::string>(kConf_Version);
-	ActiveConnections = std::vector< ::DBus::Path >();
-	WimaxHardwareEnabled = false;
-	WimaxEnabled = false;
-	WwanHardwareEnabled = false;
-	WwanEnabled = false;
-	WirelessHardwareEnabled = false;
-	WirelessEnabled = false;
-	NetworkingEnabled = true;
+	NetworkManager_adaptor::State = NM_STATE_DISCONNECTED;//NM_STATE_UNKNOWN;
+	NetworkManager_adaptor::Version = cfg.get<std::string>(kConf_Version);
+	NetworkManager_adaptor::ActiveConnections = std::vector< ::DBus::Path >();
+	NetworkManager_adaptor::WimaxHardwareEnabled = false;
+	NetworkManager_adaptor::WimaxEnabled = false;
+	NetworkManager_adaptor::WwanHardwareEnabled = false;
+	NetworkManager_adaptor::WwanEnabled = false;
+	NetworkManager_adaptor::WirelessHardwareEnabled = false;
+	NetworkManager_adaptor::WirelessEnabled = false;
+	NetworkManager_adaptor::NetworkingEnabled = true;
 }
 
 NetworkManager::~NetworkManager()
@@ -52,16 +51,16 @@ NetworkManager::~NetworkManager()
 
 uint32_t NetworkManager::state()
 {
-	return State();
+	return NetworkManager_adaptor::State();
 }
 
 void NetworkManager::state(NM_STATE newstate)
 {
 	// store
-	State = newstate;
+	NetworkManager_adaptor::State = newstate;
 
 	// signal
-	StateChanged(newstate);
+	NetworkManager_adaptor::StateChanged(newstate);
 }
 
 template <class T>
@@ -76,19 +75,19 @@ DBus::Variant NetworkManager::to_variant(T value)
 void NetworkManager::property(const std::string &property, const DBus::Variant &value)
 {
 	if (boost::iequals(property, "NetworkingEnabled")) {
-		NetworkingEnabled = static_cast<bool>(value);
+		NetworkManager_adaptor::NetworkingEnabled = static_cast<bool>(value);
 	} else if (boost::iequals(property, "WirelessEnabled")) {
-		WirelessEnabled = static_cast<bool>(value);
+		NetworkManager_adaptor::WirelessEnabled = static_cast<bool>(value);
 	} else if (boost::iequals(property, "WirelessHardwareEnabled")) {
-		WirelessHardwareEnabled = static_cast<bool>(value);
+		NetworkManager_adaptor::WirelessHardwareEnabled = static_cast<bool>(value);
 	} else if (boost::iequals(property, "WwanEnabled")) {
-		WwanEnabled = static_cast<bool>(value);
+		NetworkManager_adaptor::WwanEnabled = static_cast<bool>(value);
 	} else if (boost::iequals(property, "WwanHardwareEnabled")) {
-		WwanHardwareEnabled = static_cast<bool>(value);
+		NetworkManager_adaptor::WwanHardwareEnabled = static_cast<bool>(value);
 	} else if (boost::iequals(property, "WimaxEnabled")) {
-		WimaxEnabled = static_cast<bool>(value);
+		NetworkManager_adaptor::WimaxEnabled = static_cast<bool>(value);
 	} else if (boost::iequals(property, "WimaxHardwareEnabled")) {
-		WimaxHardwareEnabled = static_cast<bool>(value);
+		NetworkManager_adaptor::WimaxHardwareEnabled = static_cast<bool>(value);
 	} else if (boost::iequals(property, "ActiveConnections")) {
 		DBus::Path *ptr;
 		int length = value.reader().get_array(&ptr);
@@ -98,18 +97,18 @@ void NetworkManager::property(const std::string &property, const DBus::Variant &
 			conns.push_back(*ptr);
 		}
 
-		ActiveConnections = conns;
+		NetworkManager_adaptor::ActiveConnections = conns;
 	} else if (boost::iequals(property, "Version")) {
-		Version = value.reader().get_string();
+		NetworkManager_adaptor::Version = value.reader().get_string();
 	} else if (boost::iequals(property, "State")) {
-		State = static_cast<uint32_t>(value);
+		NetworkManager_adaptor::State = static_cast<uint32_t>(value);
 	//} else {
 	//	// fail
 	}
 
 	std::map<std::string, DBus::Variant> props;
 	props[property] = value;
-	PropertiesChanged(props);
+	NetworkManager_adaptor::PropertiesChanged(props);
 }
 
 void NetworkManager::SetLogging(const std::string& level, const std::string& domains)
@@ -128,7 +127,7 @@ std::map< std::string, std::string > NetworkManager::GetPermissions()
 
 void NetworkManager::Enable(const bool& enable)
 {
-	NetworkingEnabled = enable;
+	NetworkManager_adaptor::NetworkingEnabled = enable;
 
 	if (!enable) {
 		log_(0, "Disabling");
@@ -229,17 +228,13 @@ void NetworkManager::new_device(mih::network_type &type, mih::link_addr &address
 {
 	log_(0, "New device detected");
 
-	try {
-		mih::link_type ltype = boost::get<mih::link_type>(type.link);
-		if (ltype == mih::link_type_802_11) {
-			mih::mac_addr mac = boost::get<mih::mac_addr>(address);
+	mih::link_type ltype = boost::get<mih::link_type>(type.link);
+	if (ltype == mih::link_type_802_11) {
+		mih::mac_addr mac = boost::get<mih::mac_addr>(address);
 
-			add_802_11_device(mac);
-		} else {
-			log_(0, "Unsupported device type");
-		}
-	} catch (...) {
-		log_(0, "MIH error adding device");
+		add_802_11_device(mac);
+	} else {
+		log_(0, "Unsupported device type");
 	}
 }
 
@@ -247,50 +242,36 @@ void NetworkManager::add_802_11_device(mih::mac_addr &address)
 {
 	log_(0, "Adding WiFi device, address: ", address.address());
 
-	try {
-		// this is just to get the deviceindex, for a nicer D-Bus Device path
-		if_80211 fi(address);
+	// this is just to get the deviceindex, for a nicer D-Bus Device path
+	// and the ifname, for adding to wpa_supplicant
+	if_80211 fi(address);
 
-		std::stringstream path;
-		path << _dbus_path << "/Devices/" << fi.ifindex();
-		std::unique_ptr<Device> d(new DeviceWireless(_connection, path.str().c_str(), address));
+	// determine the D-Bus path
+	std::stringstream path;
+	path << _dbus_path << "/Devices/" << fi.ifindex();
 
-		// wireless network hardware is now enabled
-		if (!WirelessHardwareEnabled()) {
-			property("WirelessHardwareEnabled", to_variant<bool>(true));
-		}
+	std::unique_ptr<Device> d(
+		new DeviceWireless(_connection, path.str().c_str(), _mih_user, address));
 
-		// if networking is disabled, shut this interface
-		if (!NetworkingEnabled() || !WirelessEnabled()) {
-			d->Disconnect();
-		} else {
-			// TODO
-			// attempt to connect? if disconnected?
-		}
-
-		// save the device
-		_device_map[DBus::Path(path.str())] = std::move(d);
-
-		// signal new device
-		DeviceAdded(path.str().c_str());
-		log_(0, "Device added");
-	} catch (...) {
-		log_(0, "Error adding device");
+	// wireless network hardware is now enabled
+	if (!NetworkManager_adaptor::WirelessHardwareEnabled()) {
+		property("WirelessHardwareEnabled", to_variant<bool>(true));
 	}
-}
 
-void NetworkManager::new_accesspoints_detected()
-{
-	log_(0, "Updating AP list on DeviceWireless devices");
-
-	// tell DeviceWireless devices to update their list
-	auto it = _device_map.begin();
-	while (it != _device_map.end()) {
-		if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
-			reinterpret_cast<DeviceWireless *>(it->second.get())->refresh_accesspoint_list();
-		}
-		it++;
+	// if networking is disabled, shut this interface
+	if (!NetworkManager_adaptor::NetworkingEnabled() || !NetworkManager_adaptor::WirelessEnabled()) {
+		d->Disable();
+	} else {
+		// TODO
+		// attempt to connect? if disconnected?
 	}
+
+	// save the device
+	_device_map[DBus::Path(path.str())] = std::move(d);
+
+	// signal new device
+	NetworkManager_adaptor::DeviceAdded(path.str().c_str());
+	log_(0, "Device added");
 }
 
 void NetworkManager::link_up(const mih::mac_addr &dev, const mih::mac_addr &poa)
@@ -403,12 +384,12 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 }
 
 void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
-                                     const std::string &property,
+                                     const std::string &prop,
                                      const DBus::Variant &value)
 {
-	log_(0, "Setting property \"", property, "\"");
+	log_(0, "Setting property \"", prop, "\"");
 
-	if (boost::iequals(property, "WirelessEnabled")) {
+	if (boost::iequals(prop, "WirelessEnabled")) {
 		auto it = _device_map.begin();
 		while (it != _device_map.end()) {
 			if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
@@ -420,15 +401,15 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 			}
 			it ++;
 		}
-	} else if (boost::iequals(property, "WwanEnabled")) {
+	} else if (boost::iequals(prop, "WwanEnabled")) {
 		// Unsupported
-	} else if (boost::iequals(property, "WimaxEnabled")) {
+	} else if (boost::iequals(prop, "WimaxEnabled")) {
 		// Unsupported
 	}
 
-	NetworkManager::property(property, value);
+	property(prop, value);
 
-	PropertiesAdaptor::on_set_property(interface, property, value);
+	PropertiesAdaptor::on_set_property(interface, prop, value);
 }
 
 void NetworkManager::event_handler(mih::message &msg, const boost::system::error_code &ec)
@@ -503,9 +484,25 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 	break;
 
 	case mih::indication::link_detected:
+	{
 		log_(0, "Received a link_detected event");
-		new_accesspoints_detected();
-		break;
+
+		std::vector<mih::link_det_info> ldil;
+
+		msg >> mih::indication()
+			& mih::tlv_link_det_info_list(ldil);
+
+		// tell DeviceWireless to update the list
+		// TODO target each specific DeviceWireless
+		auto it = _device_map.begin();
+		while (it != _device_map.end()) {
+			if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
+				reinterpret_cast<DeviceWireless *>(it->second.get())->refresh_accesspoint_list(ldil);
+			}
+			it++;
+		}
+	}
+	break;
 
 	case mih::indication::link_parameters_report:
 		log_(0, "Received a link_parameters report");
@@ -527,21 +524,4 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 	default:
 		log_(0, "Received unknown/unsupported event");
 	}
-}
-
-// WPASupplicant signal listeners ////////////////////////////////////
-void NetworkManager::InterfaceAdded(const ::DBus::Path& path,
-                                    const std::map< std::string, ::DBus::Variant >& properties)
-{
-	// TODO
-}
-
-void NetworkManager::InterfaceRemoved(const ::DBus::Path& path)
-{
-	// TODO
-}
-
-void NetworkManager::PropertiesChanged(const std::map< std::string, ::DBus::Variant >& properties)
-{
-	// TODO
 }

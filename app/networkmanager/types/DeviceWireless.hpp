@@ -24,12 +24,12 @@
 
 #include "Device.hpp"
 #include "AccessPoint.hpp"
-#include "../driver/if_80211.hpp"
 
 namespace odtone {
 namespace networkmanager {
 
 class DeviceWireless :
+// NetworkManager D-Bus
 	public Device,
 	public org::freedesktop::NetworkManager::Device::Wireless_adaptor
 {
@@ -62,25 +62,19 @@ public:
 	 * Construct a new DeviceWireless D-Bus interface data type.
 	 *
 	 * @param connection The D-Bus (system) connection.
-	 * @param path The D-Bus path of this object.
-	 * @param address The MAC Address of the underlying device.
+	 * @param path       The D-Bus path of this object.
+	 * @param ctrl       @see odtone::networkmanager::Device::Device()
+	 * @param address    The MAC Address of the underlying device.
 	 */
-	DeviceWireless(DBus::Connection &connection, const char* path, odtone::mih::mac_addr &address);
+	DeviceWireless(DBus::Connection &connection,
+	               const char* path,
+	               mih_user &ctrl,
+	               mih::mac_addr &address);
 
 	/**
 	 * Destroy this object.
 	 */
 	~DeviceWireless();
-
-	/**
-	 * @see Device::Disconnect()
-	 */
-	void Disconnect();
-
-	/**
-	 * @see Device::Enable()
-	 */
-	void Enable();
 
 	/**
 	 * Get the list of associated AccessPoint objects.
@@ -90,10 +84,9 @@ public:
 	std::vector< ::DBus::Path > GetAccessPoints();
 
 	/**
-	 * Refresh the access point list.
-	 * Invoke this when new scan results show up.
+	 * Trigger a scan on this device.
 	 */
-	void refresh_accesspoint_list();
+	void Scan();
 
 	/**
 	 * see Device::link_down()
@@ -105,32 +98,22 @@ public:
 	 */
 	void link_up(const odtone::mih::mac_addr &poa);
 
+	/**
+	 * Update the access point list.
+	 */
+	void refresh_accesspoint_list(std::vector<mih::link_det_info> ldil);
+
 protected:
-	// override from PropertiesAdaptor
 	/**
 	 * @see DBus::PropertyAdaptor
 	 */
+	// override from PropertiesAdaptor
 	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
 
 private:
-	/**
-	 * Auxiliary function to compare access points.
-	 *
-	 * @param ap The AccessPoint to compare with.
-	 * @param poa The poa_info to compare with.
-	 *
-	 * @return True if they share the same mac address, false otherwise.
-	 */
-	bool same_access_point(AccessPoint &ap, poa_info &poa);
-
-private:
 	DBus::Connection &_connection;
-	if_80211          _fi;
 
 	unsigned int     _access_point_count;
-
-	std::string      _path;
-	odtone::logger   log_;
 
 	std::map<DBus::Path, std::unique_ptr<AccessPoint>> _access_points_map;
 };

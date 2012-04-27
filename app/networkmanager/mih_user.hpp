@@ -53,6 +53,26 @@ public:
 	 */
 	~mih_user();
 
+	/**
+	 * Send a link power down message to an interface.
+	 */
+	void power_down(const mih::link_tuple_id &lti, const default_handler &h);
+
+	/**
+	 * Send a link power up message to an interface.
+	 */
+	void power_up(const mih::link_tuple_id &lti, const default_handler &h);
+
+	/**
+	 * Send a link disconnect message to an interface.
+	 */
+	void disconnect(const mih::link_tuple_id &lti, const default_handler &h);
+
+	/**
+	 * Send a scan command to an interface.
+	 */
+	void scan(const mih::link_tuple_id &lti, const default_handler &h);
+
 protected:
 	/**
 	 * User registration handler.
@@ -89,8 +109,8 @@ private:
 	sap::user _mihf; /**< User SAP helper. */
 	logger    log_;
 
-	default_handler    _h;
 	new_device_handler _device_handler;
+	default_handler    _h;
 };
 
 }; };

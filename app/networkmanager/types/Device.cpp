@@ -20,13 +20,42 @@
 
 using namespace odtone::networkmanager;
 
-Device::Device(DBus::Connection &connection, const char* path)
-	: DBus::ObjectAdaptor(connection, path)
+Device::Device(DBus::Connection &connection, const char* path, mih_user &ctrl)
+	: DBus::ObjectAdaptor(connection, path), _ctrl(ctrl), _dbus_path(path), log_(_dbus_path.c_str(), std::cout)
 {
 }
 
 Device::~Device()
 {
+}
+
+void Device::Disconnect()
+{
+	log_(0, "Disconnecting");
+
+	_ctrl.disconnect(_lti,
+		[&](mih::message &pm, const boost::system::error_code &ec) {
+			// TODO update state
+		});
+}
+
+void Device::Enable()
+{
+	log_(0, "Enabling");
+
+	_ctrl.power_up(_lti,
+		[&](mih::message &pm, const boost::system::error_code &ec) {
+			// TODO update state
+		});
+}
+
+void Device::Disable()
+{
+	log_(0, "Disabling");
+	_ctrl.power_down(_lti,
+		[&](mih::message &pm, const boost::system::error_code &ec) {
+			// TODO update state
+		});
 }
 
 void Device::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)

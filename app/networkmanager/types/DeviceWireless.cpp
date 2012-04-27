@@ -23,92 +23,50 @@
 
 using namespace odtone::networkmanager;
 
-DeviceWireless::DeviceWireless(DBus::Connection &connection, const char* path, odtone::mih::mac_addr &address) :
-	Device(connection, path),
-	_connection(connection),
-	_fi(address),
-	_access_point_count(0),
-	_path(path),
-	log_(_path.c_str(), std::cout)
+DeviceWireless::DeviceWireless(DBus::Connection &connection,
+                               const char* path,
+                               mih_user &ctrl,
+                               odtone::mih::mac_addr &addr)
+	: Device(connection, path, ctrl), _connection(connection), _access_point_count(0)
 {
+	_lti.addr = addr;
+	_lti.type = mih::link_type_802_11;
+
 	// FIXME
 	// inherited from Device adaptor
-	DeviceType = NM_DEVICE_TYPE_WIFI; 
-	FirmwareMissing = false; // by definition, if it got here...
-	Managed = true;          // by definition...
+	Device_adaptor::DeviceType      = NM_DEVICE_TYPE_WIFI; // by definition
+	Device_adaptor::FirmwareMissing = false; 
+	Device_adaptor::Managed         = true;
 
-	Dhcp6Config = "/";       // TODO
-	Ip6Config = "/";         // TODO
-	Dhcp4Config = "/";       // TODO
-	ActiveConnection = "/";  // TODO
+	Device_adaptor::Dhcp6Config = "/";       // TODO
+	Device_adaptor::Ip6Config = "/";         // TODO
+	Device_adaptor::Dhcp4Config = "/";       // TODO
+	Device_adaptor::ActiveConnection = "/";  // TODO
 
-	if (_fi.get_op_mode() == odtone::mih::op_mode_powered_down) {
-		State = NM_DEVICE_STATE_UNAVAILABLE;
-	} else {
-		State = NM_DEVICE_STATE_ACTIVATED; // maybe others?
-	}
+	Device_adaptor::State = NM_DEVICE_STATE_ACTIVATED; // TODO
 
-	Capabilities = NM_DEVICE_CAP_NM_SUPPORTED;
+	Device_adaptor::Capabilities = NM_DEVICE_CAP_NM_SUPPORTED;
 
-	Driver = "nl80211";             // by design
-	IpInterface = _fi.ifname();
-	Device_adaptor::Interface = _fi.ifname();
-	Udi = "";                       // TODO
+	Device_adaptor::Driver = "nl80211";             // by design
+	Device_adaptor::IpInterface = "wlan0";			// TODO
+	Device_adaptor::Interface = "wlan0";            // TODO
+	Device_adaptor::Udi = "";                       // TODO
 
 	// inherited from Wireless adaptor
-	WirelessCapabilities = 0; // TODO
-	ActiveAccessPoint = "/";  // TODO
-	PermHwAddress = _fi.mac_address().address(); //"00:11:22:33:44:55";
-	HwAddress = _fi.mac_address().address(); //"00:11:22:33:44:55";
-
-	// store ipv4address, in decimal format
-	BOOST_FOREACH (const boost::asio::ip::address &addr, _fi.addresses()) {
-		if (addr.is_v4()) {
-			// in reverse byte order!
-			std::array<unsigned char, 4> bytev4 = addr.to_v4().to_bytes();
-			std::reverse(bytev4.begin(), bytev4.end());
-
-			boost::asio::ip::address_v4 reversev4(bytev4);
-			Ip4Address = reversev4.to_ulong();
-
-			// store the first only
-			break;
-		}
-	}
-
-	// TODO: trigger wifi scan
+	Wireless_adaptor::WirelessCapabilities = 0; // TODO
+	Wireless_adaptor::ActiveAccessPoint = "/";  // TODO
+	Wireless_adaptor::PermHwAddress = addr.address();
+	Wireless_adaptor::HwAddress = addr.address();
+	Wireless_adaptor::Bitrate = 0; // TODO no support for bitrates yet
+	Wireless_adaptor::Mode = NM_802_11_MODE_INFRA;
 }
 
 DeviceWireless::~DeviceWireless()
 {
 }
 
-void DeviceWireless::Disconnect()
-{
-	log_(0, "Disconnecting");
-	try {
-		_fi.set_op_mode(odtone::mih::link_ac_type_power_down);
-		state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN); // TODO better reasons?
-	} catch (...) {
-		log_(0, "Exception occurred, potentially not disconnected");
-	}
-}
-
-void DeviceWireless::Enable()
-{
-	log_(0, "Enabling");
-
-	try {
-		_fi.set_op_mode(odtone::mih::link_ac_type_power_up);
-		state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN); // TODO better reasons?
-	} catch (...) {
-		log_(0, "Exception occurred, potentially not enabled");
-	}
-}
-
 std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 {
-	log_(0, "Getting Access Points");
 	std::vector< ::DBus::Path > r;
 
 	auto it = _access_points_map.begin();
@@ -117,20 +75,23 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 		it++;
 	}
 
-	log_(0, "Done");
-
 	return r;
+}
+
+void DeviceWireless::Scan()
+{
+	log_(0, "Scanning");
+
+	_ctrl.scan(_lti,
+		[&](mih::message &pm, const boost::system::error_code &ec) {
+			// TODO update state
+		});
 }
 
 void DeviceWireless::link_down()
 {
-	if (_fi.get_op_mode() == odtone::mih::op_mode_powered_down) {
-		log_(0, "Link down, device is now unavailable");
-		state(NM_DEVICE_STATE_UNAVAILABLE, NM_DEVICE_STATE_REASON_UNKNOWN);
-	} else {
-		log_(0, "Link down, device is now disconnected");
-		state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
-	}
+	// TODO
+	// request state, if powered down or just disconnected
 }
 
 void DeviceWireless::link_up(const odtone::mih::mac_addr &poa)
@@ -141,48 +102,33 @@ void DeviceWireless::link_up(const odtone::mih::mac_addr &poa)
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
 {
-	if (boost::iequals(property, "Bitrate")) {
-		try {
-			Bitrate = _fi.link_bitrate();
-		} catch(...) {
-			Bitrate = 0;
-		}
-	} else if (boost::iequals(property, "Mode")) {
-		if_80211::if_type t = _fi.get_if_type();
-		switch (t) {
-		case if_80211::if_type::adhoc:
-			Mode = NM_802_11_MODE_ADHOC;
-			break;
-		case if_80211::if_type::station:
-			Mode = NM_802_11_MODE_INFRA;
-			break;
-		default:
-			Mode = NM_802_11_MODE_UNKNOWN;
-		}
-	}
+	// TODO bypass to wpa_supplicant?
 
 	PropertiesAdaptor::on_get_property(interface, property, value);
 }
 
-void DeviceWireless::refresh_accesspoint_list()
+void DeviceWireless::refresh_accesspoint_list(std::vector<mih::link_det_info> ldil)
 {
-	std::vector<poa_info> poa_list = _fi.get_detailed_scan_results();
-
-	// remove already announced AccessPoints (still in range) from the new list
-	// and, at the same time, remove old AccessPoints that are not in range anymore
-	bool found;
+	// TODO
+	// have a list of elements with timeouts
+/*	bool found;
 	auto map_it = _access_points_map.begin();
 	while (map_it != _access_points_map.end()) {
+		std::string map_addr = map_it->second->HwAddress();
+
 		found = false;
 
-		auto poa_it = poa_list.begin();
-		while (poa_it != poa_list.end() && !found) {
-			if (same_access_point(*map_it->second, *poa_it)) {				
+		auto poa_it = ldil.begin();
+		while (poa_it != ldil.end() && !found) {
+			mih::mac_addr poa_addr_ = boost::get<mih::mac_addr>(boost::get<mih::link_addr>(poa_it->id.poa_addr));
+			std::string poa_addr = poa_addr_.address();
+
+			if (boost::iequals(map_addr, poa_addr)) {
 				// update AP
 				map_it->second->Update(*poa_it);
 
 				// already in the map, remove from list
-				poa_it = poa_list.erase(poa_it);
+				poa_it = ldil.erase(poa_it);
 				found = true;
 			} else {
 				poa_it++;
@@ -191,7 +137,7 @@ void DeviceWireless::refresh_accesspoint_list()
 
 		if (!found) {
 			// announce removal
-			AccessPointRemoved(map_it->first);
+			Wireless_adaptor::AccessPointRemoved(map_it->first);
 
 			// not in range anymore, so remove from map
 			map_it = _access_points_map.erase(map_it);
@@ -201,33 +147,17 @@ void DeviceWireless::refresh_accesspoint_list()
 	}
 
 	// add remaining AccessPoints (new in range) to the map
-	BOOST_FOREACH (const poa_info &poa, poa_list) {
+	auto poa_it = ldil.begin();
+	while (poa_it != ldil.end()) {
 		std::stringstream path_str;
-		path_str << _path << "/AccessPoints/" << ++_access_point_count;
+		path_str << _dbus_path << "/AccessPoints/" << ++_access_point_count;
 
 		DBus::Path path_dbus = path_str.str();
 		_access_points_map[path_dbus] = std::unique_ptr<AccessPoint>(
-			new AccessPoint(_connection, path_str.str().c_str(), poa));
+			new AccessPoint(_connection, path_str.str().c_str(), *poa_it));
 
 		// announce addition
-		AccessPointAdded(path_dbus);
-	}
-}
-
-bool DeviceWireless::same_access_point(AccessPoint &ap, poa_info &poa)
-{
-	std::string addr;
-	odtone::mih::link_addr *mac_ = boost::get<odtone::mih::link_addr>(&poa.id.poa_addr);
-	if (mac_) {
-		odtone::mih::mac_addr *mac = boost::get<odtone::mih::mac_addr>(mac_);
-		if (mac_) {
-			addr = mac->address();
-		}
-	}
-
-	if (ap.HwAddress() == addr) {
-		return true;
-	}
-
-	return false;
+		Wireless_adaptor::AccessPointAdded(path_dbus);
+		poa_it++;
+	}*/
 }

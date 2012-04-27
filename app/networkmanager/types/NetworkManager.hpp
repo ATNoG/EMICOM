@@ -26,7 +26,6 @@
 #include "../driver/if_80211.hpp"
 
 #include "../mih_user.hpp"
-#include "../wpa_supplicant/wpa_supplicant.hpp"
 
 namespace odtone {
 namespace networkmanager {
@@ -44,12 +43,7 @@ class NetworkManager : boost::noncopyable,
 	public org::freedesktop::NetworkManager_adaptor,
 	public DBus::IntrospectableAdaptor,
 	public DBus::PropertiesAdaptor,
-	public DBus::ObjectAdaptor,
-// WPASupplicant D-Bus
-	public fi::w1::wpa_supplicant1_proxy,
-	public DBus::IntrospectableProxy,
-	public DBus::PropertiesProxy,
-	public DBus::ObjectProxy
+	public DBus::ObjectAdaptor
 {
 public:
 
@@ -168,12 +162,6 @@ public:
 	 * @return The list of Device objects.
 	 */
 	std::vector< ::DBus::Path > GetDevices();
-
-// WPASupplicant signal listeners ////////////////////////////////////
-protected:
-	void InterfaceAdded(const ::DBus::Path& path, const std::map< std::string, ::DBus::Variant >& properties);
-	void InterfaceRemoved(const ::DBus::Path& path);
-	void PropertiesChanged(const std::map< std::string, ::DBus::Variant >& properties);
 
 private:
 	/**

@@ -64,7 +64,7 @@ public:
 	 * @param path The D-Bus path for this object.
 	 * @param i The associated underlying point of access information.
 	 */
-	AccessPoint(DBus::Connection &connection, const char* path, poa_info i);
+	AccessPoint(DBus::Connection &connection, const char* path, mih::link_det_info i);
 
 	/**
 	 * Destroy this object.
@@ -74,7 +74,7 @@ public:
 	/**
 	 * Update this AP with new POA information
 	 */
-	void Update(poa_info i);
+	void Update(mih::link_det_info i);
 
 	/**
 	 * Convert a dBm signal value to a percentage

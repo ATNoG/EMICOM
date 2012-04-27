@@ -22,6 +22,7 @@
 #include <boost/noncopyable.hpp>
 
 #include "odtone/mih/types/address.hpp"
+#include "../mih_user.hpp"
 
 namespace odtone {
 namespace networkmanager {
@@ -149,10 +150,11 @@ public:
 	/**
 	 * Construct a new Device D-Bus interface data type.
 	 *
-	 * @param connection The D-Bus (system) connection to use.
-	 * @param path This object's D-Bus path.
+	 * @param connection   The D-Bus (system) connection to use.
+	 * @param path         This object's D-Bus path.
+	 * @param control_user Reference to an mih_user for interface controlling.
 	 */
-	Device(DBus::Connection &connection, const char* path);
+	Device(DBus::Connection &connection, const char* path, odtone::networkmanager::mih_user &control_user);
 
 	/**
 	 * Destroy this object.
@@ -160,14 +162,19 @@ public:
 	~Device();
 
 	/**
-	 * Call a Disconnect on this device. Not implemented at this level.
+	 * Call a Disconnect on this device.
 	 */
-	virtual void Disconnect() = 0;
+	void Disconnect();
 
 	/**
 	 * Enable this device. Don't necessarily connect, just bring up!
 	 */
-	virtual void Enable() = 0;
+	void Enable();
+
+	/**
+	 * Disable this device. Meaning cut the power.
+	 */
+	void Disable();
 
 	/**
 	 * Inform this device that L2 connectivity was dropped.
@@ -185,6 +192,13 @@ protected:
 	 * Auxiliary function to change and notify (signal) state changes on this object.
 	 */
 	void state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason);
+
+protected:
+	mih_user           &_ctrl;
+	mih::link_tuple_id  _lti;
+
+	std::string         _dbus_path;
+	logger               log_;
 };
 
 }; };
