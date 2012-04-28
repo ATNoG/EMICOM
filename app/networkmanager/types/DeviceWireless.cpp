@@ -26,12 +26,9 @@ using namespace odtone::networkmanager;
 DeviceWireless::DeviceWireless(DBus::Connection &connection,
                                const char* path,
                                mih_user &ctrl,
-                               odtone::mih::mac_addr &addr)
-	: Device(connection, path, ctrl), _connection(connection), _access_point_count(0)
+                               mih::link_tuple_id &lti)
+	: Device(connection, path, ctrl, lti), _connection(connection), _access_point_count(0)
 {
-	_lti.addr = addr;
-	_lti.type = mih::link_type_802_11;
-
 	// FIXME
 	// inherited from Device adaptor
 	Device_adaptor::DeviceType      = NM_DEVICE_TYPE_WIFI; // by definition
@@ -47,16 +44,16 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection,
 
 	Device_adaptor::Capabilities = NM_DEVICE_CAP_NM_SUPPORTED;
 
-	Device_adaptor::Driver = "nl80211";             // by design
-	Device_adaptor::IpInterface = "wlan0";			// TODO
-	Device_adaptor::Interface = "wlan0";            // TODO
-	Device_adaptor::Udi = "";                       // TODO
+	Device_adaptor::Driver = "odtone";
+	Device_adaptor::IpInterface = "";   // TODO
+	Device_adaptor::Interface = "";     // TODO
+	Device_adaptor::Udi = "";           // TODO
 
 	// inherited from Wireless adaptor
 	Wireless_adaptor::WirelessCapabilities = 0; // TODO
 	Wireless_adaptor::ActiveAccessPoint = "/";  // TODO
-	Wireless_adaptor::PermHwAddress = addr.address();
-	Wireless_adaptor::HwAddress = addr.address();
+	Wireless_adaptor::PermHwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
+	Wireless_adaptor::HwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
 	Wireless_adaptor::Bitrate = 0; // TODO no support for bitrates yet
 	Wireless_adaptor::Mode = NM_802_11_MODE_INFRA;
 }

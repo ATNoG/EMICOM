@@ -61,15 +61,15 @@ public:
 	/**
 	 * Construct a new DeviceWireless D-Bus interface data type.
 	 *
-	 * @param connection The D-Bus (system) connection.
-	 * @param path       The D-Bus path of this object.
+	 * @param connection @see odtone::networkmanager::Device::Device()
+	 * @param path       @see odtone::networkmanager::Device::Device()
 	 * @param ctrl       @see odtone::networkmanager::Device::Device()
-	 * @param address    The MAC Address of the underlying device.
+	 * @param lti        @see odtone::networkmanager::Device::Device()
 	 */
 	DeviceWireless(DBus::Connection &connection,
 	               const char* path,
 	               mih_user &ctrl,
-	               mih::mac_addr &address);
+	               mih::link_tuple_id &lti);
 
 	/**
 	 * Destroy this object.

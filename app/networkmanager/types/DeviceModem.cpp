@@ -1,5 +1,5 @@
 //==============================================================================
-// Brief   : NetworkManager Device.Wireless interface implementation
+// Brief   : NetworkManager Device.Modem interface implementation
 // Authors : André Prata <andreprata@av.it.pt>
 //------------------------------------------------------------------------------
 // ODTONE - Open Dot Twenty One
@@ -15,11 +15,11 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#include "DeviceWiMax.hpp"
+#include "DeviceModem.hpp"
 
 using namespace odtone::networkmanager;
 
-DeviceWiMax::DeviceWiMax(DBus::Connection &connection, const char* path, mih_user &ctrl, mih::link_tuple_id &lti)
+DeviceModem::DeviceModem(DBus::Connection &connection, const char* path, mih_user &ctrl, mih::link_tuple_id &lti)
 	: Device(connection, path, ctrl, lti)
 {
 	// FIXME
@@ -39,34 +39,22 @@ DeviceWiMax::DeviceWiMax(DBus::Connection &connection, const char* path, mih_use
 	Device_adaptor::Interface = ""; // Interface is ambiguous
 	Udi = "";
 
-	// inherited from WiMax adaptor
-	HwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
-	CenterFrequency = 0;
-	Rssi = 0;
-	Cinr = 0;
-	TxPower = 0;
-	Bsid = boost::get<mih::mac_addr>(_lti.addr).address();
-	ActiveNsp = "/";
+	// inherited from Wired adaptor
+	ModemCapabilities = 0;
+	CurrentCapabilities = 0;
 }
 
-DeviceWiMax::~DeviceWiMax()
+DeviceModem::~DeviceModem()
 {
 }
 
-std::vector< ::DBus::Path > DeviceWiMax::GetNspList()
-{
-	std::vector< ::DBus::Path > r;
-	// TODO
-	return r;
-}
-
-void DeviceWiMax::link_down()
+void DeviceModem::link_down()
 {
 	// TODO
 	// check if device is up, or just disconnected
 }
 
-void DeviceWiMax::link_up(const odtone::mih::mac_addr &poa)
+void DeviceModem::link_up(const odtone::mih::mac_addr &poa)
 {
 	// TODO
 	// change state

@@ -31,12 +31,16 @@ class DeviceWiMax :
 	public org::freedesktop::NetworkManager::Device::WiMax_adaptor
 {
 public:
-	DeviceWiMax(DBus::Connection &connection, const char* path);
+	/**
+	 * Construct a new ethernet Device interface.
+	 *
+	 * @param connection @see odtone::networkmanager::Device::Device()
+	 * @param path       @see odtone::networkmanager::Device::Device()
+	 * @param ctrl       @see odtone::networkmanager::Device::Device()
+	 * @param lti        @see odtone::networkmanager::Device::Device()
+	 */
+	DeviceWiMax(DBus::Connection &connection, const char* path, mih_user &ctrl, mih::link_tuple_id &lti);
 	~DeviceWiMax();
-
-	// inherited from Device adaptor
-	void Disconnect();
-	void Enable();
 
 	/**
 	 * see Device::link_down()

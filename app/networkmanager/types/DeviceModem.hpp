@@ -1,5 +1,5 @@
 //==============================================================================
-// Brief   : NetworkManager Device.Wired interface implementation
+// Brief   : NetworkManager Device.Modem interface implementation
 // Authors : André Prata <andreprata@av.it.pt>
 //------------------------------------------------------------------------------
 // ODTONE - Open Dot Twenty One
@@ -18,7 +18,7 @@
 #ifndef NETWORKMANAGER_DEVICEWIRED__HPP_
 #define NETWORKMANAGER_DEVICEWIRED__HPP_
 
-#include "../dbus/adaptors/DeviceWired.hpp"
+#include "../dbus/adaptors/DeviceModem.hpp"
 #include <boost/noncopyable.hpp>
 
 #include "Device.hpp"
@@ -26,21 +26,21 @@
 namespace odtone {
 namespace networkmanager {
 
-class DeviceWired :
+class DeviceModem :
 	public Device,
-	public org::freedesktop::NetworkManager::Device::Wired_adaptor
+	public org::freedesktop::NetworkManager::Device::Modem_adaptor
 {
 public:
 	/**
-	 * Construct a new ethernet Device interface.
+	 * Construct a new 3g Device interface.
 	 *
-	 * @param connection @see odtone::networkmanager::Device::Device()
-	 * @param path       @see odtone::networkmanager::Device::Device()
-	 * @param ctrl       @see odtone::networkmanager::Device::Device()
-	 * @param lti        @see odtone::networkmanager::Device::Device()
+	 * @param connection The D-Bus connection to serve the interface at.
+	 * @param path       The D-Bus path for the object.
+	 * @param ctrl       The MIH User interface to control the device
+	 * @param lti        A tuple that identifies this interface.
 	 */
-	DeviceWired(DBus::Connection &connection, const char* path, mih_user &ctrl, mih::link_tuple_id &lti);
-	~DeviceWired();
+	DeviceModem(DBus::Connection &connection, const char* path, mih_user &ctrl, mih::link_tuple_id &lti);
+	~DeviceModem();
 
 	/**
 	 * see Device::link_down()

@@ -20,8 +20,8 @@
 
 using namespace odtone::networkmanager;
 
-Device::Device(DBus::Connection &connection, const char* path, mih_user &ctrl)
-	: DBus::ObjectAdaptor(connection, path), _ctrl(ctrl), _dbus_path(path), log_(_dbus_path.c_str(), std::cout)
+Device::Device(DBus::Connection &connection, const char* path, mih_user &ctrl, mih::link_tuple_id &lti)
+	: DBus::ObjectAdaptor(connection, path), _ctrl(ctrl), _lti(lti),  _dbus_path(path), log_(_dbus_path.c_str(), std::cout)
 {
 }
 

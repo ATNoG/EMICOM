@@ -153,8 +153,10 @@ public:
 	 * @param connection   The D-Bus (system) connection to use.
 	 * @param path         This object's D-Bus path.
 	 * @param control_user Reference to an mih_user for interface controlling.
+	 * @param lti          A tuple that identifies this interface.
 	 */
-	Device(DBus::Connection &connection, const char* path, odtone::networkmanager::mih_user &control_user);
+	Device(DBus::Connection &connection, const char* path,
+	       odtone::networkmanager::mih_user &control_user, mih::link_tuple_id &lti);
 
 	/**
 	 * Destroy this object.

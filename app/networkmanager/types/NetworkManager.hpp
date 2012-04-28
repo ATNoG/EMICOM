@@ -169,7 +169,7 @@ private:
 	 *
 	 * @param address The MAC Address of the device.
 	 */
-	void add_802_11_device(odtone::mih::mac_addr &address);
+	void add_802_11_device(mih::mac_addr &address);
 
 	/**
 	 * Method to inform the NetworkManager that new AccessPoints were detected.
@@ -182,14 +182,14 @@ private:
 	 * @param dev The device's mac address.
 	 * @param poa The newly associated point of access' address.
 	 */
-	void link_up(const odtone::mih::mac_addr &dev, const odtone::mih::mac_addr &poa);
+	void link_up(const mih::mac_addr &dev, const mih::mac_addr &poa);
 
 	/**
 	 * Method to inform NetworkManager that an L2 connection was dropped.
 	 *
 	 * @param dev The device's mac address.
 	 */
-	void link_down(const odtone::mih::mac_addr &dev);
+	void link_down(const mih::mac_addr &dev);
 
 	/**
 	 * Default MIH event handler.

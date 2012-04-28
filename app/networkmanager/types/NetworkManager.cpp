@@ -242,6 +242,10 @@ void NetworkManager::add_802_11_device(mih::mac_addr &address)
 {
 	log_(0, "Adding WiFi device, address: ", address.address());
 
+	mih::link_tuple_id lti;
+	lti.addr = address;
+	lti.type = mih::link_type_802_11;
+
 	// this is just to get the deviceindex, for a nicer D-Bus Device path
 	// and the ifname, for adding to wpa_supplicant
 	if_80211 fi(address);
@@ -251,7 +255,7 @@ void NetworkManager::add_802_11_device(mih::mac_addr &address)
 	path << _dbus_path << "/Devices/" << fi.ifindex();
 
 	std::unique_ptr<Device> d(
-		new DeviceWireless(_connection, path.str().c_str(), _mih_user, address));
+		new DeviceWireless(_connection, path.str().c_str(), _mih_user, lti));
 
 	// wireless network hardware is now enabled
 	if (!NetworkManager_adaptor::WirelessHardwareEnabled()) {

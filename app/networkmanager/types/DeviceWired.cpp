@@ -19,8 +19,8 @@
 
 using namespace odtone::networkmanager;
 
-DeviceWired::DeviceWired(DBus::Connection &connection, const char* path)
-	: Device(connection, path)
+DeviceWired::DeviceWired(DBus::Connection &connection, const char* path, mih_user &ctrl, mih::link_tuple_id &lti)
+	: Device(connection, path, ctrl, lti)
 {
 	// FIXME
 	// inherited from Device adaptor
@@ -42,22 +42,12 @@ DeviceWired::DeviceWired(DBus::Connection &connection, const char* path)
 	// inherited from Wired adaptor
 	Carrier = false;
 	Speed = 0;
-	PermHwAddress = "00:11:22:33:44:55";
-	HwAddress = "00:11:22:33:44:55";
+	PermHwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
+	HwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
 }
 
 DeviceWired::~DeviceWired()
 {
-}
-
-void DeviceWired::Disconnect()
-{
-	// TODO
-}
-
-void DeviceWired::Enable()
-{
-	// TODO
 }
 
 void DeviceWired::link_down()
