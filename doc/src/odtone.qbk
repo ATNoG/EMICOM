@@ -116,10 +116,10 @@ projects/
 #Install Boost.Build (if your already have it, skip this step).
 To compile the Boost.Build engine, you can use the bootstrap script from the
 Boost library sources and then you can copy the resulting binary (b2) to a proper
-place (within your $PATH) or you can download a pre-built binary from
-[@http://www.boost.org/ boost's website]. To finish the Boost.Build installation,
+place (within your $PATH). To finish the Boost.Build installation,
 you must tell Boost.Build engine where to find the remaining of Boost.Build. To do
-it, you can setup a boost-build.jam file in your home directory. Example:
+it, you can setup a boost-build.jam file in a parent directory relative to the
+odtone root. Example:
 
 [table Setup boost-build.jam
     [
@@ -166,12 +166,6 @@ You can create your own local copy of the ODTONE by cloning the git repository f
 To clone the git repository you must run the next command:
 ``
 	git clone https://user@helios.av.it.pt/git/odtone/ odtone
-``
-
-Then, in order to get the last changes in the code,
-you must checkout the "dev/master" branch:
-``
-	git checkout -b <your branch name> origin/dev/master
 ``
 
 [h3 3. Compiling ODTONE]
@@ -226,6 +220,34 @@ while compiling.
 
 The Android SDK has the necessary tools to run, debug and deploy the ODTONE
 binaries.]
+
+[important By default, only the MIHF, the MIH-User and the Link SAP used in the
+demo are compiled. However, you can compile the remaining entities by defining their path
+during the compilation process.
+
+Here is an example on how to compile ICMP Link SAP: "b2 app/link_sap_icmp/"
+
+[*Path of each entity provided by ODTONE:]
+
+*[*MIHF:] src/mihf/
+
+*[*Client:] app/client/
+
+*[*MIH-User:] app/mih_usr/
+
+*[*MIIS RDF Server:] app/miis_rdf_server/
+
+*[*DHCP-User:] app/dhcp_usr/
+
+*[*DNS-User:] app/dns_usr/
+
+*[*Link SAP:] app/link_sap/
+
+*[*ICMP LINK SAP:] app/link_sap_icmp/
+
+*[*Dummyserver:] src/dummyserver/
+
+]
 
 [h3 4. Generate Doxygen Documentation]
 As a supplement to this documentation, it is possible to generate incode documentation.
@@ -285,7 +307,7 @@ Usage: mihf.peers = <mihf id> <ip> <port> <list of supported transport protocols
 
 [*List of local MIH-Users:] Comma separated list of local MIH-User SAP.
 
-Usage: mihf.users = <user sap id> <port> [<supported commands> <supported queries>], ...
+Usage: mihf.users = <user sap id> <port> [supported commands> <supported queries>\], ...
 
 [*List of local Link SAPs:] Comma separated list of local MIH Link SAPs.
 
@@ -1284,7 +1306,10 @@ Ireland, Oct 2011
 	protocols and terminology support.]]
 ]
 
-
+[xinclude ../odtone_base_lib.xml]
+[xinclude ../odtone_mih_lib.xml]
+[xinclude ../odtone_sap_lib.xml]
+[xinclude ../odtone_net_lib.xml]
 
 [endsect]
 
