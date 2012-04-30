@@ -100,8 +100,17 @@ public:
 
 	/**
 	 * Update the access point list.
+	 *
+	 * @param ldi A new or existing (update) AP info.
 	 */
-	void refresh_accesspoint_list(std::vector<mih::link_det_info> ldil);
+	void add_ap(mih::link_det_info ldi);
+
+	/**
+	 * Remove APs from the list last seen over a time duration.
+	 *
+	 * @param d AP minimum age for removal.
+	 */
+	void remove_aps_older_than(boost::posix_time::time_duration d);
 
 protected:
 	/**

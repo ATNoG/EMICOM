@@ -18,6 +18,7 @@
 #include "NetworkManager.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 using namespace odtone::networkmanager;
 
@@ -498,12 +499,23 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 
 		// tell DeviceWireless to update the list
 		// TODO target each specific DeviceWireless
-		auto it = _device_map.begin();
-		while (it != _device_map.end()) {
-			if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
-				reinterpret_cast<DeviceWireless *>(it->second.get())->refresh_accesspoint_list(ldil);
+		BOOST_FOREACH (mih::link_det_info ldi, ldil) {
+			mih::mac_addr dev_addr = boost::get<mih::mac_addr>(ldi.id.addr);
+
+			auto it = _device_map.begin();
+			while (it != _device_map.end()) {
+				if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
+					DeviceWireless *d = reinterpret_cast<DeviceWireless *>(it->second.get());
+					if (boost::iequals(d->HwAddress(), dev_addr.address())) {
+						d->add_ap(ldi);
+
+						// TODO make this configurable
+						// clean older scan results
+						d->remove_aps_older_than(boost::posix_time::seconds(30));
+					}
+				}
+				it++;
 			}
-			it++;
 		}
 	}
 	break;

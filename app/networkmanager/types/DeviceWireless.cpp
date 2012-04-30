@@ -104,57 +104,47 @@ void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const st
 	PropertiesAdaptor::on_get_property(interface, property, value);
 }
 
-void DeviceWireless::refresh_accesspoint_list(std::vector<mih::link_det_info> ldil)
+void DeviceWireless::add_ap(mih::link_det_info ldi)
 {
-	// TODO
-	// have a list of elements with timeouts
-/*	bool found;
+	// if it exists in the list, update
 	auto map_it = _access_points_map.begin();
 	while (map_it != _access_points_map.end()) {
 		std::string map_addr = map_it->second->HwAddress();
+		mih::mac_addr poa_addr = boost::get<mih::mac_addr>(boost::get<mih::link_addr>(ldi.id.poa_addr));
 
-		found = false;
+		if (boost::iequals(map_addr, poa_addr.address())) {
+			// update AP
+			map_it->second->Update(ldi);
 
-		auto poa_it = ldil.begin();
-		while (poa_it != ldil.end() && !found) {
-			mih::mac_addr poa_addr_ = boost::get<mih::mac_addr>(boost::get<mih::link_addr>(poa_it->id.poa_addr));
-			std::string poa_addr = poa_addr_.address();
-
-			if (boost::iequals(map_addr, poa_addr)) {
-				// update AP
-				map_it->second->Update(*poa_it);
-
-				// already in the map, remove from list
-				poa_it = ldil.erase(poa_it);
-				found = true;
-			} else {
-				poa_it++;
-			}
+			return;
 		}
+		map_it++;
+	}
 
-		if (!found) {
-			// announce removal
+	// not found
+	// add AccessPoint to the list
+	std::stringstream path_str;
+	path_str << _dbus_path << "/AccessPoints/" << ++_access_point_count;
+
+	DBus::Path path_dbus = path_str.str();
+	_access_points_map[path_dbus] = std::unique_ptr<AccessPoint>(
+		new AccessPoint(_connection, path_str.str().c_str(), ldi));
+
+	// announce addition
+	Wireless_adaptor::AccessPointAdded(path_dbus);
+}
+
+
+void DeviceWireless::remove_aps_older_than(boost::posix_time::time_duration d)
+{
+	auto map_it = _access_points_map.begin();
+	while (map_it != _access_points_map.end()) {
+		if (map_it->second->last_change() > d) {
 			Wireless_adaptor::AccessPointRemoved(map_it->first);
 
-			// not in range anymore, so remove from map
 			map_it = _access_points_map.erase(map_it);
 		} else {
 			map_it++;
 		}
 	}
-
-	// add remaining AccessPoints (new in range) to the map
-	auto poa_it = ldil.begin();
-	while (poa_it != ldil.end()) {
-		std::stringstream path_str;
-		path_str << _dbus_path << "/AccessPoints/" << ++_access_point_count;
-
-		DBus::Path path_dbus = path_str.str();
-		_access_points_map[path_dbus] = std::unique_ptr<AccessPoint>(
-			new AccessPoint(_connection, path_str.str().c_str(), *poa_it));
-
-		// announce addition
-		Wireless_adaptor::AccessPointAdded(path_dbus);
-		poa_it++;
-	}*/
 }

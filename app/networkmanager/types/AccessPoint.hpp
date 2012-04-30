@@ -18,6 +18,7 @@
 #ifndef NETWORKMANAGER_ACCESSPOINT__HPP_
 #define NETWORKMANAGER_ACCESSPOINT__HPP_
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "../dbus/adaptors/AccessPoint.hpp"
 #include <boost/noncopyable.hpp>
 #include "odtone/logger.hpp"
@@ -77,6 +78,13 @@ public:
 	void Update(mih::link_det_info i);
 
 	/**
+	 * Get the elapsed time since the last change on this object.
+	 *
+	 * @return The time that elapsed since the creation or last change.
+	 */
+	boost::posix_time::time_duration last_change();
+
+	/**
 	 * Convert a dBm signal value to a percentage
 	 *
 	 * @param dbm The current signal strength, in dBm.
@@ -99,6 +107,8 @@ private:
 private:
 	std::string _path;
 	logger      log_;
+
+	boost::posix_time::ptime _last_change;
 };
 
 }; };

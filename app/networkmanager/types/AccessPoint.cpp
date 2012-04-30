@@ -25,7 +25,8 @@ using namespace odtone::networkmanager;
 AccessPoint::AccessPoint(DBus::Connection &connection, const char* path, mih::link_det_info i) :
 	DBus::ObjectAdaptor(connection, path),
 	_path(path),
-	log_(_path.c_str(), std::cout)
+	log_(_path.c_str(), std::cout),
+	_last_change(boost::posix_time::microsec_clock::universal_time())
 {
 	// strength
 	mih::percentage *signal_pct = boost::get<mih::percentage>(&i.signal);
@@ -75,6 +76,8 @@ AccessPoint::~AccessPoint()
 void AccessPoint::Update(mih::link_det_info i)
 {
 	log_(0, "Updating info");
+
+	_last_change = boost::posix_time::microsec_clock::universal_time();
 
 //	uint32_t               _Flags;
 //	uint32_t               _WpaFlags;
@@ -188,6 +191,14 @@ void AccessPoint::Update(mih::link_det_info i)
 		PropertiesChanged(props);
 	}
 }
+
+boost::posix_time::time_duration AccessPoint::last_change()
+{
+	boost::posix_time::ptime now(boost::posix_time::microsec_clock::universal_time());
+
+	return boost::posix_time::time_period(_last_change, now).length();
+}
+
 
 uint32_t AccessPoint::dbm_to_percent(sint dbm)
 {
