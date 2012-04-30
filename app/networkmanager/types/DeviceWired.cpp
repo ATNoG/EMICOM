@@ -24,17 +24,17 @@ DeviceWired::DeviceWired(DBus::Connection &connection, const char* path, mih_use
 {
 	// FIXME
 	// inherited from Device adaptor
-	DeviceType = 0;
+	DeviceType = NM_DEVICE_TYPE_ETHERNET;
 	FirmwareMissing = false;
-	Managed = false;
+	Managed = true; // by definition
 	Dhcp6Config = "/";
 	Ip6Config = "/";
 	Dhcp4Config = "/";
 	ActiveConnection = "/";
-	State = 0;
+	State = NM_DEVICE_STATE_UNKNOWN; // TODO
 	Ip4Address = 0;
 	Capabilities = 0;
-	Driver = "";
+	Driver = "odtone";
 	IpInterface = "";
 	Device_adaptor::Interface = ""; // Interface is ambiguous
 	Udi = "";

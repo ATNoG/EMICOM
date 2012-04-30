@@ -23,7 +23,6 @@
 #include "odtone/logger.hpp"
 
 #include "types.hpp"
-#include "../driver/if_80211.hpp"
 
 #include "../mih_user.hpp"
 
@@ -165,11 +164,18 @@ public:
 
 private:
 	/**
-	 * Add a new 802.11 device, to be looked in the system by MAC Address.
+	 * Add a new 802.11 device, to be searched in the system by MAC Address.
 	 *
 	 * @param address The MAC Address of the device.
 	 */
 	void add_802_11_device(mih::mac_addr &address);
+
+	/**
+	 * Add a new ethernet device, to be searched in the system by MAC Address.
+	 *
+	 * @param address The MAC Address of the device.
+	 */
+	void add_ethernet_device(mih::mac_addr &address);
 
 	/**
 	 * Method to inform the NetworkManager that new AccessPoints were detected.

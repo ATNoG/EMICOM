@@ -234,6 +234,10 @@ void NetworkManager::new_device(mih::network_type &type, mih::link_addr &address
 		mih::mac_addr mac = boost::get<mih::mac_addr>(address);
 
 		add_802_11_device(mac);
+	} else if (ltype == mih::link_type_ethernet) {
+		mih::mac_addr mac = boost::get<mih::mac_addr>(address);
+
+		add_ethernet_device(mac);
 	} else {
 		log_(0, "Unsupported device type");
 	}
@@ -247,13 +251,9 @@ void NetworkManager::add_802_11_device(mih::mac_addr &address)
 	lti.addr = address;
 	lti.type = mih::link_type_802_11;
 
-	// this is just to get the deviceindex, for a nicer D-Bus Device path
-	// and the ifname, for adding to wpa_supplicant
-	if_80211 fi(address);
-
 	// determine the D-Bus path
 	std::stringstream path;
-	path << _dbus_path << "/Devices/" << fi.ifindex();
+	path << _dbus_path << "/Devices/" << boost::algorithm::replace_all_copy(address.address(), ":", "");
 
 	std::unique_ptr<Device> d(
 		new DeviceWireless(_connection, path.str().c_str(), _mih_user, lti));
@@ -265,6 +265,37 @@ void NetworkManager::add_802_11_device(mih::mac_addr &address)
 
 	// if networking is disabled, shut this interface
 	if (!NetworkManager_adaptor::NetworkingEnabled() || !NetworkManager_adaptor::WirelessEnabled()) {
+		d->Disable();
+	} else {
+		// TODO
+		// attempt to connect? if disconnected?
+	}
+
+	// save the device
+	_device_map[DBus::Path(path.str())] = std::move(d);
+
+	// signal new device
+	NetworkManager_adaptor::DeviceAdded(path.str().c_str());
+	log_(0, "Device added");
+}
+
+void NetworkManager::add_ethernet_device(mih::mac_addr &address)
+{
+	log_(0, "Adding Ethernet device, address: ", address.address());
+
+	mih::link_tuple_id lti;
+	lti.addr = address;
+	lti.type = mih::link_type_ethernet;
+
+	// determine the D-Bus path
+	std::stringstream path;
+	path << _dbus_path << "/Devices/" << boost::algorithm::replace_all_copy(address.address(), ":", "");
+
+	std::unique_ptr<Device> d(
+		new DeviceWired(_connection, path.str().c_str(), _mih_user, lti));
+
+	// if networking is disabled, shut this interface
+	if (!NetworkManager_adaptor::NetworkingEnabled()) {
 		d->Disable();
 	} else {
 		// TODO
@@ -399,7 +430,7 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 		while (it != _device_map.end()) {
 			if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
 				if (!value) {
-					it->second.get()->Disconnect();
+					it->second.get()->Disable();//Disconnect();
 				} else {
 					it->second.get()->Enable();
 				}

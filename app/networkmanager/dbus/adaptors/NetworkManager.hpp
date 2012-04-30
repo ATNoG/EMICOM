@@ -301,6 +301,7 @@ private:
 		std::map< std::string, std::map< std::string, ::DBus::Variant > > argin1; ri >> argin1;
 		::DBus::Path argin2; ri >> argin2;
 		::DBus::Path argin3; ri >> argin3;
+		// nm-applet uses both these parameters empty when activating a DeviceWired
 		::DBus::Path argout1;
 		::DBus::Path argout2;
 		AddAndActivateConnection(argin1, argin2, argin3, argout1, argout2);
