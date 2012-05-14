@@ -45,7 +45,7 @@ mih_user::~mih_user()
 {
 }
 
-void mih_user::power_down(const mih::link_tuple_id &lti, const default_handler &h)
+void mih_user::power_down(const default_handler &h, const mih::link_tuple_id &lti)
 {
 	mih::link_action_req 	lar;
 	mih::link_action_list	larl;
@@ -65,7 +65,7 @@ void mih_user::power_down(const mih::link_tuple_id &lti, const default_handler &
 	_mihf.async_send(m, h);
 }
 
-void mih_user::power_up(const mih::link_tuple_id &lti, const default_handler &h)
+void mih_user::power_up(const default_handler &h, const mih::link_tuple_id &lti)
 {
 		mih::link_action_req 	lar;
 	mih::link_action_list	larl;
@@ -85,7 +85,7 @@ void mih_user::power_up(const mih::link_tuple_id &lti, const default_handler &h)
 	_mihf.async_send(m, h);
 }
 
-void mih_user::disconnect(const mih::link_tuple_id &lti, const default_handler &h)
+void mih_user::disconnect(const default_handler &h, const mih::link_tuple_id &lti)
 {
 	mih::link_action_req 	lar;
 	mih::link_action_list	larl;
@@ -105,7 +105,7 @@ void mih_user::disconnect(const mih::link_tuple_id &lti, const default_handler &
 	_mihf.async_send(m, h);
 }
 
-void mih_user::scan(const mih::link_tuple_id &lti, const default_handler &h)
+void mih_user::scan(const default_handler &h, const mih::link_tuple_id &lti)
 {
 	mih::link_action_req 	lar;
 	mih::link_action_list	larl;

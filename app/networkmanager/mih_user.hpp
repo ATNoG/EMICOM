@@ -56,22 +56,22 @@ public:
 	/**
 	 * Send a link power down message to an interface.
 	 */
-	void power_down(const mih::link_tuple_id &lti, const default_handler &h);
+	void power_down(const default_handler &h, const mih::link_tuple_id &lti);
 
 	/**
 	 * Send a link power up message to an interface.
 	 */
-	void power_up(const mih::link_tuple_id &lti, const default_handler &h);
+	void power_up(const default_handler &h, const mih::link_tuple_id &lti);
 
 	/**
 	 * Send a link disconnect message to an interface.
 	 */
-	void disconnect(const mih::link_tuple_id &lti, const default_handler &h);
+	void disconnect(const default_handler &h, const mih::link_tuple_id &lti);
 
 	/**
 	 * Send a scan command to an interface.
 	 */
-	void scan(const mih::link_tuple_id &lti, const default_handler &h);
+	void scan(const default_handler &h, const mih::link_tuple_id &lti);
 
 protected:
 	/**

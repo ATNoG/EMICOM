@@ -33,29 +33,29 @@ void Device::Disconnect()
 {
 	log_(0, "Disconnecting");
 
-	_ctrl.disconnect(_lti,
+	_ctrl.disconnect(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
 			// TODO update state
-		});
+		}, _lti);
 }
 
 void Device::Enable()
 {
 	log_(0, "Enabling");
 
-	_ctrl.power_up(_lti,
+	_ctrl.power_up(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
 			// TODO update state
-		});
+		}, _lti);
 }
 
 void Device::Disable()
 {
 	log_(0, "Disabling");
-	_ctrl.power_down(_lti,
+	_ctrl.power_down(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
 			// TODO update state
-		});
+		}, _lti);
 }
 
 void Device::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)

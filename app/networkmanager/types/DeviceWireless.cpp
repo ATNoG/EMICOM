@@ -79,10 +79,10 @@ void DeviceWireless::Scan()
 {
 	log_(0, "Scanning");
 
-	_ctrl.scan(_lti,
+	_ctrl.scan(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
 			// TODO update state
-		});
+		}, _lti);
 }
 
 void DeviceWireless::link_down()

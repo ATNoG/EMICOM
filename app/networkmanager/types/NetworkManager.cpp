@@ -433,6 +433,9 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 					it->second.get()->Disable();//Disconnect();
 				} else {
 					it->second.get()->Enable();
+
+					DeviceWireless *d = static_cast<DeviceWireless *>(it->second.get());
+					d->Scan();
 				}
 			}
 			it ++;
