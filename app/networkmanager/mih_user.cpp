@@ -65,15 +65,19 @@ void mih_user::power_down(const default_handler &h, const mih::link_tuple_id &lt
 	_mihf.async_send(m, h);
 }
 
-void mih_user::power_up(const default_handler &h, const mih::link_tuple_id &lti)
+void mih_user::power_up(const default_handler &h, const mih::link_tuple_id &lti, bool scan)
 {
-		mih::link_action_req 	lar;
+	mih::link_action_req 	lar;
 	mih::link_action_list	larl;
 
 	lar.id = lti;
 	lar.addr = lti.addr;
 	lar.action.type = mih::link_ac_type_power_up;
 	lar.ex_time = 0;
+
+	if (scan) {
+		lar.action.attr.set(mih::link_ac_attr_scan);
+	}
 
 	larl.push_back(lar);
 

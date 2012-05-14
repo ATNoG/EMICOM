@@ -61,7 +61,7 @@ public:
 	/**
 	 * Send a link power up message to an interface.
 	 */
-	void power_up(const default_handler &h, const mih::link_tuple_id &lti);
+	void power_up(const default_handler &h, const mih::link_tuple_id &lti, bool scan = false);
 
 	/**
 	 * Send a link disconnect message to an interface.

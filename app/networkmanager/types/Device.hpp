@@ -166,17 +166,17 @@ public:
 	/**
 	 * Call a Disconnect on this device.
 	 */
-	void Disconnect();
+	virtual void Disconnect();
 
 	/**
 	 * Enable this device. Don't necessarily connect, just bring up!
 	 */
-	void Enable();
+	virtual void Enable();
 
 	/**
 	 * Disable this device. Meaning cut the power.
 	 */
-	void Disable();
+	virtual void Disable();
 
 	/**
 	 * Inform this device that L2 connectivity was dropped.

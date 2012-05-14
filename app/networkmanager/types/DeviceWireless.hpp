@@ -84,6 +84,11 @@ public:
 	std::vector< ::DBus::Path > GetAccessPoints();
 
 	/**
+	 * Override Enable method to power up and scan in the same action message.
+	 */
+	void Enable();
+
+	/**
 	 * Trigger a scan on this device.
 	 */
 	void Scan();

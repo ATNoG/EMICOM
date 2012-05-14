@@ -32,7 +32,7 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection,
 	// FIXME
 	// inherited from Device adaptor
 	Device_adaptor::DeviceType      = NM_DEVICE_TYPE_WIFI; // by definition
-	Device_adaptor::FirmwareMissing = false; 
+	Device_adaptor::FirmwareMissing = false;
 	Device_adaptor::Managed         = true;
 
 	Device_adaptor::Dhcp6Config = "/";       // TODO
@@ -73,6 +73,16 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 	}
 
 	return r;
+}
+
+void DeviceWireless::Enable()
+{
+	log_(0, "Enabling, with scan request");
+
+	_ctrl.power_up(
+		[&](mih::message &pm, const boost::system::error_code &ec) {
+			// TODO update state
+		}, _lti, true);
 }
 
 void DeviceWireless::Scan()
