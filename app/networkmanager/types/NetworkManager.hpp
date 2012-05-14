@@ -133,7 +133,8 @@ public:
 	void AddAndActivateConnection(const std::map< std::string, std::map< std::string, ::DBus::Variant > >& connection,
 	                              const ::DBus::Path& device,
 	                              const ::DBus::Path& specific_object,
-	                              ::DBus::Path& path, ::DBus::Path& active_connection);
+	                              ::DBus::Path& path,
+	                              ::DBus::Path& active_connection);
 
 	/**
 	 * Activate a given connection.

@@ -170,16 +170,22 @@ void NetworkManager::Sleep(const bool& sleep)
 
 void NetworkManager::DeactivateConnection(const ::DBus::Path& active_connection)
 {
+	log_(0, "Deactivating connection");
 	// TODO
 }
 
 void NetworkManager::AddAndActivateConnection(
-	const std::map< std::string, std::map< std::string, ::DBus::Variant > >& connection,
+	const Connection::settings_map& connection,
 	const ::DBus::Path& device,
 	const ::DBus::Path& specific_object,
-	::DBus::Path& path, ::DBus::Path& active_connection)
+	::DBus::Path& path,
+	::DBus::Path& active_connection)
 {
+	log_(0, "Adding and activating connection");
+
 	// TODO
+	path = "/";
+	active_connection = "/";
 }
 
 ::DBus::Path NetworkManager::ActivateConnection(
@@ -187,6 +193,8 @@ void NetworkManager::AddAndActivateConnection(
 	const ::DBus::Path& device,
 	const ::DBus::Path& specific_object)
 {
+	log_(0, "Activating connection");
+
 	::DBus::Path r;
 	// TODO
 	return r;
