@@ -66,6 +66,8 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 {
 	std::vector< ::DBus::Path > r;
 
+	boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
+
 	auto it = _access_points_map.begin();
 	while (it != _access_points_map.end()) {
 		r.push_back(it->first);
@@ -116,6 +118,8 @@ void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const st
 
 void DeviceWireless::add_ap(mih::link_det_info ldi)
 {
+	boost::unique_lock<boost::shared_mutex> lock(_access_points_map_mutex);
+
 	// if it exists in the list, update
 	auto map_it = _access_points_map.begin();
 	while (map_it != _access_points_map.end()) {
