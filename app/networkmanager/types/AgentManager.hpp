@@ -20,6 +20,7 @@
 
 #include "../dbus/adaptors/AgentManager.hpp"
 #include <boost/noncopyable.hpp>
+#include "odtone/logger.hpp"
 
 namespace odtone {
 namespace networkmanager {
@@ -31,13 +32,15 @@ class AgentManager : boost::noncopyable,
 	public DBus::ObjectAdaptor
 {
 public:
-	static const char* const PATH;
-
-	AgentManager(DBus::Connection &connection);
+	AgentManager(DBus::Connection &connection, const char *path);
 	~AgentManager();
 
 	void Unregister();
 	void Register(const std::string& identifier);
+
+private:
+	std::string             _path;
+	odtone::logger           log_;
 };
 
 }; };

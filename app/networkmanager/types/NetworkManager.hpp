@@ -250,6 +250,7 @@ private:
 	std::string       _settings_path;
 
 	Settings          _settings;
+	AgentManager      _agent_manager; // dummy
 	odtone::logger     log_;
 
 	mih_user          _mih_user;

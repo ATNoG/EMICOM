@@ -28,6 +28,7 @@ NetworkManager::NetworkManager(DBus::Connection &connection, const mih::config &
 	_dbus_path(cfg.get<std::string>(kConf_DBus_Path)),
 	_settings_path(cfg.get<std::string>(kConf_Settings_Path)),
 	_settings(_connection, std::string(_dbus_path).append("/Settings").c_str(), _settings_path.c_str()),
+	_agent_manager(_connection, std::string(_dbus_path).append("/AgentManager").c_str()),
 	log_(_dbus_path.c_str(), std::cout),
 	_mih_user(cfg, io,
 	          boost::bind(&NetworkManager::event_handler, this, _1, _2),

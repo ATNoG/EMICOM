@@ -19,24 +19,25 @@
 
 using namespace odtone::networkmanager;
 
-const char* const AgentManager::PATH = "/org/freedesktop/NetworkManager21/AgentManager";
-
-AgentManager::AgentManager(DBus::Connection &connection)
-	: DBus::ObjectAdaptor(connection, PATH)
+AgentManager::AgentManager(DBus::Connection &connection, const char *path) :
+	DBus::ObjectAdaptor(connection, path),
+	_path(path),
+	log_(_path.c_str(), std::cout)
 {
 }
 
 AgentManager::~AgentManager()
 {
-	// TODO
 }
 
 void AgentManager::Unregister()
 {
-	// TODO
+	log_(0, "Unregistering");
+	// TODO dummy
 }
 
 void AgentManager::Register(const std::string& identifier)
 {
-	// TODO
+	log_(0, "Registering agent ", identifier);
+	// TODO dummy
 }
