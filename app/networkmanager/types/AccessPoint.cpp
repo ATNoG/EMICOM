@@ -67,6 +67,9 @@ AccessPoint::AccessPoint(DBus::Connection &connection, const char* path, mih::li
 
 	// common flags
 	//Flags = parse_common_flags(i);
+
+	_id.ssid = i.network_id;
+	_id.addr = mac;
 }
 
 AccessPoint::~AccessPoint()
@@ -189,6 +192,9 @@ void AccessPoint::Update(mih::link_det_info i)
 
 	if (!props.empty()) {
 		PropertiesChanged(props);
+
+		_id.ssid = i.network_id;
+		_id.addr = mac;
 	}
 }
 
@@ -197,6 +203,11 @@ boost::posix_time::time_duration AccessPoint::last_change()
 	boost::posix_time::ptime now(boost::posix_time::microsec_clock::universal_time());
 
 	return boost::posix_time::time_period(_last_change, now).length();
+}
+
+AccessPoint::bss_id AccessPoint::get_id()
+{
+	return _id;
 }
 
 

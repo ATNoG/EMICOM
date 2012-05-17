@@ -26,22 +26,24 @@ DeviceWired::DeviceWired(DBus::Connection &connection, const char* path, mih_use
 	// inherited from Device adaptor
 	DeviceType = NM_DEVICE_TYPE_ETHERNET;
 	FirmwareMissing = false;
-	Managed = true; // by definition
+	Managed = true;
 	Dhcp6Config = "/";
 	Ip6Config = "/";
 	Dhcp4Config = "/";
 	ActiveConnection = "/";
+
 	State = NM_DEVICE_STATE_UNKNOWN; // TODO
+
 	Ip4Address = 0;
-	Capabilities = 0;
+	Capabilities = Device::NM_DEVICE_CAP_NM_SUPPORTED | Device::NM_DEVICE_CAP_CARRIER_DETECT;
 	Driver = "odtone";
 	IpInterface = "";
 	Device_adaptor::Interface = ""; // Interface is ambiguous
 	Udi = "";
 
 	// inherited from Wired adaptor
-	Carrier = false;
-	Speed = 0;
+	Carrier = true;
+	Speed = 100;
 	PermHwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
 	HwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
 }
@@ -52,12 +54,13 @@ DeviceWired::~DeviceWired()
 
 void DeviceWired::link_down()
 {
-	// TODO
-	// check if device is up, or just disconnected
+	log_(0, "Link down, device is now disconnected");
+	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
 }
 
-void DeviceWired::link_up(const odtone::mih::mac_addr &poa)
+void DeviceWired::link_up(const boost::optional<mih::mac_addr> &poa)
 {
-	// TODO
-	// change state
+	log_(0, "Link up, device is now preparing L3 connectivity");
+	//state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN);
+	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
 }

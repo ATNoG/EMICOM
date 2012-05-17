@@ -57,6 +57,11 @@ class AccessPoint : boost::noncopyable,
 	};
 
 public:
+	struct bss_id {
+		std::string ssid;
+		//odtone::uint32 freq;
+		odtone::mih::mac_addr addr;
+	};
 
 	/**
 	 * Construct a new AccessPoint D-Bus interface data type.
@@ -85,6 +90,13 @@ public:
 	boost::posix_time::time_duration last_change();
 
 	/**
+	 * Get the ap network id tuple.
+	 *
+	 * @return the set of elements that identify a bss.
+	 */
+	bss_id get_id();
+
+	/**
 	 * Convert a dBm signal value to a percentage
 	 *
 	 * @param dbm The current signal strength, in dBm.
@@ -109,6 +121,7 @@ private:
 	logger      log_;
 
 	boost::posix_time::ptime _last_change;
+	bss_id _id;
 };
 
 }; };

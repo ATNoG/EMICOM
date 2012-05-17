@@ -189,7 +189,7 @@ private:
 	 * @param dev The device's mac address.
 	 * @param poa The newly associated point of access' address.
 	 */
-	void link_up(const mih::mac_addr &dev, const mih::mac_addr &poa);
+	void link_up(const mih::mac_addr &dev, const boost::optional<mih::mac_addr> &poa);
 
 	/**
 	 * Method to inform NetworkManager that an L2 connection was dropped.

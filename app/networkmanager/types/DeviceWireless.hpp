@@ -102,7 +102,7 @@ public:
 	/**
 	 * see Device::link_up()
 	 */
-	void link_up(const odtone::mih::mac_addr &poa);
+	void link_up(const boost::optional<mih::mac_addr> &poa);
 
 	/**
 	 * Update the access point list.
@@ -117,6 +117,15 @@ public:
 	 * @param d AP minimum age for removal.
 	 */
 	void remove_aps_older_than(boost::posix_time::time_duration d);
+
+	/**
+	 * Get the info of the given access point.
+	 *
+	 * @param path The object's DBus path.
+	 *
+	 * @return the information of the access point.
+	 */
+	AccessPoint::bss_id get_access_point(const ::DBus::Path &path);
 
 protected:
 	/**

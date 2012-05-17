@@ -186,7 +186,7 @@ public:
 	/**
 	 * Inform this device that L2 connectivity is up.
 	 */
-	virtual void link_up(const odtone::mih::mac_addr &poa) = 0;
+	virtual void link_up(const boost::optional<mih::mac_addr> &poa) = 0;
 
 protected:
 

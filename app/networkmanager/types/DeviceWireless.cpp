@@ -40,7 +40,7 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection,
 	Device_adaptor::Dhcp4Config = "/";       // TODO
 	Device_adaptor::ActiveConnection = "/";  // TODO
 
-	Device_adaptor::State = NM_DEVICE_STATE_ACTIVATED; // TODO
+	State = NM_DEVICE_STATE_UNKNOWN; // TODO
 
 	Device_adaptor::Capabilities = NM_DEVICE_CAP_NM_SUPPORTED;
 
@@ -83,7 +83,7 @@ void DeviceWireless::Enable()
 
 	_ctrl.power_up(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
-			// TODO update state
+			state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
 		}, _lti, true);
 }
 
@@ -93,20 +93,22 @@ void DeviceWireless::Scan()
 
 	_ctrl.scan(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
-			// TODO update state
+			// link detected events will update the ap list
 		}, _lti);
 }
 
 void DeviceWireless::link_down()
 {
-	// TODO
-	// request state, if powered down or just disconnected
+	log_(0, "Link down, device is now disconnected");
+	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
 }
 
-void DeviceWireless::link_up(const odtone::mih::mac_addr &poa)
+void DeviceWireless::link_up(const boost::optional<mih::mac_addr> &poa)
 {
-	log_(0, "Link up, device is now preparing to connect");
-	state(NM_DEVICE_STATE_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN); // preparing to connect?
+	log_(0, "Link up, device is now preparing L3 connectivity");
+	// todo use poa for ActiveAccessPoint...
+	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	//state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN); // preparing to connect?
 }
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
@@ -148,7 +150,6 @@ void DeviceWireless::add_ap(mih::link_det_info ldi)
 	Wireless_adaptor::AccessPointAdded(path_dbus);
 }
 
-
 void DeviceWireless::remove_aps_older_than(boost::posix_time::time_duration d)
 {
 	auto map_it = _access_points_map.begin();
@@ -161,4 +162,11 @@ void DeviceWireless::remove_aps_older_than(boost::posix_time::time_duration d)
 			map_it++;
 		}
 	}
+}
+
+AccessPoint::bss_id DeviceWireless::get_access_point(const ::DBus::Path &path)
+{
+	boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
+
+	return _access_points_map[path].get()->get_id();
 }

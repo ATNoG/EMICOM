@@ -54,7 +54,7 @@ void DeviceModem::link_down()
 	// check if device is up, or just disconnected
 }
 
-void DeviceModem::link_up(const odtone::mih::mac_addr &poa)
+void DeviceModem::link_up(const boost::optional<mih::mac_addr> &poa)
 {
 	// TODO
 	// change state

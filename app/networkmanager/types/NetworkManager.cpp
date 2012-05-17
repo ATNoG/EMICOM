@@ -183,7 +183,52 @@ void NetworkManager::AddAndActivateConnection(
 {
 	log_(0, "Adding and activating connection");
 
-	// TODO
+/*  // debug info
+	std::cerr << "settings:" << std::endl;
+	auto a = connection.begin();
+	while (a != connection.end()) {
+		std::cerr << a->first << " {" << std::endl;
+		auto b = a->second.begin();
+		while (b != a->second.end()) {
+			std::string key = b->first;
+			std::string value = b->second.signature();
+			if (value == "s") {
+				std::string val = b->second;
+				value = val;
+			}
+			std::cerr << key << ": " << value << std::endl;
+			b ++;
+		}
+		std::cerr << "}" << std::endl;
+		a ++;
+	}
+
+	std::cerr << "device: " << device << std::endl;
+	std::cerr << "specific object: " << specific_object << std::endl;*/
+
+	// TODO check if device exists
+	Device *d = _device_map[device].get();
+	switch (d->DeviceType()) {
+		case Device::NM_DEVICE_TYPE_ETHERNET:
+			d->Enable();
+			break;
+		case Device::NM_DEVICE_TYPE_MODEM:
+			break;
+		case Device::NM_DEVICE_TYPE_WIFI:
+		{
+			AccessPoint::bss_id bid = static_cast<DeviceWireless*>(d)->get_access_point(specific_object);
+			// TODO connect to given bssid
+			//log_(0, "got ssid: ", bid.ssid, " mac: ", bid.addr.address());
+		}
+		break;
+
+		case Device::NM_DEVICE_TYPE_WIMAX:
+			break;
+		default:
+			log_(0, "Unsupported device type");
+	}
+
+	// TODO output/result parameters
 	path = "/";
 	active_connection = "/";
 }
@@ -318,9 +363,15 @@ void NetworkManager::add_ethernet_device(mih::mac_addr &address)
 	log_(0, "Device added");
 }
 
-void NetworkManager::link_up(const mih::mac_addr &dev, const mih::mac_addr &poa)
+void NetworkManager::link_up(const mih::mac_addr &dev, const boost::optional<mih::mac_addr> &poa)
 {
-	log_(0, "New L2 completed for device ", dev.address(), " with poa ", poa.address());
+	log_(0, "New L2 completed for device ", dev.address(), " with poa ", poa ? poa.get().address() : "[none]");
+
+	if (State() != NM_STATE_CONNECTED_GLOBAL ||
+	    State() != NM_STATE_CONNECTED_LOCAL ||
+	    State() != NM_STATE_CONNECTED_SITE) {
+		state(NM_STATE_CONNECTING);
+	}
 
 	// look for device and inform/check
 	bool match;
@@ -487,20 +538,21 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 			break;
 		}
 
+		boost::optional<mih::mac_addr> opoa;
 		mih::mac_addr *poa;
 		mih::link_addr *_poa = boost::get<mih::link_addr>(&up_link.poa_addr);
 		if (_poa) {
 			poa = boost::get<mih::mac_addr>(_poa);
 			if (!poa) {
 				log_(0, "Unable to determine poa address");
-				break;
+			} else {
+				opoa = *poa;
 			}
 		} else {
 			log_(0, "Unable to determine poa address");
-			break;
 		}
 
-		link_up(*dev, *poa);
+		link_up(*dev, opoa);
 	}
 	break;
 
