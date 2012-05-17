@@ -121,9 +121,15 @@ void NetworkManager::SetLogging(const std::string& level, const std::string& dom
 
 std::map< std::string, std::string > NetworkManager::GetPermissions()
 {
+	log_(0, "Getting user permissions. Sending \"yes\" to all");
+
 	std::map< std::string, std::string > r;
-	// TODO
-	// never?
+
+	r["org.freedesktop.NetworkManager.settings.modify.system"] = "yes";
+	r["org.freedesktop.NetworkManager.wifi.share.protected"] = "yes";
+	r["org.freedesktop.NetworkManager.wifi.share.open"] = "yes";
+	r["org.freedesktop.NetworkManager.settings.modify.hostname"] = "yes";
+
 	return r;
 }
 
