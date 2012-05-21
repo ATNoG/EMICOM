@@ -154,7 +154,6 @@ void Connection::read_settings()
 			}
 
 			pairs[key] = val;
-			
 		}
 		_settings[v.first] = pairs;
 	}

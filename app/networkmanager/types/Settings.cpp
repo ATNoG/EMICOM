@@ -95,6 +95,7 @@ void Settings::SaveHostname(const std::string& hostname)
 		log_(0, "Done");
 		return connection_path;
 	} catch (...) {
+		log_(0, "Exception occurred while storing settings");
 		throw DBus::Error("org.freedesktop.NetworkManager.Error.ConnectionInvalid",
 		                  "The specified settings are invalid");
 	}
