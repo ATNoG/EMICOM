@@ -23,7 +23,7 @@
 #include <boost/noncopyable.hpp>
 #include "odtone/logger.hpp"
 
-#include "../driver/if_80211.hpp"
+#include <odtone/mih/tlv_types.hpp>
 
 namespace odtone {
 namespace networkmanager {
@@ -112,10 +112,10 @@ public:
 	 */
 	static uint32_t channel_to_frequency(uint channel);
 
-private:
-	uint32_t parse_security_flags(const std::vector<nlwrap::security_features> &fts);
-	uint32_t parse_common_flags(const poa_info &i);
-
+//private:
+//	uint32_t parse_security_flags(const std::vector<nlwrap::security_features> &fts);
+//	uint32_t parse_common_flags(const poa_info &i);
+//
 private:
 	std::string _path;
 	logger      log_;

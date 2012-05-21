@@ -20,7 +20,7 @@
 
 #include "../dbus/adaptors/DeviceWireless.hpp"
 #include <boost/noncopyable.hpp>
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include "odtone/logger.hpp"
 
 #include "Device.hpp"

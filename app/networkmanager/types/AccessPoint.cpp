@@ -237,60 +237,60 @@ uint32_t AccessPoint::channel_to_frequency(uint channel)
 	return ret;
 }
 
-uint32_t AccessPoint::parse_security_flags(const std::vector<nlwrap::security_features> &fts)
-{
-	uint32_t r = NM_802_11_AP_SEC_NONE;
-
-	BOOST_FOREACH (const nlwrap::security_features &ft, fts) {
-		switch (ft)
-		{
-			case nlwrap::pairwise_wep40:
-				r |= NM_802_11_AP_SEC_PAIR_WEP40;
-				break;
-			case nlwrap::pairwise_wep104:
-				r |= NM_802_11_AP_SEC_PAIR_WEP104;
-				break;
-			case nlwrap::pairwise_tkip:
-				r |= NM_802_11_AP_SEC_PAIR_TKIP;
-				break;
-			case nlwrap::pairwise_ccmp:
-				r |= NM_802_11_AP_SEC_PAIR_CCMP;
-				break;
-
-			case nlwrap::group_wep40:
-				r |= NM_802_11_AP_SEC_GROUP_WEP40;
-				break;
-			case nlwrap::group_wep104:
-				r |= NM_802_11_AP_SEC_GROUP_WEP104;
-				break;
-			case nlwrap::group_tkip:
-				r |= NM_802_11_AP_SEC_GROUP_TKIP;
-				break;
-			case nlwrap::group_ccmp:
-				r |= NM_802_11_AP_SEC_GROUP_CCMP;
-				break;
-
-			case nlwrap::mgmt_psk:
-				r |= NM_802_11_AP_SEC_KEY_MGMT_PSK;
-				break;
-			case nlwrap::mgmt_802_1x:
-				r |= NM_802_11_AP_SEC_KEY_MGMT_802_1X;
-				break;
-		}
-	}
-
-	return r;
-}
-
-uint32_t AccessPoint::parse_common_flags(const poa_info &i)
-{
-	uint32_t r = NM_802_11_AP_FLAGS_NONE;
-
-	if (i.bss_privacy_capable) {
-		if (i.bss_privacy_capable.get()) {
-			r = NM_802_11_AP_FLAGS_PRIVACY;
-		}
-	}
-
-	return r;
-}
+//uint32_t AccessPoint::parse_security_flags(const std::vector<nlwrap::security_features> &fts)
+//{
+//	uint32_t r = NM_802_11_AP_SEC_NONE;
+//
+//	BOOST_FOREACH (const nlwrap::security_features &ft, fts) {
+//		switch (ft)
+//		{
+//			case nlwrap::pairwise_wep40:
+//				r |= NM_802_11_AP_SEC_PAIR_WEP40;
+//				break;
+//			case nlwrap::pairwise_wep104:
+//				r |= NM_802_11_AP_SEC_PAIR_WEP104;
+//				break;
+//			case nlwrap::pairwise_tkip:
+//				r |= NM_802_11_AP_SEC_PAIR_TKIP;
+//				break;
+//			case nlwrap::pairwise_ccmp:
+//				r |= NM_802_11_AP_SEC_PAIR_CCMP;
+//				break;
+//
+//			case nlwrap::group_wep40:
+//				r |= NM_802_11_AP_SEC_GROUP_WEP40;
+//				break;
+//			case nlwrap::group_wep104:
+//				r |= NM_802_11_AP_SEC_GROUP_WEP104;
+//				break;
+//			case nlwrap::group_tkip:
+//				r |= NM_802_11_AP_SEC_GROUP_TKIP;
+//				break;
+//			case nlwrap::group_ccmp:
+//				r |= NM_802_11_AP_SEC_GROUP_CCMP;
+//				break;
+//
+//			case nlwrap::mgmt_psk:
+//				r |= NM_802_11_AP_SEC_KEY_MGMT_PSK;
+//				break;
+//			case nlwrap::mgmt_802_1x:
+//				r |= NM_802_11_AP_SEC_KEY_MGMT_802_1X;
+//				break;
+//		}
+//	}
+//
+//	return r;
+//}
+//
+//uint32_t AccessPoint::parse_common_flags(const poa_info &i)
+//{
+//	uint32_t r = NM_802_11_AP_FLAGS_NONE;
+//
+//	if (i.bss_privacy_capable) {
+//		if (i.bss_privacy_capable.get()) {
+//			r = NM_802_11_AP_FLAGS_PRIVACY;
+//		}
+//	}
+//
+//	return r;
+//}

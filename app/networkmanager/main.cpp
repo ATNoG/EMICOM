@@ -20,6 +20,9 @@
 
 #include <odtone/logger.hpp>
 
+#include <boost/thread.hpp>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
 #include <cstdlib> // for EXIT_{SUCCESS,FAILURE}
 #include <iostream>
 
@@ -41,7 +44,7 @@ int main(int argc, char *argv[])
 		(sap::kConf_Receive_Buffer_Len, po::value<uint>()->default_value(4096), "Receive buffer length")
 		(sap::kConf_Port, po::value<ushort>()->default_value(1234), "Listening port")
 		(sap::kConf_MIH_SAP_id, po::value<std::string>()->default_value("mih_nm"), "MIH-User ID")
-		(sap::kConf_MIHF_Ip, po::value<std::string>()->default_value("127.0.0.1"), "Local MIHF IP address")			
+		(sap::kConf_MIHF_Ip, po::value<std::string>()->default_value("127.0.0.1"), "Local MIHF IP address")
 		(sap::kConf_MIHF_Local_Port, po::value<ushort>()->default_value(1025), "Local MIHF communication port")
 		(sap::kConf_MIH_SAP_dest, po::value<std::string>()->default_value(""), "MIHF destination")
 		(nm::kConf_DBus_Name, po::value<std::string>()->default_value("org.freedesktop.NetworkManager"),

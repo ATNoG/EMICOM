@@ -18,21 +18,7 @@
 project networkmanager
 	: requirements
 	  <linkflags>-ldbus-c++-1
-	  <linkflags>-lnl-3
-	  <linkflags>-lnl-genl-3
-	  <linkflags>-lnl-route-3
 	  <linkflags>-lboost_filesystem
-	  <include>/usr/include/libnl3
-	;
-
-odtone.explicit-alias if_80211
-	: driver/if_80211.cpp
-	  driver/nlwrap/genl_msg.cpp
-	  driver/nlwrap/genl_socket.cpp
-	  driver/nlwrap/genl_cb.cpp
-	  driver/nlwrap/rtnl_socket.cpp
-	  driver/nlwrap/rtnl_link.cpp
-	  driver/nlwrap/rtnl_link_cache.cpp
 	;
 
 #odtone.runtime-lib boost_filesystem ;
@@ -60,7 +46,6 @@ exe networkmanager
 	: main.cpp
 	  mih_user.cpp
 	  networkmanager-types
-	  if_80211
 	  ../../lib/odtone//odtone_base
 	  ../../lib/odtone/mih//odtone_mih
 	  ../../lib/odtone/sap//odtone_sap

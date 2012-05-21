@@ -17,6 +17,7 @@
 
 #include "NetworkManager.hpp"
 
+#include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 
