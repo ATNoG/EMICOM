@@ -183,7 +183,7 @@ void NetworkManager::DeactivateConnection(const ::DBus::Path& active_connection)
 }
 
 void NetworkManager::AddAndActivateConnection(
-	const Connection::settings_map& connection,
+	const settings_map& connection,
 	const ::DBus::Path& device,
 	const ::DBus::Path& specific_object,
 	::DBus::Path& path,

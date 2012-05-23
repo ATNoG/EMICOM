@@ -39,11 +39,11 @@ public:
 	~Settings();
 
 	void SaveHostname(const std::string &hostname);
-	::DBus::Path AddConnection(const Connection::settings_map &properties);
+	::DBus::Path AddConnection(const settings_map &properties);
 	::DBus::Path GetConnectionByUuid(const std::string &uuid);
 	std::vector< ::DBus::Path > ListConnections();
 
-	Connection::settings_map GetSettings(const DBus::Path &p);
+	settings_map GetSettings(const DBus::Path &p);
 
 private:
 	::DBus::Connection     &_connection;

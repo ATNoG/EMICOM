@@ -76,7 +76,7 @@ void Settings::SaveHostname(const std::string& hostname)
 	// TODO
 }
 
-::DBus::Path Settings::AddConnection(const Connection::settings_map &properties)
+::DBus::Path Settings::AddConnection(const settings_map &properties)
 {
 	log_(0, "Adding new connection");
 
@@ -140,7 +140,7 @@ std::vector< ::DBus::Path > Settings::ListConnections()
 	return r;
 }
 
-Connection::settings_map Settings::GetSettings(const DBus::Path &p)
+settings_map Settings::GetSettings(const DBus::Path &p)
 {
 	log_(0, "Getting connection at \"", p, "\"");
 

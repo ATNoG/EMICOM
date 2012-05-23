@@ -19,6 +19,7 @@ project networkmanager
 	: requirements
 	  <linkflags>-ldbus-c++-1
 	  <linkflags>-lboost_filesystem
+	  <linkflags>-lboost_serialization
 	;
 
 #odtone.runtime-lib boost_filesystem ;

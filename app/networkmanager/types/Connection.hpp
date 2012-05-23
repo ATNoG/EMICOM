@@ -24,6 +24,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include "setting_types.hpp"
+
 namespace odtone {
 namespace networkmanager {
 
@@ -32,10 +34,6 @@ class Connection : boost::noncopyable,
 	public DBus::IntrospectableAdaptor,
 	public DBus::ObjectAdaptor
 {
-public:
-	typedef std::map<std::string, std::map<std::string, ::DBus::Variant>> settings_map;
-	typedef std::map<std::string, ::DBus::Variant>                        setting_pairs;
-
 public:
 	Connection(DBus::Connection &connection,
 	           const char* path,
@@ -50,8 +48,8 @@ public:
 
 	~Connection();
 
-	Connection::settings_map GetSecrets(const std::string& setting_name);
-	Connection::settings_map GetSettings();
+	settings_map GetSecrets(const std::string& setting_name);
+	settings_map GetSettings();
 	void Delete();
 	void Update(const settings_map &properties);
 

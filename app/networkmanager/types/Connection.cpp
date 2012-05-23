@@ -17,13 +17,9 @@
 
 #include "Connection.hpp"
 
-#include <boost/foreach.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <algorithm>
+#include <fstream>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 using namespace odtone::networkmanager;
 
@@ -60,7 +56,7 @@ Connection::~Connection()
 {
 }
 
-Connection::settings_map Connection::GetSecrets(const std::string& setting_name)
+settings_map Connection::GetSecrets(const std::string& setting_name)
 {
 	log_(0, "Getting connection secrets");
 
@@ -72,7 +68,7 @@ Connection::settings_map Connection::GetSecrets(const std::string& setting_name)
 	return r;
 }
 
-Connection::settings_map Connection::GetSettings()
+settings_map Connection::GetSettings()
 {
 	log_(0, "Getting connection settings");
 
@@ -88,6 +84,9 @@ void Connection::Delete()
 	log_(0, "Removing file");
 	boost::filesystem::remove(_file_path);
 
+	// signal removal
+	Removed();
+
 	log_(0, "Removing from container");
 	_container.erase(_container.find(_path));
 	// "this" doesn't exist, at this point!
@@ -97,9 +96,12 @@ void Connection::Update(const settings_map &properties)
 {
 	log_(0, "Updating settings locally");
 
-	_settings = properties; // does this include uuid??
-
+	// thecnically the map will be different once reloaded again from file!
+	_settings = properties;
 	write_settings();
+
+	// signal changes
+	Updated();
 
 	log_(0, "Done");
 }
@@ -113,67 +115,24 @@ void Connection::read_settings()
 {
 	log_(0, "Loading connection at \"", _file_path.generic_string(), "\"");
 
-	boost::property_tree::ptree pt;
-	boost::property_tree::ini_parser::read_ini(_file_path.generic_string(), pt);
+	connection_settings s;
 
-	BOOST_FOREACH (boost::property_tree::ptree::value_type &v, pt) {
-		std::string group = v.first;
-		log_(0, "Parsing group \"", group, "\"");
+	std::ifstream ifs(_file_path.generic_string());
+	boost::archive::text_iarchive ia(ifs);
+	ia >> s;
 
-		setting_pairs pairs;
-		BOOST_FOREACH (boost::property_tree::ptree::value_type &t, v.second) {
-			std::string key = t.first;
-			std::string value = t.second.get_value<std::string>();
-			log_(0, "Adding pair \"", key, ":", value, "\"");
-
-			::DBus::Variant val;
-
-			// ssid and mac_address are not strings, but char arrays!
-			if (key == "ssid") {
-				::DBus::MessageIter ait = val.writer();
-				ait << std::vector<uint8_t>(value.begin(), value.end());
-			} else if (key == "mac-address") {
-				std::vector<std::string> str_mac;
-				boost::split(str_mac, value, boost::is_any_of(":"));
-
-				// this array size should be 6, but with .size() no segfault occurs
-				std::vector<uint8_t> mac(str_mac.size());
-				std::transform(str_mac.begin(), str_mac.end(), mac.begin(),
-					[](const std::string &s) {
-						std::stringstream ss(s);
-						ss << std::hex;
-						int n;
-						ss >> n;
-						return n;
-					});
-
-				::DBus::MessageIter ait = val.writer();
-				ait << mac;
-			} else {
-				val.writer().append_string(value.c_str());
-			}
-
-			pairs[key] = val;
-		}
-		_settings[v.first] = pairs;
-	}
+	_settings = s.to_map();
 }
 
 void Connection::write_settings()
 {
 	log_(0, "Persisting settings at \"", _file_path.generic_string(), "\"");
 
-	boost::property_tree::ptree pt;
+	connection_settings s(_settings);
 
-	BOOST_FOREACH (settings_map::value_type &v, _settings) {
-		BOOST_FOREACH (setting_pairs::value_type &t, v.second) {
-			std::string key = v.first + "." + t.first;
-			std::string value = t.second;
-			pt.put(key, value);
-		}
-	}
-
-	boost::property_tree::ini_parser::write_ini(_file_path.generic_string(), pt);
+	std::ofstream ofs(_file_path.generic_string());
+	boost::archive::text_oarchive oa(ofs);
+	oa << s;
 
 	log_(0, "Done");
 }
