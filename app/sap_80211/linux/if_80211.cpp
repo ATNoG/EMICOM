@@ -123,7 +123,7 @@ int signal_scan_finish_handler(::nl_msg *msg, void *arg)
 struct scan_results_data {
 	std::vector<poa_info> l;
 
-	boost::optional<uint> associated_index;
+	boost::optional<odtone::uint> associated_index;
 	if_80211::ctx_data &_ctx;
 
 	scan_results_data(if_80211::ctx_data &ctx) : _ctx(ctx) {}
@@ -235,26 +235,30 @@ void fetch_scan_results(scan_results_data &data)
 	log_(0, "(command) Dumped ", data.l.size(), " scan results");
 }
 
+bool compare_poa_strength(const poa_info &a, const poa_info &b)
+{
+	const odtone::sint8 *a_dbm = boost::get<odtone::sint8>(&a.signal);
+	const odtone::sint8 *b_dbm = boost::get<odtone::sint8>(&b.signal);
+
+	if (a_dbm && b_dbm) {
+		return *a_dbm > *b_dbm;
+	} else {
+		const mih::percentage *a_pct = boost::get<mih::percentage>(&a.signal);
+		const mih::percentage *b_pct = boost::get<mih::percentage>(&b.signal);
+		if (a_pct && b_pct) {
+			odtone::uint _a = *((const odtone::uint *)a_pct);
+			odtone::uint _b = *((const odtone::uint *)b_pct);
+			return _a > _b;
+		}
+	}
+
+	throw std::runtime_error("SIG_STRENGTH info not available for sorting");
+}
+
 void dispatch_strongest_scan_results(scan_results_data &d)
 {
-	std::sort(d.l.begin(), d.l.end(), // sort by strongest signal
-		[](const poa_info &a, const poa_info &b)
-		{
-			const sint8 *a_dbm = boost::get<sint8>(&a.signal);
-			const sint8 *b_dbm = boost::get<sint8>(&b.signal);
-			if (a_dbm && b_dbm) {
-				return *a_dbm > *b_dbm;
-			} else {
-				const mih::percentage *a_pct = boost::get<mih::percentage>(&a.signal);
-				const mih::percentage *b_pct = boost::get<mih::percentage>(&b.signal);
-				if (a_pct && b_pct) {
-					uint _a = *((const uint *)a_pct);
-					uint _b = *((const uint *)b_pct);
-					return _a > _b;
-				}
-			}
-			throw std::runtime_error("SIG_STRENGTH info not available for sorting");
-		});
+	// sort by strongest signal
+	std::sort(d.l.begin(), d.l.end(), compare_poa_strength);
 
 	std::map<mih::octet_string, bool> announced;
 	if (d.associated_index) {
@@ -529,6 +533,7 @@ mih::op_mode_enum if_80211::get_op_mode()
 		return mih::op_mode_powered_down;
 	}
 
+#ifdef NL80211_CMD_GET_POWER_SAVE
 	nlwrap::genl_socket s;
 	nlwrap::genl_msg m(_ctx._family_id, NL80211_CMD_GET_POWER_SAVE, 0);
 	m.put_ifindex(_ctx._ifindex);
@@ -548,6 +553,7 @@ mih::op_mode_enum if_80211::get_op_mode()
 	if (operstate == NL80211_PS_ENABLED) {
 		return odtone::mih::op_mode_power_saving;
 	}
+#endif /* NL80211_CMD_GET_POWER_SAVE */
 
 	return mih::op_mode_normal;
 }
@@ -596,6 +602,7 @@ void if_80211::set_op_mode(const mih::link_ac_type_enum &mode)
 		}
 		break;
 	case odtone::mih::link_ac_type_low_power:
+#ifdef NL80211_CMD_SET_POWER_SAVE
 		{
 			nlwrap::genl_socket s;
 			nlwrap::genl_msg m(_ctx._family_id, NL80211_CMD_SET_POWER_SAVE, 0);
@@ -614,6 +621,7 @@ void if_80211::set_op_mode(const mih::link_ac_type_enum &mode)
 			}
 		}
 		break;
+#endif /* NL80211_CMD_SET_POWER_SAVE */
 	default:
 		throw std::runtime_error("Mode not supported");
 		break;

@@ -18,7 +18,6 @@
 #include "genl_msg.hpp"
 
 #include <netlink/genl/genl.h>
-#include <linux/nl80211.h>
 
 #include <stdexcept>
 
@@ -125,12 +124,14 @@ void genl_msg::put_family_name(std::string name)
 	}
 }
 
+#ifdef NL80211_ATTR_PS_STATE
 void genl_msg::put_ps_state(int state)
 {
 	if (::nla_put_u32(_msg, NL80211_ATTR_PS_STATE, state)) {
 		throw std::runtime_error("Error putting PS_STATE in nl_msg");
 	}
 }
+#endif /* NL80211_ATTR_PS_STATE */
 
 void genl_msg::put_mac(const std::string &mac)
 {
@@ -169,9 +170,11 @@ void genl_msg::parse_attr(::nlattr *tb[NL80211_ATTR_MAX + 1])
 		attr_reason_code = ::nla_get_u16(tb[NL80211_ATTR_REASON_CODE]);
 	}
 
+#ifdef NL80211_ATTR_PS_STATE
 	if (tb[NL80211_ATTR_PS_STATE]) {
 		attr_ps_state = ::nla_get_u32(tb[NL80211_ATTR_PS_STATE]);
 	}
+#endif /* NL80211_ATTR_PS_STATE */
 
 	if (tb[NL80211_ATTR_BSS]) {
 		attr_bss = true;
@@ -314,8 +317,12 @@ bss_parse_policy::bss_parse_policy() {
 	pol[NL80211_BSS_SIGNAL_MBM].type = NLA_U32;
 	pol[NL80211_BSS_SIGNAL_UNSPEC].type = NLA_U8;
 	pol[NL80211_BSS_STATUS].type = NLA_U32;
+#ifdef NL80211_BSS_SEEN_MS_AGO
 	pol[NL80211_BSS_SEEN_MS_AGO].type = NLA_U32;
+#endif /* NL80211_BSS_SEEN_MS_AGO */
+#ifdef NL80211_BSS_BEACON_IES
 	pol[NL80211_BSS_BEACON_IES] = { };
+#endif /* NL80211_BSS_BEACON_IES */
 }
 
 stats_parse_policy::stats_parse_policy() {
@@ -329,9 +336,15 @@ stats_parse_policy::stats_parse_policy() {
 	pol[NL80211_STA_INFO_LLID].type = NLA_U16;
 	pol[NL80211_STA_INFO_PLID].type = NLA_U16;
 	pol[NL80211_STA_INFO_PLINK_STATE].type = NLA_U8;
+#ifdef NL80211_STA_INFO_TX_RETRIES
 	pol[NL80211_STA_INFO_TX_RETRIES].type = NLA_U32;
+#endif /* NL80211_STA_INFO_TX_RETRIES */
+#ifdef NL80211_STA_INFO_TX_FAILED
 	pol[NL80211_STA_INFO_TX_FAILED].type = NLA_U32;
+#endif /* NL80211_STA_INFO_TX_FAILED */
+#ifdef NL80211_STA_INFO_STA_FLAGS
 	pol[NL80211_STA_INFO_STA_FLAGS].minlen = sizeof(nl80211_sta_flag_update);
+#endif /* NL80211_STA_INFO_STA_FLAGS */
 }
 
 }
