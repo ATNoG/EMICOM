@@ -43,21 +43,21 @@ public:
 		const std::string DebugLevel() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1";
 			const std::string property_name  = "DebugLevel";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		void DebugLevel( const std::string & input) {
 			::DBus::CallMessage call ;
 			 call.member("Set");  call.interface( "org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			::DBus::Variant value;
 			::DBus::MessageIter vi = value.writer ();
 			vi << input;
@@ -71,21 +71,21 @@ public:
 		const bool DebugTimestamp() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1";
 			const std::string property_name  = "DebugTimestamp";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		void DebugTimestamp( const bool & input) {
 			::DBus::CallMessage call ;
 			 call.member("Set");  call.interface( "org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			::DBus::Variant value;
 			::DBus::MessageIter vi = value.writer ();
 			vi << input;
@@ -99,21 +99,21 @@ public:
 		const bool DebugShowKeys() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1";
 			const std::string property_name  = "DebugShowKeys";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		void DebugShowKeys( const bool & input) {
 			::DBus::CallMessage call ;
 			 call.member("Set");  call.interface( "org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			::DBus::Variant value;
 			::DBus::MessageIter vi = value.writer ();
 			vi << input;
@@ -127,28 +127,28 @@ public:
 		const std::vector< ::DBus::Path > Interfaces() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1";
 			const std::string property_name  = "Interfaces";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const std::vector< std::string > EapMethods() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1";
 			const std::string property_name  = "EapMethods";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
@@ -238,5 +238,5 @@ private:
 	}
 };
 
-} } 
+} }
 #endif //__dbusxx_____proxies_WPASupplicant_hpp__PROXY_MARSHAL_H

@@ -286,6 +286,26 @@ public:
 	 */
 	bool n2n_ho_complete_response(meta_message_ptr &in, meta_message_ptr &out);
 
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+	/**
+	 * Link Conf Request message handler.
+	 *
+	 * @param in The input message.
+	 * @param out The output message.
+	 * @return True if the response is sent immediately or false otherwise.
+	 */
+	bool link_conf_request(meta_message_ptr &in, meta_message_ptr &out);
+
+	/**
+	 * Link Conf Confirm message handler.
+	 *
+	 * @param in The input message.
+	 * @param out The output message.
+	 * @return True if the response is sent immediately or false otherwise.
+	 */
+	bool link_conf_confirm(meta_message_ptr &in, meta_message_ptr &out);
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
+
 private:
 	/**
 	 * Handler responsible for processing the received Link Get Parameters
@@ -316,6 +336,18 @@ private:
 	 */
 	void link_actions_response_handler(const boost::system::error_code &ec,
 									   meta_message_ptr &in);
+
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+	/**
+	 * Handler responsible for processing the received Link Conf
+	 * responses from Link SAPs.
+	 *
+	 * @param ec Error code.
+	 * @param in The input message.
+	 */
+	void link_conf_response_handler(const boost::system::error_code &ec,
+									   meta_message_ptr &in);
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 
 protected:
 	/**

@@ -20,6 +20,7 @@
 
 #include "../dbus/adaptors/Settings.hpp"
 #include <boost/noncopyable.hpp>
+#include <boost/optional.hpp>
 #include "odtone/logger.hpp"
 
 #include "Connection.hpp"
@@ -45,10 +46,44 @@ public:
 
 	settings_map GetSettings(const DBus::Path &p);
 
+	std::map<std::string, std::string> wpa_conf(const DBus::Path &connection);
+
+	template <typename T>
+	boost::optional<DBus::Path> get_connection_by_attribute(std::string setting, std::string attribute, T value)
+	{
+		boost::optional<DBus::Path> result;
+
+		auto it = _connections.begin();
+		while (!result && it != _connections.end()) {
+			settings_map conn = it->second->GetSettings();
+
+			// find setting
+			auto set = conn.find(setting);
+			if (set != conn.end()) {
+				// find attribute
+				auto att = set->second.find(attribute);
+				if (att != set->second.end()) {
+					// compare value
+					DBus::Variant val = att->second;
+					DBus::MessageIter mit = val.reader();
+					T v;
+					mit >> v;
+					if (v == value) {
+						result = it->first;
+					}
+				}
+			}
+
+			it ++;
+		}
+
+		return result;
+	}
+
 private:
 	::DBus::Connection     &_connection;
 
-	std::map<DBus::Path, std::unique_ptr<Connection>> _connections;
+	std::map<DBus::Path, std::shared_ptr<Connection>> _connections;
 	unsigned int            _connection_counter;
 
 	boost::filesystem::path _working_dir;

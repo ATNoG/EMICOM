@@ -52,6 +52,9 @@ enum mih_evt_list_enum {
 	mih_evt_link_handover_imminent = 5,		/**< Link handover imminent		*/
 	mih_evt_link_handover_complete = 6,		/**< Link handover complete		*/
 	mih_evt_link_pdu_transmit_status = 7,	/**< Link PDU transmit status	*/
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+	mih_evt_link_conf_required = 8,			/**< Link Conf Required			*/
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 };
 
 /**
@@ -103,7 +106,7 @@ enum iq_type_list_enum {
 	iq_type_ie_network_data_rate = 13,	/**< IE network data rate			*/
 	iq_type_ie_net_regult_domain = 14,	/**< IE NET result domain			*/
 	iq_type_ie_net_frequency_bands = 15,/**< IE NET frequency bands			*/
-	iq_type_ie_net_ip_cfg_methods = 16,	/**< IE IP config methods			*/		
+	iq_type_ie_net_ip_cfg_methods = 16,	/**< IE IP config methods			*/
 	iq_type_ie_net_capabilities = 17,	/**< IE NET capabilities			*/
 	iq_type_ie_net_supported_lcp = 18,	/**< IE NET supported LCP			*/
 	iq_type_ie_net_mob_mgmt_prot = 19,	/**< IE NET mobility management protocl	*/
@@ -144,7 +147,7 @@ typedef bitmap<16, transport_list_enum> transport_list;
 struct mbb_ho_supp {
 	/**
 	 * Construct a MBB_HO_SUPP data type.
-	 */	
+	 */
 	mbb_ho_supp() : supported(false)
 	{ }
 

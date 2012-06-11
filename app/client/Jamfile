@@ -25,3 +25,7 @@ exe client
 	  ../../lib/odtone/mih//odtone_mih
 	;
 
+install install
+	: client
+	: <location>../../dist
+	;

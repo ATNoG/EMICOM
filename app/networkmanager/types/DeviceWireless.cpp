@@ -16,10 +16,12 @@
 //==============================================================================
 
 #include "DeviceWireless.hpp"
+#include "util.hpp"
 
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <cstring>
+#include <exception>
 
 using namespace odtone::networkmanager;
 
@@ -79,11 +81,19 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 
 void DeviceWireless::Enable()
 {
+	remove_aps_older_than(boost::posix_time::seconds(0));
+
 	log_(0, "Enabling, with scan request");
 
 	_ctrl.power_up(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
-			state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+			mih::status st;
+			pm >> mih::confirm(mih::confirm::link_actions)
+				& mih::tlv_status(st);
+
+			if (st == mih::status_success) {
+				state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+			}
 		}, _lti, true);
 }
 
@@ -97,15 +107,85 @@ void DeviceWireless::Scan()
 		}, _lti);
 }
 
+void DeviceWireless::Connect(const ::DBus::Path &path, const completion_handler &h)
+{
+	boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
+
+	mih::mac_addr poa;
+	auto ap = _access_points_map.find(path);
+	if (ap == _access_points_map.end()) {
+		throw std::runtime_error("AP not found.");
+	}
+	poa.address(ap->second->HwAddress());
+
+	state(NM_DEVICE_STATE_PREPARE, NM_DEVICE_STATE_REASON_UNKNOWN);
+
+	_ctrl.connect(
+		[&, path, h](mih::message &pm, const boost::system::error_code &ec) {
+			mih::status st;
+			pm >> mih::confirm(mih::confirm::link_actions)
+				& mih::tlv_status(st);
+
+			if (st != mih::status_success) {
+				h(false);
+				return;
+			}
+
+			state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN);
+
+			// announce active AP
+			property("ActiveAccessPoint", to_variant(path));
+
+			h(true);
+		}, _lti, poa);
+}
+
+void DeviceWireless::property(const std::string &property, const DBus::Variant &value)
+{
+	DBus::MessageIter it = value.reader();
+
+	if (boost::iequals(property, "ActiveAccessPoint")) {
+		DBus::Path p;
+		it >> p;
+		ActiveAccessPoint = p;
+	} else if (boost::iequals(property, "HwAddress")) {
+		std::string s;
+		it >> s;
+		HwAddress = s;
+	} else if (boost::iequals(property, "PermHwAddress")) {
+		std::string s;
+		it >> s;
+		PermHwAddress = s;
+	} else if (boost::iequals(property, "Mode")) {
+		uint8_t u;
+		it >> u;
+		Mode = u;
+	} else if (boost::iequals(property, "Bitrate")) {
+		uint8_t u;
+		it >> u;
+		Bitrate = u;
+	} else if (boost::iequals(property, "WirelessCapabilities")) {
+		uint8_t u;
+		it >> u;
+		WirelessCapabilities = u;
+	}
+
+	std::map<std::string, DBus::Variant> m;
+	m[property] = value;
+	PropertiesChanged(m);
+}
+
 void DeviceWireless::link_down()
 {
 	log_(0, "Link down, device is now disconnected");
 	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	DBus::Path no_active_access_point = "/";
+	property("ActiveAccessPoint", to_variant(no_active_access_point));
 }
 
 void DeviceWireless::link_up(const boost::optional<mih::mac_addr> &poa)
 {
-	log_(0, "Link up, device is now preparing L3 connectivity");
+	log_(0, "Link up");
 	// todo use poa for ActiveAccessPoint...
 	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
 	//state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN); // preparing to connect?
@@ -121,6 +201,10 @@ void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const st
 void DeviceWireless::add_ap(mih::link_det_info ldi)
 {
 	boost::unique_lock<boost::shared_mutex> lock(_access_points_map_mutex);
+
+	// TODO make this configurable
+	// clean older scan results
+	remove_aps_older_than(boost::posix_time::seconds(30));
 
 	// if it exists in the list, update
 	auto map_it = _access_points_map.begin();
@@ -143,7 +227,7 @@ void DeviceWireless::add_ap(mih::link_det_info ldi)
 	path_str << _dbus_path << "/AccessPoints/" << ++_access_point_count;
 
 	DBus::Path path_dbus = path_str.str();
-	_access_points_map[path_dbus] = std::unique_ptr<AccessPoint>(
+	_access_points_map[path_dbus] = std::shared_ptr<AccessPoint>(
 		new AccessPoint(_connection, path_str.str().c_str(), ldi));
 
 	// announce addition
@@ -168,5 +252,5 @@ AccessPoint::bss_id DeviceWireless::get_access_point(const ::DBus::Path &path)
 {
 	boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
 
-	return _access_points_map[path].get()->get_id();
+	return _access_points_map[path]->get_id();
 }

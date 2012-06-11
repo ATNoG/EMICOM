@@ -29,6 +29,8 @@
 #include <odtone/mih/tlv_types.hpp>
 
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <odtone/logger.hpp>
 #include <iostream>
@@ -36,6 +38,8 @@
 
 #include "linux/if_80211.hpp"
 #include "timer_task.hpp"
+
+#include "wpa_supplicant/wpa_supplicant.hpp"
 
 #define STOP_SCHED_SCAN_ON_L2_UP
 
@@ -76,6 +80,9 @@ static logger log_("sap_80211", std::cout);
 std::unique_ptr<sap::link>  ls;
 std::unique_ptr<timer_task> threshold_check_task;
 std::unique_ptr<timer_task> scheduled_scan_task;
+
+std::unique_ptr<wpa_supplicant::Interface> wpa_interface;
+std::string devname;
 
 mih::link_evt_list capabilities_event_list;
 mih::link_cmd_list capabilities_command_list;
@@ -192,8 +199,7 @@ void dispatch_link_detected(mih::link_det_info &l)
 	ls->async_send(m);
 }
 
-void dispatch_link_parameters_report(mih::link_tuple_id lid,
-	mih::link_param_rpt_list &rpt_list)
+void dispatch_link_parameters_report(mih::link_tuple_id lid, mih::link_param_rpt_list &rpt_list)
 {
 	if (!subscribed_event_list.get(mih::evt_link_parameters_report)) {
 		return;
@@ -205,6 +211,63 @@ void dispatch_link_parameters_report(mih::link_tuple_id lid,
 	m << mih::indication(mih::indication::link_parameters_report)
 		& mih::tlv_link_identifier(lid)
 		& mih::tlv_link_param_rpt_list(rpt_list);
+
+	ls->async_send(m);
+}
+
+void dispatch_link_conf_completion(odtone::uint16 tid, bool connected)
+{
+	mih::message m;
+	m.tid(tid);
+
+	if (connected) {
+		log_(0, "(command) Dispatching link_conf status success");
+
+		m << mih::confirm(mih::confirm::link_conf)
+			& mih::tlv_status(mih::status(mih::status_success));
+	} else {
+		log_(0, "(command) Dispatching link_conf status failure");
+
+		try {
+			wpa_interface->Disconnect();
+		} catch (DBus::Error &e) {
+			// was probably already disconnected
+		}
+
+		m << mih::confirm(mih::confirm::link_conf)
+			& mih::tlv_status(mih::status(mih::status_failure));
+	}
+
+	ls->async_send(m);
+}
+
+void dispatch_link_action_completion(odtone::uint16 tid,
+                                     mih::link_scan_rsp_list &scan_rsp_list,
+                                     bool connected)
+{
+	mih::message m;
+	m.tid(tid);
+
+	if (connected) {
+		log_(0, "(command) Dispatching link_action status success");
+
+		m << mih::confirm(mih::confirm::link_actions)
+			& mih::tlv_status(mih::status(mih::status_success))
+			& mih::tlv_link_scan_rsp_list(scan_rsp_list)
+			& mih::tlv_link_ac_result(mih::link_ac_success);
+
+	} else {
+		log_(0, "(command) Dispatching link_action status failure");
+
+		try {
+			wpa_interface->Disconnect();
+		} catch (DBus::Error &e) {
+			// was probably already disconnected
+		}
+
+		m << mih::confirm(mih::confirm::link_conf)
+			& mih::tlv_status(mih::status(mih::status_failure));
+	}
 
 	ls->async_send(m);
 }
@@ -335,6 +398,15 @@ void scheduled_scan_trigger(if_80211 &fi)
 ///////////////////////////////////////////////////////////////////////////////
 //// Command handling functions
 ///////////////////////////////////////////////////////////////////////////////
+
+template <class T>
+DBus::Variant to_variant(T value)
+{
+	DBus::Variant v;
+	DBus::MessageIter iter = v.writer();
+	iter << value;
+	return v;
+}
 
 // Dispatch failure message for command errors.
 void dispatch_status_failure(odtone::uint16 tid, mih::confirm::mid mid)
@@ -750,24 +822,24 @@ void handle_link_actions(boost::asio::io_service &ios,
 	try {
 		// This should be processed after the delay, but
 		// it's being processed before due to the lack of support
-		if (action.attr.get(mih::link_ac_attr_data_fwd_req)) {
-			// not supported
-			log_(0, "(command) No support for specified link_ac_attr");
-			dispatch_status_failure(tid, mih::confirm::link_actions);
-			return;
-		}
 		if (action.attr.get(mih::link_ac_attr_res_retain)) {
 			// not supported
 			log_(0, "(command) No support for specified link_ac_attr");
 			dispatch_status_failure(tid, mih::confirm::link_actions);
 			return;
 		}
-		if (poa) {
+		if (action.attr.get(mih::link_ac_attr_data_fwd_req)) {
 			// not supported
-			log_(0, "(command) No support for specified attribute (poa addr)");
+			log_(0, "(command) No support for specified link_ac_attr");
 			dispatch_status_failure(tid, mih::confirm::link_actions);
 			return;
 		}
+		//if (poa) {
+		//	// not supported
+		//	log_(0, "(command) No support for specified attribute (poa addr)");
+		//	dispatch_status_failure(tid, mih::confirm::link_actions);
+		//	return;
+		//}
 
 		if (delay > 0) {
 			boost::asio::deadline_timer timer(ios);
@@ -778,12 +850,88 @@ void handle_link_actions(boost::asio::io_service &ios,
 
 		fi.set_op_mode(action.type.get());
 
+		// get scan results
+		bool scanned = false;
 		mih::link_scan_rsp_list scan_rsp_list;
 		if (action.type != mih::link_ac_type_power_down) {
 			if (action.attr.get(mih::link_ac_attr_scan)) {
 				fi.trigger_scan(true);
 				scan_rsp_list = fi.get_scan_results();
+				scanned = true;
 			}
+		}
+
+////////
+		if (action.type == mih::link_ac_type_power_down) {
+			try {
+				wpa_interface->Disconnect();
+			} catch (DBus::Error &e) {
+				// already disconnected
+			}
+		}
+
+		if (poa && action.type == mih::link_ac_type_power_up) {
+			mih::mac_addr connect_addr = boost::get<mih::mac_addr>(poa.get());
+			log_(0, "(command) Requested connection to ", connect_addr.address());
+
+			boost::optional<poa_info> bss = fi.known_bssid(connect_addr);
+
+			if (!bss && !scanned) {
+				fi.trigger_scan(true);
+				fi.get_scan_results(); // force scan results fetching
+				bss = fi.known_bssid(connect_addr);
+			}
+
+			if (!bss) {
+				log_(0, "(command) Cannot find a network for given BSSID.");
+				dispatch_status_failure(tid, mih::confirm::link_actions);
+				return;
+			}
+
+			wpa_interface->add_completion_handler(boost::bind(dispatch_link_action_completion, tid, scan_rsp_list, _1));
+
+			if (bss.get().net_capabilities.get(mih::net_caps_security)) {
+				log_(0, "(command) Auth required for ", connect_addr.address(), " [", bss.get().network_id, "]");
+				log_(0, "(command) Dispatching conf required event");
+
+				mih::link_id _lid = fi.link_id();
+				mih::link_tuple_id lid;
+				lid.type = _lid.type;
+				lid.addr = _lid.addr;
+				lid.poa_addr = poa.get();
+
+				boost::optional<mih::network_id> network = bss.get().network_id;
+				mih::configuration_list lconf;
+
+				mih::message m;
+				m << mih::indication(mih::indication::link_conf_required)
+					& mih::tlv_link_identifier(lid)
+					& mih::tlv_network_id(network)
+					& mih::tlv_configuration_list(lconf);
+
+				ls->async_send(m);
+			} else {
+				log_(0, "(command) Attempting connection to ",
+					connect_addr.address(), " [", bss.get().network_id, "]");
+
+				try {
+					std::map<std::string, DBus::Variant> m;
+					m["ssid"] = to_variant(bss.get().network_id);
+
+					mih::message success, failure;
+					success << mih::confirm(mih::confirm::link_conf)
+						& mih::tlv_status(mih::status(mih::status_success));
+					failure << mih::confirm(mih::confirm::link_conf)
+						& mih::tlv_status(mih::status(mih::status_failure));
+
+					DBus::Path wpa_network = wpa_interface->AddNetwork(m);
+					wpa_interface->SelectNetwork(wpa_network);
+				} catch (DBus::Error e) {
+					log_(0, "Error selecting network \"", e.name(), ": ", e.message(), "\"");
+				}
+			}
+
+			return;
 		}
 
 		log_(0, "(command) Dispatching status success");
@@ -807,13 +955,75 @@ void handle_link_actions(boost::asio::io_service &ios,
 	}
 }
 
+// This basically requests a connection to the poa identified by the link_tuple_id
+// and network, given a requested set of configurations
+void handle_link_conf(boost::asio::io_service &ios,
+                      if_80211 &fi,
+                      odtone::uint16 tid,
+                      mih::link_tuple_id lti,
+                      boost::optional<mih::network_id> network,
+                      mih::configuration_list lconf)
+{
+	log_(0, "(command) Handling link_conf");
+
+	try {
+		mih::mac_addr connect_addr = boost::get<mih::mac_addr>(boost::get<mih::link_addr>(lti.poa_addr));
+		std::string ssid = network.get(); // deliberately fail if not set
+
+		log_(0, "(command) Attempting connection to ", connect_addr.address(), " [", ssid, "]");
+
+		std::map<std::string, DBus::Variant> network_map;
+		network_map["ssid"] = to_variant(ssid);
+		auto it = lconf.begin();
+		while (it != lconf.end()) {
+			log_(0, "(command) supplicant setting [", it->key, "=",
+			     it->key.compare("password") == 0 ? "\"secret\"" : it->value, "]");
+
+			if (   boost::iequals(it->key, "scan_ssid")
+			    || boost::iequals(it->key, "mode")
+			    || boost::iequals(it->key, "frequency")
+			    || boost::iequals(it->key, "wep_tx_keyidx")
+			    || boost::iequals(it->key, "eapol_flags")
+			    || boost::iequals(it->key, "engine")
+			    || boost::iequals(it->key, "fragment_size")
+			    || boost::iequals(it->key, "proactive_key_caching")) {
+				network_map[it->key] = to_variant(boost::lexical_cast<int>(it->value));
+			} else {
+				network_map[it->key] = to_variant(it->value);
+			}
+			it ++;
+		}
+
+		// prepare success and failure messages.
+		mih::message success, failure;
+		success << mih::confirm(mih::confirm::link_conf)
+			& mih::tlv_status(mih::status(mih::status_success));
+		failure << mih::confirm(mih::confirm::link_conf)
+			& mih::tlv_status(mih::status(mih::status_failure));
+
+		try {
+			DBus::Path wpa_network = wpa_interface->AddNetwork(network_map);
+			wpa_interface->add_completion_handler(boost::bind(dispatch_link_conf_completion, tid, _1));
+			wpa_interface->SelectNetwork(wpa_network);
+		} catch (DBus::Error e) {
+			log_(0, "(command) DBus error \"", e.name(), ": ", e.message(), "\"");
+			dispatch_status_failure(tid, mih::confirm::link_conf);
+			return;
+		}
+	} catch (std::exception e) {
+		log_(0, "(command) Exception: ", e.what());
+		dispatch_status_failure(tid, mih::confirm::link_conf);
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //// Special MIHF callback
 ///////////////////////////////////////////////////////////////////////////////
 
 void default_handler(boost::asio::io_service &ios,
 	if_80211 &fi,
-	mih::message& msg, const boost::system::error_code& ec)
+	mih::message& msg,
+	const boost::system::error_code& ec)
 {
 	if (ec) {
 		return;
@@ -895,6 +1105,23 @@ void default_handler(boost::asio::io_service &ios,
 		}
 		break;
 
+	case mih::request::link_conf:
+		{
+			log_(0, "(command) Received link_conf message");
+
+			mih::link_tuple_id lti;
+			boost::optional<mih::network_id> network;
+			mih::configuration_list lconf;
+
+			msg >> mih::request()
+				& mih::tlv_link_identifier(lti)
+				& mih::tlv_network_id(network)
+				& mih::tlv_configuration_list(lconf);
+
+			handle_link_conf(ios, fi, msg.tid(), lti, network, lconf);
+		}
+		break;
+
 	default:
 		log_(0, "(command) Received unknown MIH message");
 	}
@@ -926,6 +1153,7 @@ void set_supported_event_list()
 	//capabilities_event_list.set(mih::evt_link_handover_imminent);
 	//capabilities_event_list.set(mih::evt_link_handover_complete);
 	//capabilities_event_list.set(mih::evt_link_pdu_transmit_status);
+	capabilities_event_list.set(mih::evt_link_conf_required);
 }
 
 // To set the supported command list. (hardcoded)
@@ -935,7 +1163,7 @@ void set_supported_command_list()
 	capabilities_command_list.set(mih::cmd_link_event_unsubscribe);
 	capabilities_command_list.set(mih::cmd_link_get_parameters);
 	capabilities_command_list.set(mih::cmd_link_configure_thresholds);
-	capabilities_command_list.set(mih::cmd_link_action);
+	capabilities_command_list.set(mih::cmd_link_conf);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -987,6 +1215,12 @@ int main(int argc, char** argv)
 		set_supported_event_list();
 		set_supported_command_list();
 
+		// start dbus service
+		DBus::BusDispatcher dispatcher;
+		DBus::default_dispatcher = &dispatcher;
+		DBus::Connection dbus_connection = DBus::Connection::SystemBus();
+		boost::thread disp(boost::bind(&DBus::BusDispatcher::enter, &dispatcher));
+
 		boost::asio::io_service ios;
 
 		if_80211 fi(ios, mih::mac_addr(cfg.get<std::string>(sap::kConf_Interface_Addr)));
@@ -1018,7 +1252,36 @@ int main(int argc, char** argv)
 		fi.link_down_callback(boost::bind(&dispatch_link_down, _1, _2, _3));
 		fi.link_detected_callback(boost::bind(&dispatch_link_detected, _1));
 
+		// checking wpa_supplicant
+		sleep(1); // TODO: "ensure" the d-bus dispatcher has started
+
+		wpa_supplicant::WPASupplicant wpa(dbus_connection, "/fi/w1/wpa_supplicant1", "fi.w1.wpa_supplicant1");
+
+		devname = fi.ifname();
+		DBus::Path wpa_interface_path;
+		try {
+			wpa_interface_path = wpa.GetInterface(devname);
+		} catch (DBus::Error e) {
+			log_(0, "Error getting ", devname, " interface from WPA Supplicant. Adding it myself.");
+			log_(0, "Message was \"", e.name(), ": ", e.message(), "\"");
+
+			std::map<std::string, DBus::Variant> m;
+
+			m["Ifname"] = to_variant(devname);
+			//m["Driver"] = to_variant(std::string("nl80211"));
+
+			wpa_interface_path = wpa.CreateInterface(m);
+
+			log_(0, "Apparently successul, at ", wpa_interface_path);
+		}
+
+		std::unique_ptr<wpa_supplicant::Interface> _wpa_interface(
+			new wpa_supplicant::Interface(dbus_connection, wpa_interface_path.c_str(), "fi.w1.wpa_supplicant1"));
+		wpa_interface = std::move(_wpa_interface);
+
 		ios.run();
+	} catch (DBus::Error e) {
+		std::cerr << "DBus error: " << e.name() << ": " << e.message() << std::endl;
 	} catch(std::exception &e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
 	} catch(std::string &str) {

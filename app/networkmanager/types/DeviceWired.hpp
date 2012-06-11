@@ -19,7 +19,6 @@
 #define NETWORKMANAGER_DEVICEWIRED__HPP_
 
 #include "../dbus/adaptors/DeviceWired.hpp"
-#include <boost/noncopyable.hpp>
 
 #include "Device.hpp"
 

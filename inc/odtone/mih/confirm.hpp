@@ -55,6 +55,9 @@ public:
 		mn_ho_complete = msg_id<3, 0, 10>::value,			/**< MIH_N2N_HO_Complete.confirm			*/
 		n2n_ho_complete = msg_id<3, 0, 11>::value,			/**< MIH_N2N_HO_Commlete.confirm			*/
 		get_information = msg_id<4, 0, 1>::value,			/**< MIH_Get_Information.confirm			*/
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+		link_conf = msg_id<3, 0, 12>::value					/**< MIH_Link_Conf.confirm					*/
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 	};
 
 	/**

@@ -684,6 +684,9 @@ enum link_evt_list_enum {
 	evt_link_handover_imminent = 5,		/**< Link handover imminent		*/
 	evt_link_handover_complete = 6,		/**< Link handover complete		*/
 	evt_link_pdu_transmit_status = 7,	/**< Link PDU transmit status	*/
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+	evt_link_conf_required = 8,			/**< Link Conf Required			*/
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 };
 
 /**
@@ -701,6 +704,9 @@ enum link_cmd_list_enum {
 	cmd_link_get_parameters       = 3,	/**< Get parameters.		*/
 	cmd_link_configure_thresholds = 4,	/**< Configure thresholds.	*/
 	cmd_link_action               = 5,	/**< Action.				*/
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+	cmd_link_conf                 = 6,	/**< Configure link. */
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 };
 
 /**
@@ -1055,6 +1061,33 @@ struct status_rsp {
  */
 typedef std::vector<status_rsp> status_rsp_list;
 
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * CONFIGURATION data type.
+ */
+struct configuration {
+	/**
+	 * Serialize/deserialize the CONFIGURATION data type.
+	 *
+	 * @param ar The archive to/from where serialize/deserialize the data type.
+	 */
+	template<class ArchiveT>
+	void serialize(ArchiveT& ar)
+	{
+		ar & key;
+		ar & value;
+	}
+
+	octet_string key;	/**< Configuration key.		*/
+	octet_string value;	/**< Configuration value.	*/
+};
+
+/**
+ * LIST(CONFIGURATION) data type.
+ */
+typedef std::vector<configuration> configuration_list;
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace mih */ } /*namespace odtone */
 

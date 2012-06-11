@@ -121,7 +121,10 @@ public:
 	void DeactivateConnection(const ::DBus::Path& active_connection);
 
 	/**
-	 * Add and activate a connection, automatically filling properties with a given device and specific object.
+	 * Add and activate a connection.
+	 *
+	 * There's no support for automatically filling properties
+	 * with a given device and specific object.
 	 *
 	 * @param connection The connection parameters.
 	 * @param device The device for automatic parameter filling.
@@ -233,16 +236,13 @@ private:
 	 * @param property The property that is to be changed.
 	 * @param value    The new value of the referred property.
 	 */
-	void property(const std::string &property, const DBus::Variant &value);
+	template <class T>
+	void property(const std::string &property, const T &value);
 
 	/**
-	 * Convert a given value to the Variant type.
-	 *
-	 * @param value The value to convert to Variant.
-	 * @return The result Variant value.
+	 * Calculate the active connection list from the respective map
 	 */
-	template <class T>
-	DBus::Variant to_variant(T value);
+	std::vector<DBus::Path> active_connections();
 
 private:
 	DBus::Connection &_connection;
@@ -254,7 +254,11 @@ private:
 	odtone::logger     log_;
 
 	mih_user          _mih_user;
-	std::map<DBus::Path, std::unique_ptr<Device>> _device_map;
+
+	std::map<DBus::Path, std::shared_ptr<Device>> _device_map;
+
+	// address by Device first, then by ActiveConnection object's dbus address
+	std::map<DBus::Path, std::map<DBus::Path, std::shared_ptr<ConnectionActive>>> _active_connections;
 };
 
 }; };

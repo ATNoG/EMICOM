@@ -155,7 +155,7 @@ bool event_service::local_event_subscribe_request(meta_message_ptr &in,
 		& mih::tlv_event_list(events);
 
 	mih::octet_string link_id = _link_abook.search_interface(link.type, link.addr);
-	
+
 	// Check if the Link SAP exists
 	// If not replies with a failure status
 	if(link_id.compare("") == 0) {
@@ -940,5 +940,26 @@ bool event_service::link_pdu_transmit_status_indication(meta_message_ptr &in,
 	return false;
 }
 
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+/**
+ * Link Conf Required Indication message handler.
+ *
+ * @param in The input message.
+ * @param out The output message.
+ * @return True if the response is sent immediately or false otherwise.
+ */
+bool event_service::link_conf_required_indication(meta_message_ptr &in, meta_message_ptr &out)
+{
+	ODTONE_LOG(1, "(mies) received Link_Conf_Required.indication from ",
+	    in->source().to_string());
+
+	if(in->is_local())
+		_link_abook.reset(in->source().to_string());
+
+	link_event_forward(in, mih::mih_evt_link_conf_required);
+
+	return false;
+}
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 } /* namespace mihf */ } /* namespace odtone */
 // EOF ////////////////////////////////////////////////////////////////////////

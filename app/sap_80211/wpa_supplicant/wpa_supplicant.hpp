@@ -15,10 +15,7 @@
 // This software is distributed without any warranty.
 //==============================================================================
 
-#include "proxies/BSS.hpp"
-#include "proxies/Interface.hpp"
-#include "proxies/Network.hpp"
-#include "proxies/WPASupplicant.hpp"
-#include "proxies/WPS.hpp"
+#include "WPASupplicant.hpp"
+#include "Interface.hpp"
 
 // EOF ////////////////////////////////////////////////////////////////////////

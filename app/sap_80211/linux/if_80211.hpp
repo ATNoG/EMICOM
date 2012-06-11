@@ -79,6 +79,13 @@ public:
 	unsigned int ifindex();
 
 	/**
+	 * Get the interface name of this device.
+	 *
+	 * @return The interface name.
+	 */
+	std::string ifname();
+
+	/**
 	 * Get the MAC address of this device.
 	 *
 	 * @return the MAC address of the device.
@@ -151,6 +158,14 @@ public:
 	odtone::uint get_current_data_rate(mih::mac_addr &addr);
 
 	/**
+	 * Attempt to resolve an SSID given its BSSID.
+	 *
+	 * @param addr The given BSSID.
+	 * @return the optional SSID.
+	 */
+	boost::optional<poa_info> known_bssid(mih::mac_addr &addr);
+
+	/**
 	 * Set the callback for LINK_UP events.
 	 *
 	 * @param h The callback.
@@ -186,6 +201,9 @@ public:
 		int                   _ifindex;
 		std::string           _dev;
 		odtone::mih::mac_addr _mac;
+
+		boost::shared_mutex             _seen_bssids_access;
+		std::map<std::string, poa_info> _seen_bssids;
 	};
 
 private:

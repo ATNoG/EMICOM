@@ -174,11 +174,13 @@ int handle_scan_results(::nl_msg *msg, void *arg)
 
 		poa_info i;
 
+		mih::mac_addr poa_addr = mih::mac_addr(m.bss_bssid.get().c_str());
+
 		i.network_id = m.ie_ssid.get();
 		i.channel_id = frequency_to_channel_id(m.bss_frequency.get());
 		i.id.type = mih::link_type_802_11;
 		i.id.addr = d->_ctx._mac;
-		i.id.poa_addr = mih::mac_addr(m.bss_bssid.get().c_str());
+		i.id.poa_addr = poa_addr;
 		i.signal = m.bss_signal_mbm.get();
 		i.data_rate = m.ie_max_data_rate.get() * 1000;
 		i.mih_capabilities = mih::link_mihcap_flag();
@@ -188,6 +190,10 @@ int handle_scan_results(::nl_msg *msg, void *arg)
 		// and the noise value (through NL80211_CMD_GET_SURVEY). (missing "interference")
 
 		d->l.push_back(i);
+
+		// save the mac:ssid pair
+		boost::unique_lock<boost::shared_mutex> lock(d->_ctx._seen_bssids_access);
+		d->_ctx._seen_bssids[poa_addr.address()] = i;
 	} catch(...) {
 		log_(0, "(command) Error parsing scan dump message");
 	}
@@ -237,6 +243,11 @@ void fetch_scan_results(scan_results_data &data)
 	m.put_ifindex(data._ctx._ifindex);
 
 	nlwrap::nl_cb cb(handle_scan_results, static_cast<void *>(&data));
+
+	// uncommenting this prevents the "known bssid" table to grow indefinitely.
+	// however, it poses concurrency issues, and access must be synchronized!
+	//{boost::unique_lock<boost::shared_mutex> lock(data._ctx._seen_bssids_access);
+	//data._ctx._seen_bssids.clear();}
 
 	s.send(m);
 
@@ -373,7 +384,6 @@ int handle_nl_event(nl_msg *msg, void *arg)
 
 			// The multicast message just informs of new results.
 			// The complete information must be retrieved with a GET_SCAN.
-
 			scan_results_data d(*ctx);
 			fetch_scan_results(d);
 			dispatch_strongest_scan_results(d);
@@ -407,6 +417,7 @@ if_80211::if_80211(boost::asio::io_service &ios, mih::mac_addr mac) : _ctx(ios)
 	nlwrap::rtnl_link link(cache.get_by_addr(mac.address()));
 
 	_ctx._ifindex = link.ifindex();
+	_ctx._dev = link.name();
 
 	// initalize socket
 	_ctx._family_id = _socket.family_id("nl80211");
@@ -425,6 +436,11 @@ if_80211::~if_80211()
 unsigned int if_80211::ifindex()
 {
 	return _ctx._ifindex;
+}
+
+std::string if_80211::ifname()
+{
+	return _ctx._dev;
 }
 
 mih::mac_addr if_80211::mac_address()
@@ -677,6 +693,18 @@ odtone::uint if_80211::get_current_data_rate(mih::mac_addr &addr)
 	}
 
 	return rate * 100;
+}
+
+boost::optional<poa_info> if_80211::known_bssid(mih::mac_addr &addr)
+{
+	boost::shared_lock<boost::shared_mutex> lock(_ctx._seen_bssids_access);
+
+	auto found = _ctx._seen_bssids.find(addr.address());
+	if (found != _ctx._seen_bssids.end()) {
+		return found->second;
+	} else {
+		return boost::optional<poa_info>();
+	}
 }
 
 void if_80211::link_up_callback(link_up_handler h)

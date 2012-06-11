@@ -51,7 +51,6 @@ void mih_user::power_down(const default_handler &h, const mih::link_tuple_id &lt
 	mih::link_action_list	larl;
 
 	lar.id = lti;
-	lar.addr = lti.addr;
 	lar.action.type = mih::link_ac_type_power_down;
 	lar.ex_time = 0;
 
@@ -71,7 +70,6 @@ void mih_user::power_up(const default_handler &h, const mih::link_tuple_id &lti,
 	mih::link_action_list	larl;
 
 	lar.id = lti;
-	lar.addr = lti.addr;
 	lar.action.type = mih::link_ac_type_power_up;
 	lar.ex_time = 0;
 
@@ -95,7 +93,6 @@ void mih_user::disconnect(const default_handler &h, const mih::link_tuple_id &lt
 	mih::link_action_list	larl;
 
 	lar.id = lti;
-	lar.addr = lti.addr;
 	lar.action.type = mih::link_ac_type_disconnect;
 	lar.ex_time = 0;
 
@@ -125,6 +122,42 @@ void mih_user::scan(const default_handler &h, const mih::link_tuple_id &lti)
 	mih::message m;
 	m << mih::request(mih::request::link_actions)
 		& mih::tlv_link_action_list(larl);
+	m.destination(mih::id("local-mihf"));
+
+	_mihf.async_send(m, h);
+}
+
+void mih_user::connect(const default_handler &h, const mih::link_tuple_id &lti, const mih::link_addr &poa)
+{
+	mih::link_action_req 	lar;
+	mih::link_action_list	larl;
+
+	lar.id = lti;
+	lar.addr = poa;
+	lar.action.type = mih::link_ac_type_power_up;
+	lar.ex_time = 0;
+
+	larl.push_back(lar);
+
+	mih::message m;
+	m << mih::request(mih::request::link_actions)
+		& mih::tlv_link_action_list(larl);
+	m.destination(mih::id("local-mihf"));
+
+	_mihf.async_send(m, h);
+}
+
+void mih_user::conf(const default_handler &h,
+          const mih::link_tuple_id &lti,
+	      const boost::optional<std::string> &network,
+	      const mih::configuration_list &conf)
+{
+	mih::message m;
+
+	m << mih::request(mih::request::link_conf)
+		& mih::tlv_link_identifier(lti)
+		& mih::tlv_network_id(network)
+		& mih::tlv_configuration_list(conf);
 	m.destination(mih::id("local-mihf"));
 
 	_mihf.async_send(m, h);
@@ -188,6 +221,7 @@ void mih_user::capability_discover_confirm(mih::message& msg, const boost::syste
 		wanted_evts.set(mih::mih_evt_link_going_down);
 		wanted_evts.set(mih::mih_evt_link_parameters_report);
 		wanted_evts.set(mih::mih_evt_link_up);
+		wanted_evts.set(mih::mih_evt_link_conf_required);
 
 		mih::message m;
 		m << mih::request(mih::request::event_subscribe)

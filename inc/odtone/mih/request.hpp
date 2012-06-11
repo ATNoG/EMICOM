@@ -56,6 +56,9 @@ public:
 		n2n_ho_complete = msg_id<3, 1, 11>::value,			/**< MIH_N2N_HO_Commlete.request	*/
 		get_information = msg_id<4, 1, 1>::value,			/**< MIH_Get_Information.request	*/
 		push_information = msg_id<4, 1, 2>::value,			/**< MIH_Push_Information.request	*/
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+		link_conf = msg_id<3, 1, 12>::value					/**< MIH_Link_Conf.request			*/
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 	};
 
 	/**

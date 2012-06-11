@@ -19,7 +19,7 @@
 #define NETWORKMANAGER_DEVICEWIRELESS__HPP_
 
 #include "../dbus/adaptors/DeviceWireless.hpp"
-#include <boost/noncopyable.hpp>
+
 #include <boost/thread/shared_mutex.hpp>
 #include "odtone/logger.hpp"
 
@@ -34,6 +34,8 @@ class DeviceWireless :
 	public Device,
 	public org::freedesktop::NetworkManager::Device::Wireless_adaptor
 {
+	typedef boost::function<void(bool success)> completion_handler;
+
 public:
 	/**
 	 * Enumeration of possible DeviceWireless Capabilities.
@@ -95,6 +97,13 @@ public:
 	void Scan();
 
 	/**
+	 * Connect to a given Access Point.
+	 *
+	 * @param poa The Access Point to connect to.
+	 */
+	void Connect(const ::DBus::Path &path, const completion_handler &h);
+
+	/**
 	 * see Device::link_down()
 	 */
 	void link_down();
@@ -134,13 +143,18 @@ protected:
 	// override from PropertiesAdaptor
 	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
 
+	/**
+	 * Send a properties change signal on this DeviceWireless instance.
+	 */
+	void property(const std::string &property, const DBus::Variant &value);
+
 private:
 	DBus::Connection &_connection;
 
 	unsigned int     _access_point_count;
 
 	boost::shared_mutex _access_points_map_mutex;
-	std::map<DBus::Path, std::unique_ptr<AccessPoint>> _access_points_map;
+	std::map<DBus::Path, std::shared_ptr<AccessPoint>> _access_points_map;
 };
 
 }; };

@@ -65,7 +65,10 @@ public:
 		push_information = msg_id<4, 3, 2>::value,			/**< MIH_Push_Information.indication*/
 		// ODTONE specific messages
 		link_register = msg_id<1, 3, 6>::value,				/**< Link_Register.indication	*/
-		user_register = msg_id<1, 3, 7>::value				/**< User_Register.indication	*/
+		user_register = msg_id<1, 3, 7>::value,				/**< User_Register.indication	*/
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+		link_conf_required = msg_id<2, 3, 10>::value		/**< Conf_Required.indication */
+#endif
 	};
 
 	/**

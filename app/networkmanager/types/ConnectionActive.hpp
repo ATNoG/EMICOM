@@ -31,8 +31,31 @@ class ConnectionActive : boost::noncopyable,
 	public DBus::ObjectAdaptor
 {
 public:
-	ConnectionActive(DBus::Connection &connection, const char* path);
+
+	/**
+	 * Enumeration of possible Connection.Active states.
+	 */
+	enum NM_ACTIVE_CONNECTION_STATE {
+		NM_ACTIVE_CONNECTION_STATE_UNKNOWN      = 0,
+		NM_ACTIVE_CONNECTION_STATE_ACTIVATING   = 1,
+		NM_ACTIVE_CONNECTION_STATE_ACTIVATED    = 2,
+		NM_ACTIVE_CONNECTION_STATE_DEACTIVATING = 3
+	};
+
+public:
+	ConnectionActive(DBus::Connection &connection,
+	                 const char* path,
+	                 const ::DBus::Path &_connection,
+	                 const ::DBus::Path &_specific_object,
+	                 const std::string &_uuid,
+	                 const std::vector< ::DBus::Path > &_devices,
+	                 uint32_t _state,
+	                 bool _default,
+	                 bool _default6,
+	                 bool _vpn);
 	~ConnectionActive();
+
+	void state(NM_ACTIVE_CONNECTION_STATE s);
 };
 
 }; };

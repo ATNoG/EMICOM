@@ -329,16 +329,16 @@ void send_link_get_parameters_request(handler &sap, const char *dst)
 	mih::link_id_list	lil;
 	mih::mac_addr      	mac;
 
-	mac.address("00:11:22:33:44:55");
+	mac.address("00:27:10:7d:5f:30");
 	li.type = mih::link_type_802_11;
 	li.addr = mac;
 	lil.push_back(li);
 
 	mih::link_status_req	lsr;
-	mih::link_param_802_11	lp = mih::link_param_802_11_rssi;
+	//mih::link_param_802_11	lp = mih::link_param_802_11_rssi;
 	lsr._states_req.set(mih::link_states_req_op_mode);
-	lsr._param_type_list.push_back(lp);
-	lsr._desc_req.set(mih::link_desc_req_classes_of_service_supported);
+	lsr._param_type_list.push_back(mih::link_param_802_11(mih::link_param_802_11_rssi));
+	//lsr._desc_req.set(mih::link_desc_req_classes_of_service_supported);
 
 	p << mih::request(mih::request::link_get_parameters)
 		& mih::tlv_link_id_list(lil)
@@ -363,16 +363,17 @@ void send_link_actions_request(handler &sap, const char *dst)
 	mih::link_tuple_id 	li;
 	mih::mac_addr      	mac;
 
-	mac.address("00:11:22:33:44:55");
+	mac.address("00:27:10:7d:5f:30");
 	li.type = mih::link_type_802_11;
 	li.addr = mac;
 
 	mih::link_action_req 	lar;
 	mih::link_action_list	larl;
 	lar.id = li;
-	lar.addr = mac;
-	lar.action.type = mih::link_ac_type_none;
-	lar.action.attr.set(mih::link_ac_attr_scan);
+	lar.addr = mih::mac_addr("00:0f:f7:71:ad:20");
+	lar.action.type = mih::link_ac_type_power_up;
+	//lar.action.attr.set(mih::link_ac_attr_data_fwd_req);
+	//lar.action.attr.set(mih::link_ac_attr_scan);
 	lar.ex_time = 0;
 
 	larl.push_back(lar);

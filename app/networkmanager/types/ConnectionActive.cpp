@@ -16,23 +16,44 @@
 //==============================================================================
 
 #include "ConnectionActive.hpp"
+#include "util.hpp"
 
 using namespace odtone::networkmanager;
 
-ConnectionActive::ConnectionActive(DBus::Connection &connection, const char* path)
+ConnectionActive::ConnectionActive(DBus::Connection &connection,
+                                   const char* path,
+                                   const ::DBus::Path &_connection,
+                                   const ::DBus::Path &_specific_object,
+                                   const std::string &_uuid,
+                                   const std::vector< ::DBus::Path > &_devices,
+                                   uint32_t _state,
+                                   bool _default,
+                                   bool _default6,
+                                   bool _vpn)
 	: DBus::ObjectAdaptor(connection, path)
 {
-	// FIXME
-	Vpn = false;
-	Default6 = false;
-	Default = false;
-	State = 0;
-	Devices = std::vector< ::DBus::Path >();
-	Uuid = "";
-	SpecificObject = "/";
-	Connection = "/";
+	Connection     = _connection;
+	SpecificObject = _specific_object;
+	Uuid           = _uuid;
+	Devices        = _devices;
+	State          = _state;
+	Default        = _default;
+	Default6       = _default6;
+	Vpn            = _vpn;
 }
 
 ConnectionActive::~ConnectionActive()
 {
+}
+
+void ConnectionActive::state(NM_ACTIVE_CONNECTION_STATE s)
+{
+	if (s != State()) {
+		State = s;
+
+		std::map<std::string, ::DBus::Variant> m;
+		m["State"] = to_variant(s);
+
+		PropertiesChanged(m);
+	}
 }

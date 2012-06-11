@@ -371,7 +371,7 @@ bool command_service::link_configure_thresholds_request(meta_message_ptr &in,
 		*in >> mih::request(mih::request::link_configure_thresholds)
 		       & mih::tlv_link_identifier(lti)
 		       & mih::tlv_link_cfg_param_list(lcpl);
-		
+
 		*out << mih::request(mih::request::link_configure_thresholds)
 		       & mih::tlv_link_cfg_param_list(lcpl);
 
@@ -627,7 +627,7 @@ bool command_service::link_actions_request(meta_message_ptr &in,
 					utils::update_local_capabilities(_abook, _link_abook, _user_abook);
 				} else {
 					mih::link_addr* a = boost::get<mih::link_addr>(&(*lar).addr);
-					if (a && ((*lar).action.attr.get(mih::link_ac_attr_data_fwd_req)) ) {
+					if (a/* && ((*lar).action.attr.get(mih::link_ac_attr_data_fwd_req)) */) {
 						*out << mih::request(mih::request::link_actions)
 									& mih::tlv_link_action((*lar).action)
 									& mih::tlv_time_interval((*lar).ex_time)
@@ -1075,6 +1075,151 @@ bool command_service::n2n_ho_complete_response(meta_message_ptr &in,
 					in, out);
 }
 
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+/**
+ * Handler responsible for setting a failure Link Conf
+ * responses.
+ *
+ * @param ec Error code.
+ * @param in The input message.
+ */
+void command_service::link_conf_response_handler(const boost::system::error_code &ec,
+													meta_message_ptr &in)
+{
+	if(ec) {
+		return;
+	}
+
+	{
+		boost::mutex::scoped_lock lock(_mutex);
+		_timer.erase(in->tid());
+	}
+
+	meta_message_ptr out(new meta_message());
+
+	ODTONE_LOG(1, "(mics) setting failure response to Link_Conf.request");
+
+	mih::status st = mih::status_failure;
+
+	*out << mih::response(mih::response::link_conf)
+		& mih::tlv_status(st);
+
+	out->tid(in->tid());
+	out->destination(in->source());
+	out->source(mihfid);
+
+	out->ip(in->ip());
+	out->scope(in->scope());
+	out->port(in->port());
+	_transmit(out);
+}
+
+/**
+ * Link Conf Request message handler.
+ *
+ * @param in The input message.
+ * @param out The output message.
+ * @return True if the response is sent immediately or false otherwise.
+ */
+bool command_service::link_conf_request(meta_message_ptr &in,
+					       meta_message_ptr &out)
+{
+	ODTONE_LOG(1, "(mics) received a Link_Conf.request from ",
+	    in->source().to_string());
+
+	if(utils::this_mihf_is_destination(in)) {
+		//
+		// Kick this message to MIH_Link SAP.
+		//
+		mih::link_tuple_id lti;
+		boost::optional<mih::network_id> network;
+		mih::configuration_list confl;
+
+		*in >> mih::request(mih::request::link_conf)
+			& mih::tlv_link_identifier(lti)
+			& mih::tlv_network_id(network)
+			& mih::tlv_configuration_list(confl);
+
+		out->destination(mih::id(_link_abook.search_interface(lti.type, lti.addr)));
+
+		// If the Link SAP is known, send message
+		if (out->destination().to_string().compare("") != 0) {
+			// Check if the Link SAP is still active
+			uint16 fails = _link_abook.fail(out->destination().to_string());
+			if (fails > kConf_MIHF_Link_Delete_Value) {
+				mih::octet_string dst = out->destination().to_string();
+				_link_abook.inactive(dst);
+
+				// Update MIHF capabilities
+				utils::update_local_capabilities(_abook, _link_abook, _user_abook);
+			} else {
+				*out << mih::request(mih::request::link_conf)
+					& mih::tlv_link_identifier(lti)
+					& mih::tlv_network_id(network)
+					& mih::tlv_configuration_list(confl);
+			}
+
+			out->tid(in->tid());
+			out->source(in->source());
+
+			ODTONE_LOG(2, "(mics) forwarding Link_Conf.request to ",
+				out->destination().to_string());
+			utils::forward_request(out, _lpool, _transmit);
+		}
+
+		// Set the timer that will be responsible for responding to this request
+		boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(_io);
+		timer->expires_from_now(boost::posix_time::milliseconds(kConf_MIHF_Link_Response_Time_Value));
+		timer->async_wait(boost::bind(&command_service::link_conf_response_handler, this, _1, in));
+		{
+			boost::mutex::scoped_lock lock(_mutex);
+			_timer[in->tid()] = timer;
+		}
+		// Do not respond to the request. The thread response handler will be
+		// responsible for that.
+		//return false;
+	} else {
+		utils::forward_request(in, _lpool, _transmit);
+		//return false;
+	}
+
+	return false;
+}
+
+/**
+ * Link Conf Confirm message handler.
+ *
+ * @param in The input message.
+ * @param out The output message.
+ * @return True if the response is sent immediately or false otherwise.
+ */
+bool command_service::link_conf_confirm(meta_message_ptr &in,
+					    meta_message_ptr &out)
+{
+	ODTONE_LOG(1, "(mics) received Link_Conf.confirm from ",
+		in->source().to_string());
+
+	_link_abook.reset(in->source().to_string());
+
+	if(_lpool.set_user_tid(in)) {
+
+		{
+			boost::mutex::scoped_lock lock(_mutex);
+			_timer.erase(in->tid());
+		}
+
+		ODTONE_LOG(1, "(mics) setting response to Link_Conf.request");
+
+		// forward to user
+		_transmit(in);
+
+		return false;
+	}
+
+	ODTONE_LOG(1, "no pending transaction for this message, discarding");
+	return false;
+
+}
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 
 } /* namespace mihf */ } /* namespace odtone */
-

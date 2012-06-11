@@ -222,6 +222,18 @@ public:
 	bool link_pdu_transmit_status_indication(meta_message_ptr &in,
 						 meta_message_ptr &out);
 
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+	/**
+	 * Link Conf Required Indication message handler.
+	 *
+	 * @param in The input message.
+	 * @param out The output message.
+	 * @return True if the response is sent immediately or false otherwise.
+	 */
+	bool link_conf_required_indication(meta_message_ptr &in,
+						meta_message_ptr &out);
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
+
 protected:
 	/**
 	 * Forward the message for all users subscribed to event from the

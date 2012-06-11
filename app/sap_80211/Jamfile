@@ -35,6 +35,13 @@ make libnl.a
 
 lib libnl : : <file>libnl.a : : <include>libnl/include/ ;
 
+lib dbus-c++ : : <name>dbus-c++-1 <link>shared ;
+
+odtone.explicit-alias wpa_supplicant
+	: wpa_supplicant/WPASupplicant.cpp
+	  wpa_supplicant/Interface.cpp
+	;
+
 odtone.explicit-alias if_80211
 	: linux/if_80211.cpp
 	  linux/nlwrap/nl_cb.cpp
@@ -51,6 +58,8 @@ exe sap_80211
 	: main.cpp
 	  timer_task.cpp
 	  if_80211
+	  wpa_supplicant
+	  dbus-c++
 	  libnl
 	  ../../lib/odtone//odtone_base
 	  ../../lib/odtone/mih//odtone_mih

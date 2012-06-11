@@ -37,12 +37,12 @@ class Connection : boost::noncopyable,
 public:
 	Connection(DBus::Connection &connection,
 	           const char* path,
-               std::map<DBus::Path, std::unique_ptr<Connection>> &container,
+               std::map<DBus::Path, std::shared_ptr<Connection>> &container,
 	           const boost::filesystem::path &file_path);
 
 	Connection(DBus::Connection &connection,
 	           const char* path,
-	           std::map<DBus::Path, std::unique_ptr<Connection>> &container,
+	           std::map<DBus::Path, std::shared_ptr<Connection>> &container,
 	           const settings_map &settings,
 	           const boost::filesystem::path &file_path);
 
@@ -55,6 +55,8 @@ public:
 
 	std::string GetUuid();
 
+	std::map<std::string, std::string> supplicant_conf();
+
 private:
 	void read_settings();
 	void write_settings();
@@ -63,7 +65,7 @@ private:
 	boost::filesystem::path _file_path;
 	settings_map            _settings;
 
-	std::map<DBus::Path, std::unique_ptr<Connection>> &_container;
+	std::map<DBus::Path, std::shared_ptr<Connection>> &_container;
 
 	DBus::Path              _path;
 	odtone::logger           log_;

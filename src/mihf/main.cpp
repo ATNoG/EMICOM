@@ -480,6 +480,11 @@ void mies_register_callbacks(event_service &mies)
 	sac_register_callback(mih::confirm::event_unsubscribe,
 			      boost::bind(&event_service::event_unsubscribe_confirm,
 					  boost::ref(mies), _1, _2));
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+	sac_register_callback(mih::indication::link_conf_required,
+			      boost::bind(&event_service::link_conf_required_indication,
+					  boost::ref(mies), _1, _2));
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 }
 // REGISTER(event_service::link_pdu_transmit_status_indication)
 
@@ -566,6 +571,14 @@ void mics_register_callbacks(command_service &mics)
 	sac_register_callback(mih::response::n2n_ho_complete,
 			      boost::bind(&command_service::n2n_ho_complete_response,
 					  boost::ref(mics), _1, _2));
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+	sac_register_callback(mih::request::link_conf,
+			      boost::bind(&command_service::link_conf_request,
+					  boost::ref(mics), _1, _2));
+	sac_register_callback(mih::confirm::link_conf,
+			      boost::bind(&command_service::link_conf_confirm,
+					  boost::ref(mics), _1, _2));
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 }
 
 void miis_register_callbacks(information_service &miis)
@@ -604,7 +617,7 @@ int main(int argc, char **argv)
 		(kConf_MIHF_Peer_List, po::value<std::string>()->default_value(""), "List of peer MIHFs")
 		(kConf_MIHF_Users_List, po::value<std::string>()->default_value(""), "List of local MIH-Users")
 		(kConf_MIHF_Links_List, po::value<std::string>()->default_value(""), "List of local Links SAPs")
-		(kConf_MIHF_Transport_List, po::value<std::string>()->default_value("udp"), "List of supported transport protocols")		
+		(kConf_MIHF_Transport_List, po::value<std::string>()->default_value("udp"), "List of supported transport protocols")
 		(kConf_MIHF_Link_Response_Time, po::value<uint16>()->default_value(3000), "Link SAP response time (milliseconds)")
 		(kConf_MIHF_Link_Delete, po::value<uint16>()->default_value(2), "Link SAP response fails to forget")
 		(kConf_MIHF_Discover, po::value<std::string>()->default_value(""), "MIHF Discovery Mechanisms Order")

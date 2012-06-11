@@ -55,9 +55,9 @@ Settings::Settings(DBus::Connection &connection, const char *path, const char *w
 			ss << _path << "/" << ++_connection_counter;
 
 			::DBus::Path connection_path = ss.str();
-			std::unique_ptr<Connection> connection(
+			std::shared_ptr<Connection> connection(
 				new Connection(_connection, connection_path.c_str(), _connections, *dir_it));
-			_connections[connection_path] = std::move(connection);
+			_connections[connection_path] = connection;
 		}
 		++ dir_it;
 	}
@@ -88,9 +88,9 @@ void Settings::SaveHostname(const std::string& hostname)
 		std::stringstream ss;
 		ss << _path << "/" << ++_connection_counter;
 		::DBus::Path connection_path = ss.str();
-		std::unique_ptr<Connection> connection(
+		std::shared_ptr<Connection> connection(
 			new Connection(_connection, connection_path.c_str(), _connections, properties, file_path));
-		_connections[connection_path] = std::move(connection);
+		_connections[connection_path] = connection;
 
 		log_(0, "Done");
 		return connection_path;
@@ -150,5 +150,15 @@ settings_map Settings::GetSettings(const DBus::Path &p)
 	}
 
 	throw DBus::Error("org.freedesktop.NetworkManager.Error.UnknownConnection",
-	                  "Couldn't find a connection at given DPath");
+	                  "Couldn't find a connection at given Path");
+}
+
+std::map<std::string, std::string> Settings::wpa_conf(const DBus::Path &connection)
+{
+	auto it = _connections.find(connection);
+	if (it != _connections.end()) {
+		return it->second->supplicant_conf();
+	}
+
+	throw std::runtime_error("No such connection");
 }

@@ -50,63 +50,63 @@ public:
 		const std::map< std::string, ::DBus::Variant > Capabilities() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "Capabilities";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const std::string State() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "State";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const bool Scanning() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "Scanning";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const uint32_t ApScan() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "ApScan";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		void ApScan( const uint32_t & input) {
 			::DBus::CallMessage call ;
 			 call.member("Set");  call.interface( "org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			::DBus::Variant value;
 			::DBus::MessageIter vi = value.writer ();
 			vi << input;
@@ -120,119 +120,119 @@ public:
 		const std::string Ifname() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "Ifname";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const std::string Driver() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "Driver";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const std::string BridgeIfname() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "BridgeIfname";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const ::DBus::Path CurrentBSS() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "CurrentBSS";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const ::DBus::Path CurrentNetwork() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "CurrentNetwork";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const std::map< std::string, std::vector< uint8_t > > Blobs() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "Blobs";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const std::vector< ::DBus::Path > BSSs() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "BSSs";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		const uint32_t BSSExpireAge() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "BSSExpireAge";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		void BSSExpireAge( const uint32_t & input) {
 			::DBus::CallMessage call ;
 			 call.member("Set");  call.interface( "org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			::DBus::Variant value;
 			::DBus::MessageIter vi = value.writer ();
 			vi << input;
@@ -246,21 +246,21 @@ public:
 		const uint32_t BSSExpireCount() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "BSSExpireCount";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		void BSSExpireCount( const uint32_t & input) {
 			::DBus::CallMessage call ;
 			 call.member("Set");  call.interface( "org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			::DBus::Variant value;
 			::DBus::MessageIter vi = value.writer ();
 			vi << input;
@@ -274,21 +274,21 @@ public:
 		const std::string Country() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "Country";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
 		void Country( const std::string & input) {
 			::DBus::CallMessage call ;
 			 call.member("Set");  call.interface( "org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			::DBus::Variant value;
 			::DBus::MessageIter vi = value.writer ();
 			vi << input;
@@ -302,14 +302,14 @@ public:
 		const std::vector< ::DBus::Path > Networks() {
 			::DBus::CallMessage call ;
 			 call.member("Get"); call.interface("org.freedesktop.DBus.Properties");
-			::DBus::MessageIter wi = call.writer(); 
+			::DBus::MessageIter wi = call.writer();
 			const std::string interface_name = "fi.w1.wpa_supplicant1.Interface";
 			const std::string property_name  = "Networks";
 			wi << interface_name;
 			wi << property_name;
 			::DBus::Message ret = this->invoke_method (call);
 			::DBus::MessageIter ri = ret.reader ();
-			::DBus::Variant argout; 
+			::DBus::Variant argout;
 			ri >> argout;
 			return argout;
 		};
@@ -503,5 +503,5 @@ private:
 	}
 };
 
-} } } 
+} } }
 #endif //__dbusxx_____proxies_Interface_hpp__PROXY_MARSHAL_H
