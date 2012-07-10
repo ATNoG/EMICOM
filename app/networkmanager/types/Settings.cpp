@@ -19,14 +19,6 @@
 
 #include "NetworkManager.hpp"
 
-// needed for boost::filesystem
-namespace boost {
-	void assertion_failed_msg(char const* a, char const* b, char const* c, char const* d, long e)
-	{
-		// nothing
-	}
-};
-
 using namespace odtone::networkmanager;
 
 Settings::Settings(DBus::Connection &connection, const char *path, const char *working_dir) :
