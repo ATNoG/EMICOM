@@ -141,7 +141,6 @@ install odtone-dist
 	  app/sap_8023/sap_8023.conf
 	  app/networkmanager//networkmanager
 	  app/networkmanager/networkmanager.conf
-	  app/client//client
 #	  app/client//client
 #	  src/dummyserver//dummyserver
 #	  app/miis_rdf_server//miis_rdf_server
