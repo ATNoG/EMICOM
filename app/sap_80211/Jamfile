@@ -22,7 +22,6 @@ odtone.explicit-alias wpa_supplicant
 	  wpa_supplicant/Interface.cpp
 	;
 
-
 exe sap_80211
 	: main.cpp
 	  timer_task.cpp
