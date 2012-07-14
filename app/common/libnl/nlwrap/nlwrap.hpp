@@ -18,6 +18,7 @@
 #include "nl_cb.hpp"
 #include "nl_socket.hpp"
 #include "nl_msg.hpp"
+#include "nl_addr.hpp"
 
 #include "genl_socket.hpp"
 #include "genl_msg.hpp"
@@ -25,5 +26,9 @@
 #include "rtnl_socket.hpp"
 #include "rtnl_link.hpp"
 #include "rtnl_link_cache.hpp"
+#include "rtnl_addr.hpp"
+#include "rtnl_addr_cache.hpp"
+#include "rtnl_route.hpp"
+#include "rtnl_route_cache.hpp"
 
 // EOF ////////////////////////////////////////////////////////////////////////

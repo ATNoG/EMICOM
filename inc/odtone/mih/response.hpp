@@ -57,6 +57,7 @@ public:
 		get_information	= msg_id<4, 2, 1>::value,			/**< MIH_Get_Information.response		*/
 #ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
 		link_conf = msg_id<3, 2, 12>::value,				/**< MIH_Link_Conf.response				*/
+		l3_conf = msg_id<3, 2, 13>::value,					/**< MIH_L3_Conf.response				*/
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 	};
 

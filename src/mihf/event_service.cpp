@@ -960,6 +960,26 @@ bool event_service::link_conf_required_indication(meta_message_ptr &in, meta_mes
 
 	return false;
 }
+
+/**
+ * L3 Conf Required Indication message handler.
+ *
+ * @param in The input message.
+ * @param out The output message.
+ * @return True if the response is sent immediately or false otherwise.
+ */
+bool event_service::l3_conf_required_indication(meta_message_ptr &in, meta_message_ptr &out)
+{
+	ODTONE_LOG(1, "(mies) received L3_Conf_Required.indication from ",
+	    in->source().to_string());
+
+	if(in->is_local())
+		_link_abook.reset(in->source().to_string());
+
+	link_event_forward(in, mih::mih_evt_l3_conf_required);
+
+	return false;
+}
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 } /* namespace mihf */ } /* namespace odtone */
 // EOF ////////////////////////////////////////////////////////////////////////

@@ -30,11 +30,9 @@ namespace odtone {
 namespace networkmanager {
 
 class DeviceWireless :
-// NetworkManager D-Bus
 	public Device,
 	public org::freedesktop::NetworkManager::Device::Wireless_adaptor
 {
-	typedef boost::function<void(bool success)> completion_handler;
 
 public:
 	/**
@@ -101,6 +99,8 @@ public:
 	 *
 	 * @param poa The Access Point to connect to.
 	 */
+	// TODO deprecate this method
+	#warning deprecate
 	void Connect(const ::DBus::Path &path, const completion_handler &h);
 
 	/**

@@ -34,6 +34,9 @@ class Device : boost::noncopyable,
 	public DBus::ObjectAdaptor
 {
 public:
+	typedef boost::function<void(bool success)> completion_handler;
+
+public:
 
 	/**
 	 * Enumeration of possible Device Types.
@@ -187,6 +190,23 @@ public:
 	 * Inform this device that L2 connectivity is up.
 	 */
 	virtual void link_up(const boost::optional<mih::mac_addr> &poa) = 0;
+
+	/**
+	 * Send a link_conf command to this device.
+	 */
+	virtual void link_conf(const completion_handler &h,
+	                       const boost::optional<mih::network_id> &network,
+	                       const mih::configuration_list &lconf);
+
+	/**
+	 * Send an l3_conf command to this device.
+	 */
+	virtual void l3_conf(const completion_handler &h,
+	                     const mih::ip_cfg_methods &cfg_methods,
+	                     const boost::optional<mih::ip_info_list> &address_list,
+	                     const boost::optional<mih::ip_info_list> &route_list,
+	                     const boost::optional<mih::ip_addr_list> &dns_list,
+	                     const boost::optional<mih::fqdn_list> &domain_list);
 
 protected:
 

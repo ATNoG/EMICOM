@@ -39,7 +39,9 @@
 #include "linux/if_80211.hpp"
 #include "timer_task.hpp"
 
-#include "wpa_supplicant/wpa_supplicant.hpp"
+#include <wpa_supplicant.hpp>
+//#include "dhcpcd/dhcpcd.hpp"
+#include <boost/filesystem/fstream.hpp>
 
 #define STOP_SCHED_SCAN_ON_L2_UP
 
@@ -70,6 +72,7 @@ struct threshold_cross_data {
 static const char* const kConf_Sap_Verbosity = "link.verbosity";
 static const char* const kConf_Sched_Scan_Period = "link.sched_scan_period";
 static const char* const kConf_Default_Threshold_Period = "link.default_th_period";
+static const char* const kConf_Resolv_Conf_File = "sys.resolv_conf_file";
 
 static logger log_("sap_80211", std::cout);
 
@@ -81,6 +84,7 @@ std::unique_ptr<sap::link>  ls;
 std::unique_ptr<timer_task> threshold_check_task;
 std::unique_ptr<timer_task> scheduled_scan_task;
 
+//std::unique_ptr<dhcp::dhcpcd> dhclient;
 std::unique_ptr<wpa_supplicant::Interface> wpa_interface;
 std::string devname;
 
@@ -91,6 +95,8 @@ mih::link_evt_list subscribed_event_list;
 boost::shared_mutex _th_list_mutex;
 std::vector<threshold_cross_data> th_cross_list;
 std::vector<std::unique_ptr<periodic_report_data>> period_rpt_list;
+
+std::string resolv_conf_file;
 
 ///////////////////////////////////////////////////////////////////////////////
 //// Event dispatchers
@@ -957,20 +963,18 @@ void handle_link_actions(boost::asio::io_service &ios,
 
 // This basically requests a connection to the poa identified by the link_tuple_id
 // and network, given a requested set of configurations
-void handle_link_conf(boost::asio::io_service &ios,
+void handle_link_conf(const boost::asio::io_service &ios,
                       if_80211 &fi,
                       odtone::uint16 tid,
-                      mih::link_tuple_id lti,
-                      boost::optional<mih::network_id> network,
-                      mih::configuration_list lconf)
+                      const boost::optional<mih::network_id> &network,
+                      const mih::configuration_list &lconf)
 {
 	log_(0, "(command) Handling link_conf");
 
 	try {
-		mih::mac_addr connect_addr = boost::get<mih::mac_addr>(boost::get<mih::link_addr>(lti.poa_addr));
 		std::string ssid = network.get(); // deliberately fail if not set
 
-		log_(0, "(command) Attempting connection to ", connect_addr.address(), " [", ssid, "]");
+		log_(0, "(command) Attempting connection to [", ssid, "]");
 
 		std::map<std::string, DBus::Variant> network_map;
 		network_map["ssid"] = to_variant(ssid);
@@ -994,13 +998,6 @@ void handle_link_conf(boost::asio::io_service &ios,
 			it ++;
 		}
 
-		// prepare success and failure messages.
-		mih::message success, failure;
-		success << mih::confirm(mih::confirm::link_conf)
-			& mih::tlv_status(mih::status(mih::status_success));
-		failure << mih::confirm(mih::confirm::link_conf)
-			& mih::tlv_status(mih::status(mih::status_failure));
-
 		try {
 			DBus::Path wpa_network = wpa_interface->AddNetwork(network_map);
 			wpa_interface->add_completion_handler(boost::bind(dispatch_link_conf_completion, tid, _1));
@@ -1013,6 +1010,77 @@ void handle_link_conf(boost::asio::io_service &ios,
 	} catch (std::exception e) {
 		log_(0, "(command) Exception: ", e.what());
 		dispatch_status_failure(tid, mih::confirm::link_conf);
+	}
+}
+
+void handle_l3_conf(const boost::asio::io_service &ios,
+                    if_80211 &fi,
+                    odtone::uint16 tid,
+                    const mih::ip_cfg_methods &cfg_methods,
+                    const boost::optional<mih::ip_info_list> &address_list,
+                    const boost::optional<mih::ip_info_list> &route_list,
+                    const boost::optional<mih::ip_addr_list> &dns_list,
+                    const boost::optional<mih::fqdn_list> &domain_list)
+{
+	log_(0, "(command) Handling l3_conf");
+
+	try {
+		log_(0, "(command) Clearing previous configurations");
+
+		// clear addresses
+		fi.clear_addresses();
+
+		// clear routes
+		fi.clear_routes();
+
+		// clear dns servers and domains
+		{ boost::filesystem::ofstream dns_resolv(resolv_conf_file, std::ios_base::trunc);
+		}
+
+		// handle automatic configurations
+		// dhcp TODO
+		if (cfg_methods.get(mih::ip_cfg_ipv4_dynamic) || cfg_methods.get(mih::ip_cfg_ipv6_stateful)) {
+			log_(0, "(command) Configuring automatic IP");
+
+			//dhclient->Rebind(devname);
+		}
+
+		if (address_list) {
+			log_(0, "(command) Adding static addresses");
+			fi.add_addresses(address_list.get());
+		}
+		if (route_list) {
+			log_(0, "(command) Adding static routes");
+			fi.add_routes(route_list.get());
+		}
+		if (dns_list) {
+			log_(0, "(command) Adding manual dns servers");
+			boost::filesystem::ofstream dns_resolv(resolv_conf_file, std::ios_base::app);
+			for (auto it = dns_list.get().begin(); it != dns_list.get().end(); ++it) {
+				dns_resolv << "nameserver " << it->address() << std::endl;
+			}
+		}
+		if (domain_list) {
+			log_(0, "(command) Adding manual domain list");
+			std::string searches = boost::algorithm::join(domain_list.get(), " ");
+			boost::filesystem::ofstream dns_resolv(resolv_conf_file, std::ios_base::app);
+			dns_resolv << "search " << searches << std::endl;
+		}
+
+		log_(0, "(command) Dispatching status success");
+
+		mih::message m;
+		mih::status st = mih::status_success;
+
+		m << mih::confirm(mih::confirm::l3_conf)
+			& mih::tlv_status(st);
+
+		m.tid(tid);
+
+		ls->async_send(m);
+	} catch (std::exception &e) {
+		log_(0, "(command) Exception: ", e.what());
+		dispatch_status_failure(tid, mih::confirm::l3_conf);
 	}
 }
 
@@ -1118,7 +1186,30 @@ void default_handler(boost::asio::io_service &ios,
 				& mih::tlv_network_id(network)
 				& mih::tlv_configuration_list(lconf);
 
-			handle_link_conf(ios, fi, msg.tid(), lti, network, lconf);
+			handle_link_conf(ios, fi, msg.tid(), network, lconf);
+		}
+		break;
+
+	case mih::request::l3_conf:
+		{
+			log_(0, "(command) Received l3_conf message");
+
+			mih::link_tuple_id lti;
+			mih::ip_cfg_methods cfg_methods;
+			boost::optional<mih::ip_info_list> address_list;
+			boost::optional<mih::ip_info_list> route_list;
+			boost::optional<mih::ip_addr_list> dns_list;
+			boost::optional<mih::fqdn_list> domain_list;
+
+			msg >> mih::request()
+				& mih::tlv_link_identifier(lti)
+				& mih::tlv_ip_cfg_methods(cfg_methods)
+				& mih::tlv_ip_addr_list(address_list)
+				& mih::tlv_ip_route_list(route_list)
+				& mih::tlv_ip_dns_list(dns_list)
+				& mih::tlv_fqdn_list(domain_list);
+
+			handle_l3_conf(ios, fi, msg.tid(), cfg_methods, address_list, route_list, dns_list, domain_list);
 		}
 		break;
 
@@ -1180,115 +1271,112 @@ int main(int argc, char** argv)
 		std::cerr << "###########" << std::endl;
 	}
 
-	try {
-		// Declare Link SAP available options
-		po::options_description desc("MIH Link SAP Configuration");
-		desc.add_options()
-			("help", "Display configuration options")
-			(kConf_Sap_Verbosity, po::value<odtone::uint>()->default_value(2), "Log level [0-2]")
-			(kConf_Sched_Scan_Period, po::value<odtone::uint>()->default_value(0), "Scheduled scan interval (millis)")
-			(kConf_Default_Threshold_Period, po::value<odtone::uint>()->default_value(1000), "Default threshold checking interval (millis)")
-			(sap::kConf_Interface_Addr, po::value<std::string>()->default_value(""), "Interface address")
-			(sap::kConf_Port, po::value<odtone::ushort>()->default_value(1235), "Port")
-			(sap::kConf_File, po::value<std::string>()->default_value("sap_80211.conf"), "Configuration File")
-			(sap::kConf_Receive_Buffer_Len, po::value<odtone::uint>()->default_value(4096), "Receive Buffer Length")
-			(sap::kConf_MIHF_Ip, po::value<std::string>()->default_value("127.0.0.1"), "Local MIHF Ip")
-			(sap::kConf_MIHF_Local_Port, po::value<odtone::ushort>()->default_value(1025), "MIHF Local Communications Port")
-			(sap::kConf_MIHF_Id, po::value<std::string>()->default_value("local-mihf"), "Local MIHF Id")
-			(sap::kConf_MIH_SAP_id, po::value<std::string>()->default_value("link"), "Link SAP Id");
+	boost::asio::io_service ios;
 
-		mih::config cfg(desc);
-		cfg.parse(argc, argv, sap::kConf_File);
+	// Declare Link SAP available options
+	po::options_description desc("MIH Link SAP Configuration");
+	desc.add_options()
+		("help", "Display configuration options")
+		(kConf_Sap_Verbosity, po::value<odtone::uint>()->default_value(2), "Log level [0-2]")
+		(kConf_Sched_Scan_Period, po::value<odtone::uint>()->default_value(0), "Scheduled scan interval (millis)")
+		(kConf_Default_Threshold_Period, po::value<odtone::uint>()->default_value(1000), "Default threshold checking interval (millis)")
+		(sap::kConf_Interface_Addr, po::value<std::string>()->default_value(""), "Interface address")
+		(sap::kConf_Port, po::value<odtone::ushort>()->default_value(1235), "Port")
+		(sap::kConf_File, po::value<std::string>()->default_value("sap_80211.conf"), "Configuration File")
+		(sap::kConf_Receive_Buffer_Len, po::value<odtone::uint>()->default_value(4096), "Receive Buffer Length")
+		(sap::kConf_MIHF_Ip, po::value<std::string>()->default_value("127.0.0.1"), "Local MIHF Ip")
+		(sap::kConf_MIHF_Local_Port, po::value<odtone::ushort>()->default_value(1025), "MIHF Local Communications Port")
+		(sap::kConf_MIHF_Id, po::value<std::string>()->default_value("local-mihf"), "Local MIHF Id")
+		(sap::kConf_MIH_SAP_id, po::value<std::string>()->default_value("link"), "Link SAP Id")
+		(kConf_Resolv_Conf_File, po::value<std::string>()->default_value("/etc/resolv.conf"), "System's resolv.conf location");
 
-		if (cfg.help()) {
-			std::cerr << desc << std::endl;
-			return EXIT_SUCCESS;
-		}
+	mih::config cfg(desc);
+	cfg.parse(argc, argv, sap::kConf_File);
 
-		odtone::uint sched_scan_period = cfg.get<odtone::uint>(kConf_Sched_Scan_Period);
-		odtone::uint th_period = cfg.get<odtone::uint>(kConf_Default_Threshold_Period);
-		if (th_period == 0) {
-			std::cerr << "default_th_period must be positive!" << std::endl;
-			return EXIT_FAILURE;
-		}
-
-		set_supported_event_list();
-		set_supported_command_list();
-
-		// start dbus service
-		DBus::BusDispatcher dispatcher;
-		DBus::default_dispatcher = &dispatcher;
-		DBus::Connection dbus_connection = DBus::Connection::SystemBus();
-		boost::thread disp(boost::bind(&DBus::BusDispatcher::enter, &dispatcher));
-
-		boost::asio::io_service ios;
-
-		if_80211 fi(ios, mih::mac_addr(cfg.get<std::string>(sap::kConf_Interface_Addr)));
-		mih::link_id id = fi.link_id();
-
-		std::unique_ptr<sap::link> _ls(new sap::link(cfg, ios,
-			boost::bind(&default_handler, boost::ref(ios), boost::ref(fi), _1, _2)));
-		ls = std::move(_ls);
-		mihf_sap_init(id);
-
-		std::unique_ptr<timer_task> _threshold_check_task(new timer_task(ios, th_period,
-			boost::bind(&global_thresholds_check, boost::ref(ios), boost::ref(fi))));
-		threshold_check_task = std::move(_threshold_check_task);
-
-		if (sched_scan_period > 0) {
-			std::unique_ptr<timer_task> _scheduled_scan_task(new timer_task(ios, sched_scan_period,
-				boost::bind(&scheduled_scan_trigger, boost::ref(fi))));
-			scheduled_scan_task = std::move(_scheduled_scan_task);
-#ifndef STOP_SCHED_SCAN_ON_L2_UP
-			scheduled_scan_task->start();
-#else
-			if (!fi.link_up()) {
-				scheduled_scan_task->start();
-			}
-#endif /* STOP_SCHED_SCAN_ON_L2_UP */
-		}
-
-		fi.link_up_callback(boost::bind(&dispatch_link_up, _1, _2, _3, _4, _5));
-		fi.link_down_callback(boost::bind(&dispatch_link_down, _1, _2, _3));
-		fi.link_detected_callback(boost::bind(&dispatch_link_detected, _1));
-
-		// checking wpa_supplicant
-		sleep(1); // TODO: "ensure" the d-bus dispatcher has started
-
-		wpa_supplicant::WPASupplicant wpa(dbus_connection, "/fi/w1/wpa_supplicant1", "fi.w1.wpa_supplicant1");
-
-		devname = fi.ifname();
-		DBus::Path wpa_interface_path;
-		try {
-			wpa_interface_path = wpa.GetInterface(devname);
-		} catch (DBus::Error e) {
-			log_(0, "Error getting ", devname, " interface from WPA Supplicant. Adding it myself.");
-			log_(0, "Message was \"", e.name(), ": ", e.message(), "\"");
-
-			std::map<std::string, DBus::Variant> m;
-
-			m["Ifname"] = to_variant(devname);
-			//m["Driver"] = to_variant(std::string("nl80211"));
-
-			wpa_interface_path = wpa.CreateInterface(m);
-
-			log_(0, "Apparently successul, at ", wpa_interface_path);
-		}
-
-		std::unique_ptr<wpa_supplicant::Interface> _wpa_interface(
-			new wpa_supplicant::Interface(dbus_connection, wpa_interface_path.c_str(), "fi.w1.wpa_supplicant1"));
-		wpa_interface = std::move(_wpa_interface);
-
-		ios.run();
-	} catch (DBus::Error e) {
-		std::cerr << "DBus error: " << e.name() << ": " << e.message() << std::endl;
-	} catch(std::exception &e) {
-		std::cerr << "Exception: " << e.what() << std::endl;
-	} catch(std::string &str) {
-		std::cerr << "Exception: " << str << std::endl;
-	} catch(const char *str) {
-		std::cerr << "Exception: " << str << std::endl;
+	if (cfg.help()) {
+		std::cerr << desc << std::endl;
+		return EXIT_SUCCESS;
 	}
+
+	resolv_conf_file = cfg.get<std::string>(kConf_Resolv_Conf_File);
+
+	odtone::uint sched_scan_period = cfg.get<odtone::uint>(kConf_Sched_Scan_Period);
+	odtone::uint th_period = cfg.get<odtone::uint>(kConf_Default_Threshold_Period);
+	if (th_period == 0) {
+		std::cerr << "default_th_period must be positive!" << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	set_supported_event_list();
+	set_supported_command_list();
+
+	// start dbus service
+	DBus::BusDispatcher dispatcher;
+	DBus::default_dispatcher = &dispatcher;
+	DBus::Connection dbus_connection = DBus::Connection::SystemBus();
+	boost::thread disp(boost::bind(&DBus::BusDispatcher::enter, &dispatcher));
+
+	if_80211 fi(ios, mih::mac_addr(cfg.get<std::string>(sap::kConf_Interface_Addr)));
+	mih::link_id id = fi.link_id();
+
+	std::unique_ptr<sap::link> _ls(new sap::link(cfg, ios,
+		boost::bind(&default_handler, boost::ref(ios), boost::ref(fi), _1, _2)));
+	ls = std::move(_ls);
+	mihf_sap_init(id);
+
+	std::unique_ptr<timer_task> _threshold_check_task(new timer_task(ios, th_period,
+		boost::bind(&global_thresholds_check, boost::ref(ios), boost::ref(fi))));
+	threshold_check_task = std::move(_threshold_check_task);
+
+	if (sched_scan_period > 0) {
+		std::unique_ptr<timer_task> _scheduled_scan_task(new timer_task(ios, sched_scan_period,
+			boost::bind(&scheduled_scan_trigger, boost::ref(fi))));
+		scheduled_scan_task = std::move(_scheduled_scan_task);
+#ifndef STOP_SCHED_SCAN_ON_L2_UP
+		scheduled_scan_task->start();
+#else
+		if (!fi.link_up()) {
+			scheduled_scan_task->start();
+		}
+#endif /* STOP_SCHED_SCAN_ON_L2_UP */
+	}
+
+	fi.link_up_callback(boost::bind(&dispatch_link_up, _1, _2, _3, _4, _5));
+	fi.link_down_callback(boost::bind(&dispatch_link_down, _1, _2, _3));
+	fi.link_detected_callback(boost::bind(&dispatch_link_detected, _1));
+
+	// checking wpa_supplicant
+	sleep(1); // TODO: "ensure" the d-bus dispatcher has started
+
+	//std::unique_ptr<dhcp::dhcpcd> _dhclient(
+	//	new dhcp::dhcpcd(dbus_connection, "/name/marples/roy/dhcpcd", "name.marples.roy.dhcpcd"));
+	//dhclient = std::move(_dhclient);
+
+	wpa_supplicant::WPASupplicant wpa(dbus_connection, "/fi/w1/wpa_supplicant1", "fi.w1.wpa_supplicant1");
+
+	devname = fi.ifname();
+	DBus::Path wpa_interface_path;
+	try {
+		wpa_interface_path = wpa.GetInterface(devname);
+	} catch (DBus::Error e) {
+		log_(0, "Error getting ", devname, " interface from WPA Supplicant. Adding it myself.");
+		log_(0, "Message was \"", e.name(), ": ", e.message(), "\"");
+
+		std::map<std::string, DBus::Variant> m;
+
+		m["Ifname"] = to_variant(devname);
+		//m["Driver"] = to_variant(std::string("nl80211"));
+
+		wpa_interface_path = wpa.CreateInterface(m);
+
+		log_(0, "Apparently successul, at ", wpa_interface_path);
+	}
+
+	std::unique_ptr<wpa_supplicant::Interface> _wpa_interface(
+		new wpa_supplicant::Interface(dbus_connection, wpa_interface_path.c_str(), "fi.w1.wpa_supplicant1"));
+	wpa_interface = std::move(_wpa_interface);
+
+	ios.run();
 }
 
 // EOF ////////////////////////////////////////////////////////////////////////

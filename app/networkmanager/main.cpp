@@ -73,7 +73,6 @@ int main(int argc, char *argv[])
 
 	// launch the service
 	boost::asio::io_service ios;
-
 	networkmanager::NetworkManager manager(conn, cfg, ios);
 
 	boost::thread io(boost::bind(&boost::asio::io_service::run, &ios));

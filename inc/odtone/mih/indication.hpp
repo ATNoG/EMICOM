@@ -67,7 +67,8 @@ public:
 		link_register = msg_id<1, 3, 6>::value,				/**< Link_Register.indication	*/
 		user_register = msg_id<1, 3, 7>::value,				/**< User_Register.indication	*/
 #ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
-		link_conf_required = msg_id<2, 3, 10>::value		/**< Conf_Required.indication */
+		link_conf_required = msg_id<2, 3, 10>::value,		/**< Conf_Required.indication		*/
+		l3_conf_required = msg_id<2, 3, 11>::value,			/**< L3_Conf_Required.indication	*/
 #endif
 	};
 

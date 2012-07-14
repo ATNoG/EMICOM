@@ -81,9 +81,15 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 
 void DeviceWireless::Enable()
 {
-	remove_aps_older_than(boost::posix_time::seconds(0));
+	{
+		boost::unique_lock<boost::shared_mutex> lock(_access_points_map_mutex);
+		remove_aps_older_than(boost::posix_time::seconds(0));
+	}
 
 	log_(0, "Enabling, with scan request");
+
+	// assume success
+	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
 
 	_ctrl.power_up(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
@@ -91,8 +97,8 @@ void DeviceWireless::Enable()
 			pm >> mih::confirm(mih::confirm::link_actions)
 				& mih::tlv_status(st);
 
-			if (st == mih::status_success) {
-				state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+			if (st != mih::status_success) {
+				state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
 			}
 		}, _lti, true);
 }
@@ -102,7 +108,7 @@ void DeviceWireless::Scan()
 	log_(0, "Scanning");
 
 	_ctrl.scan(
-		[&](mih::message &pm, const boost::system::error_code &ec) {
+		[](mih::message &pm, const boost::system::error_code &ec) {
 			// link detected events will update the ap list
 		}, _lti);
 }
@@ -121,7 +127,7 @@ void DeviceWireless::Connect(const ::DBus::Path &path, const completion_handler 
 	state(NM_DEVICE_STATE_PREPARE, NM_DEVICE_STATE_REASON_UNKNOWN);
 
 	_ctrl.connect(
-		[&, path, h](mih::message &pm, const boost::system::error_code &ec) {
+		[&, h, path](mih::message &pm, const boost::system::error_code &ec) {
 			mih::status st;
 			pm >> mih::confirm(mih::confirm::link_actions)
 				& mih::tlv_status(st);
@@ -230,6 +236,8 @@ void DeviceWireless::add_ap(mih::link_det_info ldi)
 	_access_points_map[path_dbus] = std::shared_ptr<AccessPoint>(
 		new AccessPoint(_connection, path_str.str().c_str(), ldi));
 
+	log_(0, "Adding AP ", path_str.str(), " with SSID ", ldi.network_id);
+
 	// announce addition
 	Wireless_adaptor::AccessPointAdded(path_dbus);
 }
@@ -252,5 +260,10 @@ AccessPoint::bss_id DeviceWireless::get_access_point(const ::DBus::Path &path)
 {
 	boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
 
-	return _access_points_map[path]->get_id();
+	auto bss = _access_points_map.find(path);
+	if (bss != _access_points_map.end()) {
+		return bss->second->get_id();
+	}
+
+	throw std::runtime_error("No such ap");
 }

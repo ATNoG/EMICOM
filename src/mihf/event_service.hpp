@@ -232,6 +232,16 @@ public:
 	 */
 	bool link_conf_required_indication(meta_message_ptr &in,
 						meta_message_ptr &out);
+
+	/**
+	 * L3 Conf Required Indication message handler.
+	 *
+	 * @param in The input message.
+	 * @param out The output message.
+	 * @return True if the response is sent immediately or false otherwise.
+	 */
+	bool l3_conf_required_indication(meta_message_ptr &in,
+						meta_message_ptr &out);
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 
 protected:

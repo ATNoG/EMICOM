@@ -176,6 +176,44 @@ struct ip_subnet_info
 	}
 };
 
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+/**
+ * IP_ADDR_LIST type.
+ */
+typedef std::vector<ip_addr> ip_addr_list;
+
+/**
+ * FQDN_LIST type.
+ */
+typedef std::vector<fqdn> fqdn_list;
+
+/**
+ * IP_INFO data type.
+ */
+struct ip_info
+{
+	ip_addr        gateway;	/**< The gateway address.           	*/
+	ip_subnet_info subnet;	/**< The link or target subnet info.	*/
+
+	/**
+	 * Serialize/deserialize the IP_INFO data type.
+	 *
+	 * @param ar The archive to/from where serialize/deserialize the data type.
+	 */
+	template<class ArchiveT>
+	void serialize(ArchiveT& ar)
+	{
+		ar & gateway;
+		ar & subnet;
+	}
+};
+
+/**
+ * LIST(IP_INFO) data type.
+ */
+typedef std::vector<ip_info> ip_info_list;
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
+
 
 ///////////////////////////////////////////////////////////////////////////////
 } /* namespace mih */ } /*namespace odtone */

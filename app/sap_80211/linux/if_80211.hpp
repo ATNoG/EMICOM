@@ -25,6 +25,7 @@
 #include <boost/thread.hpp>
 
 #include <odtone/mih/tlv_types.hpp>
+#include <odtone/mih/types/ipconfig.hpp>
 
 #include <nlwrap.hpp>
 
@@ -164,6 +165,31 @@ public:
 	 * @return the optional SSID.
 	 */
 	boost::optional<poa_info> known_bssid(mih::mac_addr &addr);
+
+	/**
+	 * Clear every address associated with this link.
+	 */
+	void clear_addresses();
+
+	/**
+	 * Add a list of addresses to this interface.
+	 * The default gateways (routes), are automatically configured.
+	 *
+	 * @param addrs The list of addresses.
+	 */
+	void add_addresses(const std::vector<mih::ip_info> &addrs);
+
+	/**
+	 * Clear every route associated with this link.
+	 */
+	void clear_routes();
+
+	/**
+	 * Add a list of routes to the interface.
+	 *
+	 * @param routes The list of routes.
+	 */
+	void add_routes(const std::vector<mih::ip_info> &routes);
 
 	/**
 	 * Set the callback for LINK_UP events.

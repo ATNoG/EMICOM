@@ -41,17 +41,23 @@ lib libnl
 	;
 
 lib nlwrap
-	: nlwrap/nl_cb.cpp
-	  nlwrap/nl_socket.cpp
-	  nlwrap/nl_msg.cpp
-	  nlwrap/genl_msg.cpp
+	: nlwrap/genl_msg.cpp
 	  nlwrap/genl_socket.cpp
-	  nlwrap/rtnl_socket.cpp
-	  nlwrap/rtnl_link.cpp
+	  nlwrap/nl_addr.cpp
+	  nlwrap/nl_cb.cpp
+	  nlwrap/nl_msg.cpp
+	  nlwrap/nl_socket.cpp
+	  nlwrap/rtnl_addr_cache.cpp
+	  nlwrap/rtnl_addr.cpp
 	  nlwrap/rtnl_link_cache.cpp
+	  nlwrap/rtnl_link.cpp
+	  nlwrap/rtnl_route_cache.cpp
+	  nlwrap/rtnl_route.cpp
+	  nlwrap/rtnl_socket.cpp
 	  libnl
 	  ../../../lib/odtone//odtone_base
 	:
 	:
 	: <include>nlwrap
 	;
+

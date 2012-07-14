@@ -1218,7 +1218,210 @@ bool command_service::link_conf_confirm(meta_message_ptr &in,
 
 	ODTONE_LOG(1, "no pending transaction for this message, discarding");
 	return false;
+}
 
+/**
+ * Link Conf Response message handler.
+ *
+ * @param in The input message.
+ * @param out The output message.
+ * @return True if the response is sent immediately or false otherwise.
+ */
+bool command_service::link_conf_response(meta_message_ptr &in,
+					    meta_message_ptr &out)
+{
+	ODTONE_LOG(1, "(mics) received Link_Conf.response from ",
+	    in->source().to_string());
+
+	if(!_lpool.set_user_tid(in)) {
+		ODTONE_LOG(1, "(mics) no local pending transaction for this message, discarding");
+		return false;
+	}
+
+	ODTONE_LOG(1, "(mics) forwarding Link_Conf.response to ", in->destination().to_string());
+
+	_transmit(in);
+
+	return false;
+}
+
+/**
+ * Handler responsible for setting a failure L3 Conf
+ * responses.
+ *
+ * @param ec Error code.
+ * @param in The input message.
+ */
+void command_service::l3_conf_response_handler(const boost::system::error_code &ec,
+													meta_message_ptr &in)
+{
+	if(ec) {
+		return;
+	}
+
+	{
+		boost::mutex::scoped_lock lock(_mutex);
+		_timer.erase(in->tid());
+	}
+
+	meta_message_ptr out(new meta_message());
+
+	ODTONE_LOG(1, "(mics) setting failure response to L3_Conf.request");
+
+	mih::status st = mih::status_failure;
+
+	*out << mih::response(mih::response::l3_conf)
+		& mih::tlv_status(st);
+
+	out->tid(in->tid());
+	out->destination(in->source());
+	out->source(mihfid);
+
+	out->ip(in->ip());
+	out->scope(in->scope());
+	out->port(in->port());
+	_transmit(out);
+}
+
+/**
+ * L3 Conf Request message handler.
+ *
+ * @param in The input message.
+ * @param out The output message.
+ * @return True if the response is sent immediately or false otherwise.
+ */
+bool command_service::l3_conf_request(meta_message_ptr &in,
+					       meta_message_ptr &out)
+{
+	ODTONE_LOG(1, "(mics) received a L3_Conf.request from ",
+	    in->source().to_string());
+
+	if(utils::this_mihf_is_destination(in)) {
+		//
+		// Kick this message to MIH_Link SAP.
+		//
+		mih::link_tuple_id lti;
+		mih::ip_cfg_methods cfg_methods;
+		boost::optional<mih::ip_info_list> address_list;
+		boost::optional<mih::ip_info_list> route_list;
+		boost::optional<mih::ip_addr_list> dns_list;
+		boost::optional<mih::fqdn_list> domain_list;
+
+		*in >> mih::request(mih::request::l3_conf)
+			& mih::tlv_link_identifier(lti)
+			& mih::tlv_ip_cfg_methods(cfg_methods)
+			& mih::tlv_ip_addr_list(address_list)
+			& mih::tlv_ip_route_list(route_list)
+			& mih::tlv_ip_dns_list(dns_list)
+			& mih::tlv_fqdn_list(domain_list);
+
+		out->destination(mih::id(_link_abook.search_interface(lti.type, lti.addr)));
+
+		// If the Link SAP is known, send message
+		if (out->destination().to_string().compare("") != 0) {
+			// Check if the Link SAP is still active
+			uint16 fails = _link_abook.fail(out->destination().to_string());
+			if (fails > kConf_MIHF_Link_Delete_Value) {
+				mih::octet_string dst = out->destination().to_string();
+				_link_abook.inactive(dst);
+
+				// Update MIHF capabilities
+				utils::update_local_capabilities(_abook, _link_abook, _user_abook);
+			} else {
+				*out << mih::request(mih::request::l3_conf)
+					& mih::tlv_link_identifier(lti)
+					& mih::tlv_ip_cfg_methods(cfg_methods)
+					& mih::tlv_ip_addr_list(address_list)
+					& mih::tlv_ip_route_list(route_list)
+					& mih::tlv_ip_dns_list(dns_list)
+					& mih::tlv_fqdn_list(domain_list);
+			}
+
+			out->tid(in->tid());
+			out->source(in->source());
+
+			ODTONE_LOG(2, "(mics) forwarding L3_Conf.request to ",
+				out->destination().to_string());
+			utils::forward_request(out, _lpool, _transmit);
+		}
+
+		// Set the timer that will be responsible for responding to this request
+		boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(_io);
+		timer->expires_from_now(boost::posix_time::milliseconds(kConf_MIHF_Link_Response_Time_Value));
+		timer->async_wait(boost::bind(&command_service::l3_conf_response_handler, this, _1, in));
+		{
+			boost::mutex::scoped_lock lock(_mutex);
+			_timer[in->tid()] = timer;
+		}
+		// Do not respond to the request. The thread response handler will be
+		// responsible for that.
+		//return false;
+	} else {
+		utils::forward_request(in, _lpool, _transmit);
+		//return false;
+	}
+
+	return false;
+}
+
+/**
+ * L3 Conf Confirm message handler.
+ *
+ * @param in The input message.
+ * @param out The output message.
+ * @return True if the response is sent immediately or false otherwise.
+ */
+bool command_service::l3_conf_confirm(meta_message_ptr &in,
+					    meta_message_ptr &out)
+{
+	ODTONE_LOG(1, "(mics) received L3_Conf.confirm from ",
+		in->source().to_string());
+
+	_link_abook.reset(in->source().to_string());
+
+	if(_lpool.set_user_tid(in)) {
+
+		{
+			boost::mutex::scoped_lock lock(_mutex);
+			_timer.erase(in->tid());
+		}
+
+		ODTONE_LOG(1, "(mics) setting response to L3_Conf.request");
+
+		// forward to user
+		_transmit(in);
+
+		return false;
+	}
+
+	ODTONE_LOG(1, "no pending transaction for this message, discarding");
+	return false;
+
+}
+
+/**
+ * L3 Conf Response message handler.
+ *
+ * @param in The input message.
+ * @param out The output message.
+ * @return True if the response is sent immediately or false otherwise.
+ */
+bool command_service::l3_conf_response(meta_message_ptr &in,
+					    meta_message_ptr &out)
+{
+	ODTONE_LOG(1, "(mics) received L3_Conf.response from ",
+	    in->source().to_string());
+
+	if(!_lpool.set_user_tid(in)) {
+		ODTONE_LOG(1, "(mics) no local pending transaction for this message, discarding");
+		return false;
+	}
+
+	ODTONE_LOG(1, "(mics) forwarding L3_Conf.response to ", in->destination().to_string());
+
+	_transmit(in);
+
+	return false;
 }
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 

@@ -1,0 +1,110 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/name/marples/roy/dhcpcd">
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg name="data" direction="out" type="s"/>
+		</method>
+	</interface>
+	<interface name="name.marples.roy.dhcpcd">
+		<method name="GetVersion">
+			<arg name="version" direction="out" type="s"/>
+		</method>
+		<method name="GetDhcpcdVersion">
+			<arg name="version" direction="out" type="s"/>
+		</method>
+		<method name="ListInterfaces">
+			<arg name="interfaces" direction="out" type="as"/>
+		</method>
+		<method name="GetInterfaces">
+			<arg name="interfaces" direction="out" type="a{sa{sv}}"/>
+		</method>
+		<method name="GetStatus">
+			<arg name="Status" direction="out" type="s"/>
+		</method>
+		<method name="Rebind">
+			<arg name="interface" direction="in" type="s"/>
+		</method>
+		<method name="Release">
+			<arg name="interface" direction="in" type="s"/>
+		</method>
+		<method name="Stop">
+			<arg name="interface" direction="in" type="s"/>
+		</method>
+		<method name="GetConfigBlocks">
+			<arg name="block" direction="in" type="s"/>
+			<arg name="names" direction="out" type="as"/>
+		</method>
+		<method name="GetConfig">
+			<arg name="block" direction="in" type="s"/>
+			<arg name="name" direction="in" type="s"/>
+			<arg name="config" direction="out" type="aa(ss)"/>
+		</method>
+		<method name="SetConfig">
+			<arg name="block" direction="in" type="s"/>
+			<arg name="name" direction="in" type="s"/>
+			<arg name="config" direction="in" type="aa(ss)"/>
+		</method>
+		<signal name="Event">
+			<arg name="configuration" type="a{sv}"/>
+		</signal>
+		<signal name="StatusChanged">
+			<arg name="status" type="s"/>
+		</signal>
+		<method name="Scan">
+			<arg name="interface" direction="in" type="s"/>
+		</method>
+		<method name="ScanResults">
+			<arg name="interface" direction="in" type="s"/>
+			<arg name="results" direction="out" type="a(a{sv})"/>
+		</method>
+		<method name="ListNetworks">
+			<arg name="interface" direction="in" type="s"/>
+			<arg name="ids" direction="out" type="aa(isss)"/>
+		</method>
+		<method name="AddNetwork">
+			<arg name="interface" direction="in" type="s"/>
+			<arg name="id" direction="out" type="i"/>
+		</method>
+		<method name="RemoveNetwork">
+			<arg name="interface" direction="in" type="s"/>
+			<arg name="id" direction="in" type="i"/>
+		</method>
+		<method name="EnableNetwork">
+			<arg name="interface" direction="in" type="s"/>
+			<arg name="id" direction="in" type="i"/>
+		</method>
+		<method name="DisableNetwork">
+			<arg name="interface" direction="in" type="s"/>
+			<arg name="id" direction="in" type="i"/>
+		</method>
+		<method name="SelectNetwork">
+			<arg name="interface" direction="in" type="s"/>
+			<arg name="id" direction="in" type="i"/>
+		</method>
+		<method name="GetNetwork">
+			<arg name="interface" direction="in" type="s"/>
+			<arg name="id" direction="in" type="i"/>
+			<arg name="parameter" direction="in" type="s"/>
+			<arg name="value" direction="out" type="s"/>
+		</method>
+		<method name="SetNetwork">
+			<arg name="interface" direction="in" type="s"/>
+			<arg name="id" direction="in" type="i"/>
+			<arg name="parameter" direction="in" type="s"/>
+			<arg name="value" direction="in" type="s"/>
+		</method>
+		<method name="SaveConfig">
+			<arg name="interface" direction="in" type="s"/>
+		</method>
+		<method name="Disconnect">
+			<arg name="interface" direction="in" type="s"/>
+		</method>
+		<method name="Reassociate">
+			<arg name="interface" direction="in" type="s"/>
+		</method>
+		<signal name="ScanResults">
+			<arg name="interface" direction="out" type="s"/>
+		</signal>
+	</interface>
+</node>

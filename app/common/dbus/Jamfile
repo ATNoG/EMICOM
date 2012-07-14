@@ -1,0 +1,62 @@
+#==============================================================================
+# Brief   : DBus dispatcher for dbus-cplusplus package
+# Authors : André Prata <andreprata@av.it.pt>
+#------------------------------------------------------------------------------
+# ODTONE - Open Dot Twenty One
+#
+# Copyright (C) 2009-2012 Universidade Aveiro
+# Copyright (C) 2009-2012 Instituto de Telecomunicações - Pólo Aveiro
+#
+# This software is distributed under a license. The full license
+# agreement can be found in the file LICENSE in this distribution.
+# This software may not be copied, modified, sold or distributed
+# other than expressed in the named license agreement.
+#
+# This software is distributed without any warranty.
+#==============================================================================
+
+actions run_make
+{
+	current_dir="`pwd`"
+
+	cd "$current_dir/$(>:D)"
+	export LDFLAGS="${LDFLAGS} -lexpat"
+	./bootstrap || exit
+	./configure || exit
+
+	cd "$current_dir"
+	make -C $(>:D) || exit
+
+	cp $(>:D)/src/.libs/libdbus-c++-1.a $(<)
+}
+
+make dbus-cpp.a
+	: dbus-cpp/bootstrap
+	: @run_make
+	;
+
+lib dbus : : <name>dbus-1 <link>shared ;
+
+lib dbus-cpp
+	: dbus
+	: <file>dbus-cpp.a
+	: <link>static
+	: <include>dbus-cpp/include
+	;
+
+lib odtone-dbus-cpp
+	: asio_dispatcher.cpp
+	  dbus-cpp
+	  ../../../lib/odtone//odtone_base
+	:
+	: : <include>.
+	;
+
+lib wpa-supplicant
+	: wpa_supplicant/WPASupplicant.cpp
+	  wpa_supplicant/Interface.cpp
+	  dbus-cpp
+	  ../../../lib/odtone//odtone_base
+	:
+	: : <include>wpa_supplicant
+	;

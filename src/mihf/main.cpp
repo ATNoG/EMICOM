@@ -484,6 +484,9 @@ void mies_register_callbacks(event_service &mies)
 	sac_register_callback(mih::indication::link_conf_required,
 			      boost::bind(&event_service::link_conf_required_indication,
 					  boost::ref(mies), _1, _2));
+	sac_register_callback(mih::indication::l3_conf_required,
+			      boost::bind(&event_service::l3_conf_required_indication,
+					  boost::ref(mies), _1, _2));
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 }
 // REGISTER(event_service::link_pdu_transmit_status_indication)
@@ -577,6 +580,18 @@ void mics_register_callbacks(command_service &mics)
 					  boost::ref(mics), _1, _2));
 	sac_register_callback(mih::confirm::link_conf,
 			      boost::bind(&command_service::link_conf_confirm,
+					  boost::ref(mics), _1, _2));
+	sac_register_callback(mih::response::link_conf,
+			      boost::bind(&command_service::link_conf_response,
+					  boost::ref(mics), _1, _2));
+	sac_register_callback(mih::request::l3_conf,
+			      boost::bind(&command_service::l3_conf_request,
+					  boost::ref(mics), _1, _2));
+	sac_register_callback(mih::confirm::l3_conf,
+			      boost::bind(&command_service::l3_conf_confirm,
+					  boost::ref(mics), _1, _2));
+	sac_register_callback(mih::response::l3_conf,
+			      boost::bind(&command_service::l3_conf_response,
 					  boost::ref(mics), _1, _2));
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 }

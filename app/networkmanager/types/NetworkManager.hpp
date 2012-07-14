@@ -244,6 +244,18 @@ private:
 	 */
 	std::vector<DBus::Path> active_connections();
 
+	/**
+	 * Proceed with the configuration of a link.
+	 */
+	void link_conf(const DBus::Path &device,
+	               const boost::optional<mih::network_id> &network,
+	               const mih::configuration_list &lconf);
+
+	/**
+	 * Configure IPs, routes and DNS in a device.
+	 */
+	void l3_conf(const DBus::Path &device, const DBus::Path &connection);
+
 private:
 	DBus::Connection &_connection;
 	std::string       _dbus_path;

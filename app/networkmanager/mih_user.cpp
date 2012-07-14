@@ -147,10 +147,10 @@ void mih_user::connect(const default_handler &h, const mih::link_tuple_id &lti, 
 	_mihf.async_send(m, h);
 }
 
-void mih_user::conf(const default_handler &h,
-          const mih::link_tuple_id &lti,
-	      const boost::optional<std::string> &network,
-	      const mih::configuration_list &conf)
+void mih_user::link_conf(const default_handler &h,
+                         const mih::link_tuple_id &lti,
+                         const boost::optional<std::string> &network,
+                         const mih::configuration_list &conf)
 {
 	mih::message m;
 
@@ -158,6 +158,28 @@ void mih_user::conf(const default_handler &h,
 		& mih::tlv_link_identifier(lti)
 		& mih::tlv_network_id(network)
 		& mih::tlv_configuration_list(conf);
+	m.destination(mih::id("local-mihf"));
+
+	_mihf.async_send(m, h);
+}
+
+void mih_user::l3_conf(const default_handler &h,
+                       const mih::link_tuple_id &lti,
+                       const mih::ip_cfg_methods &cfg_methods,
+                       const boost::optional<mih::ip_info_list> &address_list,
+                       const boost::optional<mih::ip_info_list> &route_list,
+                       const boost::optional<mih::ip_addr_list> &dns_list,
+                       const boost::optional<mih::fqdn_list> &domain_list)
+{
+	mih::message m;
+
+	m << mih::request(mih::request::l3_conf)
+		& mih::tlv_link_identifier(lti)
+		& mih::tlv_ip_cfg_methods(cfg_methods)
+		& mih::tlv_ip_addr_list(address_list)
+		& mih::tlv_ip_route_list(route_list)
+		& mih::tlv_ip_dns_list(dns_list)
+		& mih::tlv_fqdn_list(domain_list);
 	m.destination(mih::id("local-mihf"));
 
 	_mihf.async_send(m, h);

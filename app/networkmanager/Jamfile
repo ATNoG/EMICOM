@@ -17,7 +17,6 @@
 
 project networkmanager
 	: requirements
-	  <linkflags>-ldbus-c++-1
 	  <linkflags>-lboost_filesystem
 	  <linkflags>-lboost_serialization
 	;
@@ -47,6 +46,7 @@ exe networkmanager
 	: main.cpp
 	  mih_user.cpp
 	  networkmanager-types
+	  ../common/dbus//dbus-cpp
 	  ../../lib/odtone//odtone_base
 	  ../../lib/odtone/mih//odtone_mih
 	  ../../lib/odtone/sap//odtone_sap
@@ -55,6 +55,7 @@ exe networkmanager
 install install
 	: networkmanager
 	  networkmanager.conf
+	  run.sh
 	: <location>../../dist
 	;
 

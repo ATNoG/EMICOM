@@ -57,7 +57,8 @@ public:
 		get_information = msg_id<4, 1, 1>::value,			/**< MIH_Get_Information.request	*/
 		push_information = msg_id<4, 1, 2>::value,			/**< MIH_Push_Information.request	*/
 #ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
-		link_conf = msg_id<3, 1, 12>::value					/**< MIH_Link_Conf.request			*/
+		link_conf = msg_id<3, 1, 12>::value,				/**< MIH_Link_Conf.request			*/
+		l3_conf = msg_id<3, 1, 13>::value,					/**< MIH_L3_Conf.request			*/
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 	};
 

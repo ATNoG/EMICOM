@@ -79,10 +79,23 @@ public:
 	void connect(const default_handler &h, const mih::link_tuple_id &lti, const mih::link_addr &poa);
 
 	/**
-	 * Send a conf command to an interface.
+	 * Send a link conf command to an interface.
 	 */
-	void conf(const default_handler &h, const mih::link_tuple_id &lti,
-	          const boost::optional<std::string> &network, const mih::configuration_list &conf);
+	void link_conf(const default_handler &h,
+	               const mih::link_tuple_id &lti,
+	               const boost::optional<std::string> &network,
+	               const mih::configuration_list &conf);
+
+	/**
+	 * Send an l3 conf command to an interface.
+	 */
+	void l3_conf(const default_handler &h,
+	             const mih::link_tuple_id &lti,
+	             const mih::ip_cfg_methods &cfg_methods,
+	             const boost::optional<mih::ip_info_list> &address_list,
+	             const boost::optional<mih::ip_info_list> &route_list,
+	             const boost::optional<mih::ip_addr_list> &dns_list,
+	             const boost::optional<mih::fqdn_list> &domain_list);
 
 protected:
 	/**

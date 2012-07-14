@@ -25,7 +25,7 @@
 #include "nl_cb.hpp"
 
 namespace nlwrap {
-	
+
 /**
  * This class provides a RAI wrapper for the nl_sock datatype on the ROUTE_NETLINK protocol.
  */

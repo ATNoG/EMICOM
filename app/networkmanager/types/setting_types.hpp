@@ -75,6 +75,9 @@ namespace networkmanager {
 	typedef std::map<std::string, std::map<std::string, ::DBus::Variant>> settings_map;
 	typedef std::map<std::string, ::DBus::Variant>                        setting_pairs;
 
+	typedef DBus::Struct<std::vector<unsigned char>, uint32_t, std::vector<unsigned char>>           ip6_addr_tuple;
+	typedef DBus::Struct<std::vector<unsigned char>, uint32_t, std::vector<unsigned char>, uint32_t> ip6_route_tuple;
+
 	template <class T>
 	static void setting_value(const setting_pairs &s, const char *key, boost::optional<T> &value)
 	{
@@ -317,15 +320,8 @@ namespace networkmanager {
 		boost::optional<bool>                                    _never_default;
 		boost::optional<bool>                                    _may_fail;
 		boost::optional<int32_t>                                 _ip6_privacy;
-		boost::optional<std::vector<DBus::Struct<
-			std::vector<unsigned char>,
-			uint32_t,
-			std::vector<unsigned char>>>>                        _addresses;
-		boost::optional<std::vector<DBus::Struct<
-			std::vector<unsigned char>,
-			uint32_t,
-			std::vector<unsigned char>,
-			uint32_t>>>                                          _routes;
+		boost::optional<std::vector<ip6_addr_tuple>>             _addresses;
+		boost::optional<std::vector<ip6_route_tuple>>            _routes;
 	};
 
 	struct settings_wimax {

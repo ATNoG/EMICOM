@@ -27,6 +27,7 @@ Device::Device(DBus::Connection &connection, const char* path, mih_user &ctrl, m
 
 Device::~Device()
 {
+	std::cerr << "Going to life!!" << std::endl;
 }
 
 void Device::Disconnect()
@@ -85,4 +86,47 @@ void Device::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)
 		State = newstate;
 		StateChanged(oldstate, newstate, reason);
 	}
+}
+
+void Device::link_conf(const completion_handler &h,
+                       const boost::optional<mih::network_id> &network,
+                       const mih::configuration_list &lconf)
+{
+	log_(0, "Associating/Authenticating");
+
+	_ctrl.link_conf(
+		[h](mih::message &pm, const boost::system::error_code &ec) {
+			mih::status st;
+			pm >> mih::confirm(mih::confirm::link_conf)
+				& mih::tlv_status(st);
+
+			if (st == mih::status_success) {
+				h(true);
+			} else {
+				h(false);
+			}
+		}, _lti, network, lconf);
+}
+
+void Device::l3_conf(const completion_handler &h,
+                     const mih::ip_cfg_methods &cfg_methods,
+                     const boost::optional<mih::ip_info_list> &address_list,
+                     const boost::optional<mih::ip_info_list> &route_list,
+                     const boost::optional<mih::ip_addr_list> &dns_list,
+                     const boost::optional<mih::fqdn_list> &domain_list)
+{
+	log_(0, "Configuring L3");
+
+	_ctrl.l3_conf(
+		[h](mih::message &pm, const boost::system::error_code &ec) {
+			mih::status st;
+			pm >> mih::confirm(mih::confirm::l3_conf)
+				& mih::tlv_status(st);
+
+			if (st == mih::status_success) {
+				h(true);
+			} else {
+				h(false);
+			}
+		}, _lti, cfg_methods, address_list, route_list, dns_list, domain_list);
 }

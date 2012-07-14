@@ -36,6 +36,15 @@ namespace networkmanager {
 		return v;
 	}
 
+	template <class T>
+	T from_variant(const DBus::Variant &v)
+	{
+		T value;
+		DBus::MessageIter iter = v.reader();
+		iter >> value;
+		return value;
+	}
+
 }; };
 
 #endif /* NETWORKMANAGER_UTIL__HPP_ */

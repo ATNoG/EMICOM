@@ -304,6 +304,42 @@ public:
 	 * @return True if the response is sent immediately or false otherwise.
 	 */
 	bool link_conf_confirm(meta_message_ptr &in, meta_message_ptr &out);
+
+	/**
+	 * Link Conf Response message handler.
+	 *
+	 * @param in The input message.
+	 * @param out The output message.
+	 * @return True if the response is sent immediately or false otherwise.
+	 */
+	bool link_conf_response(meta_message_ptr &in, meta_message_ptr &out);
+
+	/**
+	 * L3 Conf Request message handler.
+	 *
+	 * @param in The input message.
+	 * @param out The output message.
+	 * @return True if the response is sent immediately or false otherwise.
+	 */
+	bool l3_conf_request(meta_message_ptr &in, meta_message_ptr &out);
+
+	/**
+	 * L3 Conf Confirm message handler.
+	 *
+	 * @param in The input message.
+	 * @param out The output message.
+	 * @return True if the response is sent immediately or false otherwise.
+	 */
+	bool l3_conf_confirm(meta_message_ptr &in, meta_message_ptr &out);
+
+	/**
+	 * L2 Conf Response message handler.
+	 *
+	 * @param in The input message.
+	 * @param out The output message.
+	 * @return True if the response is sent immediately or false otherwise.
+	 */
+	bool l3_conf_response(meta_message_ptr &in, meta_message_ptr &out);
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 
 private:
@@ -346,6 +382,16 @@ private:
 	 * @param in The input message.
 	 */
 	void link_conf_response_handler(const boost::system::error_code &ec,
+									   meta_message_ptr &in);
+
+	/**
+	 * Handler responsible for processing the received L3 Conf
+	 * responses from Link SAPs.
+	 *
+	 * @param ec Error code.
+	 * @param in The input message.
+	 */
+	void l3_conf_response_handler(const boost::system::error_code &ec,
 									   meta_message_ptr &in);
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 

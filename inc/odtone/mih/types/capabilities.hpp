@@ -54,6 +54,7 @@ enum mih_evt_list_enum {
 	mih_evt_link_pdu_transmit_status = 7,	/**< Link PDU transmit status	*/
 #ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
 	mih_evt_link_conf_required = 8,			/**< Link Conf Required			*/
+	mih_evt_l3_conf_required = 9,			/**< L3 Conf Required			*/
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 };
 

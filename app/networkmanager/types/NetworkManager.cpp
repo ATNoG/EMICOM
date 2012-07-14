@@ -153,7 +153,7 @@ void NetworkManager::Sleep(const bool& sleep)
 
 		state(NM_STATE_DISCONNECTING);
 
-		std::map<DBus::Path, std::shared_ptr<Device>>::iterator it = _device_map.begin();
+		auto it = _device_map.begin();
 		while (it != _device_map.end()) {
 			it->second->Disconnect();
 			it++;
@@ -211,8 +211,12 @@ void NetworkManager::AddAndActivateConnection(
 
 	try {
 		// TODO check if device exists
-		std::shared_ptr<Device> d = _device_map[device];
-		switch (d->DeviceType()) {
+		auto d = _device_map.find(device);
+		if (d == _device_map.end()) {
+			throw DBus::Error("org.freedesktop.NetworkManager.Error.UnknownDevice", "Unknown device");
+		}
+
+		switch (d->second->DeviceType()) {
 			case Device::NM_DEVICE_TYPE_ETHERNET:
 			{
 				path = _settings.AddConnection(connection);
@@ -224,12 +228,12 @@ void NetworkManager::AddAndActivateConnection(
 				break;
 			case Device::NM_DEVICE_TYPE_WIFI:
 			{
-				// if there's no indication of SSID, try to find settings that do
-				auto s = connection.find("802-11-wireless");
-				if (s == connection.end() || s->second.find("ssid") == s->second.end()) {
+//				// if there's no indication of SSID, try to find settings that do
+//				auto s = connection.find("802-11-wireless");
+//				if (s == connection.end() || s->second.find("ssid") == s->second.end()) {
 					// find a previous configuration with the given SSID
 					// get the ssid
-					std::shared_ptr<DeviceWireless> _d = std::static_pointer_cast<DeviceWireless>(d);
+					std::shared_ptr<DeviceWireless> _d = std::static_pointer_cast<DeviceWireless>(d->second);
 					AccessPoint::bss_id bss = _d->get_access_point(specific_object);
 					// get the path of settings with such ssid
 					boost::optional<DBus::Path> settings;
@@ -238,7 +242,7 @@ void NetworkManager::AddAndActivateConnection(
 					if (settings) {
 						path = settings.get();
 					}
-				}
+//				}
 				if (boost::iequals(path, "/")) { // go ahead and use the provided one
 					path = _settings.AddConnection(connection);
 				}
@@ -305,12 +309,16 @@ void NetworkManager::AddAndActivateConnection(
 		property("ActiveConnections", active_connection_list);
 
 		// TODO check if device exists
-		std::shared_ptr<Device> d = _device_map[device];
-		switch (d->DeviceType()) {
+		auto d = _device_map.find(device);
+		if (d == _device_map.end()) {
+			throw DBus::Error("org.freedesktop.NetworkManager.Error.UnknownDevice", "Unknown device");
+		}
+
+		switch (d->second->DeviceType()) {
 			case Device::NM_DEVICE_TYPE_ETHERNET:
 			{
 				// connect
-				d->Enable();
+				d->second->Enable();
 			}
 			break;
 
@@ -319,8 +327,8 @@ void NetworkManager::AddAndActivateConnection(
 			case Device::NM_DEVICE_TYPE_WIFI:
 			{
 				// connect
-				std::static_pointer_cast<DeviceWireless>(d)->Connect(specific_object,
-					[&](bool success) {
+				std::static_pointer_cast<DeviceWireless>(d->second)->Connect(specific_object,
+					[&, device, connection](bool success) {
 						if (!success) {
 							log_(0, "Connection failed");
 							state(NM_STATE_DISCONNECTED); // TODO check other interfaces
@@ -328,7 +336,8 @@ void NetworkManager::AddAndActivateConnection(
 						}
 
 						log_(0, "Authenticated, now configuring IP address");
-						// TODO start ip configuration
+						l3_conf(device, connection);
+
 						state(NM_STATE_CONNECTING); // TODO check other interfaces
 					});
 			}
@@ -605,6 +614,289 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 	PropertiesAdaptor::on_set_property(interface, prop, value);
 }
 
+std::vector<DBus::Path> NetworkManager::active_connections()
+{
+	std::vector<DBus::Path> keys;
+
+	auto it = _active_connections.begin();
+	while (it != _active_connections.end()) {
+		boost::copy(it->second | boost::adaptors::map_keys, std::back_inserter(keys));
+		it ++;
+	}
+
+	return keys;
+}
+
+void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connection)
+{
+	mih::ip_cfg_methods cfg_methods;
+	mih::ip_info_list address_list;
+	mih::ip_info_list route_list;
+	mih::ip_addr_list dns_list;
+	mih::fqdn_list domain_list;
+
+	// get the device
+	auto dev = _device_map.find(device);
+	if (dev == _device_map.end()) {
+		throw std::runtime_error("Device not found");
+	}
+
+	//
+	// Parse IPv4 configurations
+	//
+	settings_map settings = _settings.GetSettings(connection);
+	auto v4_settings_it = settings.find("ipv4");
+	if (v4_settings_it != settings.end()) {
+		log_(0, "Parsing IPv4 settings");
+
+		// Parse the configuration method
+		auto method_it = v4_settings_it->second.find("method");
+		if (method_it == v4_settings_it->second.end()) {
+			throw std::runtime_error("ipv4 settings are missing a \"method\" setting.");
+		}
+
+		std::string method = from_variant<std::string>(method_it->second);
+		if (boost::iequals(method, "auto")) {
+			cfg_methods.set(mih::ip_cfg_ipv4_dynamic);
+		} else if (boost::iequals(method, "manual")) {
+			cfg_methods.set(mih::ip_cfg_ipv4_static);
+		} else if (boost::iequals(method, "disabled")) {
+			// do nothing
+		//} else if (boost::iequals(method, "shared")) {
+		//	// assign a 10.42.x.1/24 and start a DHCP and forwarding DNS server
+		//} else if (boost::iequals(method, "link-local")) {
+		//	// assign a 169.254/16 address
+		} else {
+			log_(0, "Unsupported ipv4 method specified");
+			throw std::runtime_error("Unsupported ipv4 method specified");
+		}
+
+		// Parse the specific addresses field
+		auto addresses_it = v4_settings_it->second.find("addresses");
+		if (addresses_it != v4_settings_it->second.end()) {
+			log_(0, "Parsing IPv4 addresses");
+
+			cfg_methods.set(mih::ip_cfg_ipv4_static);
+
+			std::vector<std::vector<uint32_t>> addresses;
+			addresses = from_variant<std::vector<std::vector<uint32_t>>>(addresses_it->second);
+			for (unsigned int r = 0; r < addresses.size(); ++r) {
+				mih::ip_info info;
+				info.subnet.ipaddr = mih::ip_addr(mih::ip_addr::ipv4, &addresses[r][0], 4);
+				info.subnet.ipprefixlen = addresses[r][1];
+				info.gateway = mih::ip_addr(mih::ip_addr::ipv4, &addresses[r][2], 4);
+
+				address_list.push_back(info);
+			}
+		}
+
+		// Parse the specific routes field
+		auto routes_it = v4_settings_it->second.find("routes");
+		if (routes_it != v4_settings_it->second.end()) {
+			log_(0, "Parsing IPv4 routes");
+
+			cfg_methods.set(mih::ip_cfg_ipv4_static);
+
+			std::vector<std::vector<uint32_t>> routes;
+			routes = from_variant<std::vector<std::vector<uint32_t>>>(routes_it->second);
+			for (unsigned int r = 0; r < routes.size(); ++r) {
+				mih::ip_info info;
+				info.subnet.ipaddr = mih::ip_addr(mih::ip_addr::ipv4, &routes[r][0], 4);
+				info.subnet.ipprefixlen = routes[r][1];
+				info.gateway = mih::ip_addr(mih::ip_addr::ipv4, &routes[r][2], 4);
+
+				route_list.push_back(info);
+			}
+		}
+
+		// Parse the specific dns servers field
+		auto dns_it = v4_settings_it->second.find("dns");
+		if (dns_it != v4_settings_it->second.end()) {
+			log_(0, "Parsing IPv4 dns");
+
+			cfg_methods.set(mih::ip_cfg_ipv4_static);
+
+			std::vector<uint32_t> nameservers = from_variant<std::vector<uint32_t>>(dns_it->second);
+			for (unsigned int r = 0; r < nameservers.size(); ++r) {
+				dns_list.push_back(mih::ip_addr(mih::ip_addr::ipv4, &nameservers[r], 4));
+			}
+		}
+
+		// Parse the specific dns-search field
+		auto domains_it = v4_settings_it->second.find("dns-search");
+		if (domains_it != v4_settings_it->second.end()) {
+			log_(0, "Parsing IPv4 domains");
+
+			cfg_methods.set(mih::ip_cfg_ipv4_static);
+
+			std::vector<std::string> nameservers = from_variant<std::vector<std::string>>(domains_it->second);
+			domain_list.insert(domain_list.end(), nameservers.begin(), nameservers.end());
+		}
+	}
+
+	//
+	// Parse IPv6 configurations
+	//
+	auto v6_settings_it = settings.find("ipv6");
+	if (v6_settings_it != settings.end()) {
+		log_(0, "Parsing IPv6 settings");
+
+		// Parse the configuration method
+		auto method_it = v6_settings_it->second.find("method");
+		if (method_it == v6_settings_it->second.end()) {
+			throw std::runtime_error("ipv6 settings are missing a \"method\" setting.");
+		}
+
+		std::string method = from_variant<std::string>(method_it->second);
+		if (boost::iequals(method, "auto") || boost::iequals(method, "dhcp")) {
+			cfg_methods.set(mih::ip_cfg_ipv6_stateful);
+		} else if (boost::iequals(method, "manual")) {
+			cfg_methods.set(mih::ip_cfg_ipv6_manual);
+		} else if (boost::iequals(method, "ignored")) {
+			// do nothing
+		//} else if (boost::iequals(method, "link-local")) {
+		//	// assign a link-local address
+		} else {
+			log_(0, "Unsupported ipv6 method specified");
+			throw std::runtime_error("Unsupported ipv6 method specified");
+		}
+
+		// Parse the specific addresses field
+		auto addresses_it = v6_settings_it->second.find("addresses");
+		if (addresses_it != v6_settings_it->second.end()) {
+			log_(0, "Parsing IPv6 addresses");
+
+			cfg_methods.set(mih::ip_cfg_ipv6_manual);
+
+			std::vector<ip6_addr_tuple> addresses;
+			addresses = from_variant<std::vector<ip6_addr_tuple>>(addresses_it->second);
+			for (unsigned int r = 0; r < addresses.size(); ++r) {
+				mih::ip_info info;
+				info.subnet.ipaddr = mih::ip_addr(mih::ip_addr::ipv6, &addresses[r]._1[0], 16);
+				info.subnet.ipprefixlen = addresses[r]._2;
+				info.gateway = mih::ip_addr(mih::ip_addr::ipv6, &addresses[r]._3[0], 16);
+
+				address_list.push_back(info);
+			}
+		}
+
+		// Parse the specific routes field
+		auto routes_it = v6_settings_it->second.find("routes");
+		if (routes_it != v6_settings_it->second.end()) {
+			log_(0, "Parsing IPv6 routes");
+
+			cfg_methods.set(mih::ip_cfg_ipv6_manual);
+
+			std::vector<ip6_route_tuple> routes;
+			routes = from_variant<std::vector<ip6_route_tuple>>(routes_it->second);
+			for (unsigned int r = 0; r < routes.size(); ++r) {
+				mih::ip_info info;
+				info.subnet.ipaddr = mih::ip_addr(mih::ip_addr::ipv6, &routes[r]._1[0], 16);
+				info.subnet.ipprefixlen = routes[r]._2;
+				info.gateway = mih::ip_addr(mih::ip_addr::ipv6, &routes[r]._3[0], 16);
+
+				route_list.push_back(info);
+			}
+		}
+
+		// Parse the specific dns servers field
+		auto dns_it = v6_settings_it->second.find("dns");
+		if (dns_it != v6_settings_it->second.end()) {
+			log_(0, "Parsing IPv6 dns");
+
+			cfg_methods.set(mih::ip_cfg_ipv6_manual);
+
+			std::vector<std::vector<uint8_t>> nameservers;
+			nameservers = from_variant<std::vector<std::vector<uint8_t>>>(dns_it->second);
+			for (unsigned int r = 0; r < nameservers.size(); ++r) {
+				dns_list.push_back(mih::ip_addr(mih::ip_addr::ipv6, &nameservers[r][0], 16));
+			}
+		}
+
+		// Parse the specific dns-search field
+		auto domains_it = v6_settings_it->second.find("dns-search");
+		if (domains_it != v6_settings_it->second.end()) {
+			log_(0, "Parsing IPv6 domains");
+
+			cfg_methods.set(mih::ip_cfg_ipv6_manual);
+
+			std::vector<std::string> nameservers;
+			nameservers = from_variant<std::vector<std::string>>(domains_it->second);
+			domain_list.insert(domain_list.end(), nameservers.begin(), nameservers.end());
+		}
+	}
+
+	dev->second->l3_conf(
+		[&](bool success) {
+			if (success) {
+				log_(0, "Success configuring L3");
+			} else {
+				log_(0, "Error configuring L3");
+			}
+		},
+		cfg_methods,
+		boost::make_optional(address_list.size() > 0, address_list),
+		boost::make_optional(route_list.size()   > 0, route_list),
+		boost::make_optional(dns_list.size()     > 0, dns_list),
+		boost::make_optional(domain_list.size()  > 0, domain_list));
+}
+
+// TODO move this into the device!
+// this should only merge the settings and then command the Device!
+void NetworkManager::link_conf(const DBus::Path &device,
+                               const boost::optional<mih::network_id> &network,
+                               const mih::configuration_list &lconf)
+{
+	auto dev = _device_map.find(device);
+	if (dev == _device_map.end()) {
+		throw std::runtime_error("Device not found");
+	}
+
+	if (!(network && dev->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI)) {
+		log_(0, "Network name required for 802_11 configuration");
+		return;
+	}
+
+	// search by 802-11-wireless ssid
+	std::vector<unsigned char> ssid(network.get().begin(), network.get().end());
+
+	boost::optional<DBus::Path> connection;
+	connection = _settings.get_connection_by_attribute("802-11-wireless", "ssid", ssid);
+
+	if (!connection) {
+		// request user input
+		log_(0, "No configuration found, user input required");
+		return;
+	}
+
+	log_(0, "Configuration found");
+
+	std::map<std::string, std::string> conf;
+	conf = _settings.wpa_conf(connection.get());
+
+	mih::configuration_list confl;
+
+	auto it = conf.begin();
+	while (it != conf.end()) {
+		mih::configuration c;
+		c.key = it->first;
+		c.value = it->second;
+		confl.push_back(c);
+
+		it ++;
+	}
+
+	// respond
+	dev->second->link_conf(
+		[&](bool success) {
+			if (success) {
+				log_(0, "Authentication success");
+			} else {
+				log_(0, "Authentication failure");
+			}
+		}, network, confl);
+}
+
 void NetworkManager::event_handler(mih::message &msg, const boost::system::error_code &ec)
 {
 	log_(0, "Event received, status: ", ec.message());
@@ -735,59 +1027,15 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 			& mih::tlv_network_id(network)
 			& mih::tlv_configuration_list(lconf);
 
-		if (network && lti.type == mih::link_type_802_11) {
-			// search by 802-11-wireless ssid
-			std::vector<unsigned char> ssid(network.get().begin(), network.get().end());
+		mih::mac_addr address = boost::get<mih::mac_addr>(lti.addr);
+		std::stringstream path;
+		path << _dbus_path << "/Devices/" << boost::algorithm::erase_all_copy(address.address(), ":");
 
-			boost::optional<DBus::Path> connection;
-			connection = _settings.get_connection_by_attribute("802-11-wireless", "ssid", ssid);
-
-			if (connection) {
-				std::map<std::string, std::string> conf;
-				conf = _settings.wpa_conf(connection.get());
-
-				mih::configuration_list confl;
-
-				log_(0, "Configuration found");
-				auto it = conf.begin();
-				while (it != conf.end()) {
-					mih::configuration c;
-					c.key = it->first;
-					c.value = it->second;
-					confl.push_back(c);
-
-					it ++;
-				}
-
-				// respond
-				_mih_user.conf(
-					[&](mih::message &pm, const boost::system::error_code &ec) {
-						// do nothing
-					}, lti, network, confl);
-			} else {
-				log_(0, "Configuration not found");
-				// request user input
-			}
-		//} else {
-		// ...
-		}
+		link_conf(path.str(), network, lconf);
 	}
 	break;
 
 	default:
 		log_(0, "Received unknown/unsupported event");
 	}
-}
-
-std::vector<DBus::Path> NetworkManager::active_connections()
-{
-	std::vector<DBus::Path> keys;
-
-	auto it = _active_connections.begin();
-	while (it != _active_connections.end()) {
-		boost::copy(it->second | boost::adaptors::map_keys, std::back_inserter(keys));
-		it ++;
-	}
-
-	return keys;
 }

@@ -79,7 +79,6 @@ public:
 	void change(rtnl_link &original, rtnl_link &changes);
 
 private:
-	bool         _own;
 	rtnl_socket  _socket;
 	::nl_cache  *_cache;
 };
