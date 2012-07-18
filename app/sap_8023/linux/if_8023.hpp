@@ -75,6 +75,13 @@ public:
 	unsigned int ifindex();
 
 	/**
+	 * Get the interface name of this device.
+	 *
+	 * @return The interface name.
+	 */
+	std::string ifname();
+
+	/**
 	 * Get the MAC address of this device.
 	 *
 	 * @return the MAC address of the device.
@@ -108,6 +115,31 @@ public:
 	 * @param mode The new operating mode.
 	 */
 	void set_op_mode(const mih::link_ac_type_enum &mode);
+
+	/**
+	 * Clear every address associated with this link.
+	 */
+	void clear_addresses();
+
+	/**
+	 * Add a list of addresses to this interface.
+	 * The default gateways (routes), are automatically configured.
+	 *
+	 * @param addrs The list of addresses.
+	 */
+	void add_addresses(const std::vector<mih::ip_info> &addrs);
+
+	/**
+	 * Clear every route associated with this link.
+	 */
+	void clear_routes();
+
+	/**
+	 * Add a list of routes to the interface.
+	 *
+	 * @param routes The list of routes.
+	 */
+	void add_routes(const std::vector<mih::ip_info> &routes);
 
 	/**
 	 * Set the callback for LINK_UP events.

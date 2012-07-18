@@ -107,6 +107,8 @@ if_8023::if_8023(boost::asio::io_service &ios, mih::mac_addr mac) : _ctx(ios)
 	nlwrap::rtnl_link link(cache.get_by_addr(mac.address()));
 
 	_ctx._ifindex = link.ifindex();
+	_ctx._dev = link.name();
+
 	_ctx._active = link.get_operstate() == IF_OPER_UP;
 
 	// initalize socket
@@ -123,6 +125,11 @@ if_8023::~if_8023()
 unsigned int if_8023::ifindex()
 {
 	return _ctx._ifindex;
+}
+
+std::string if_8023::ifname()
+{
+	return _ctx._dev;
 }
 
 mih::mac_addr if_8023::mac_address()
@@ -193,6 +200,104 @@ void if_8023::set_op_mode(const mih::link_ac_type_enum &mode)
 	nlwrap::rtnl_link_cache cache;
 	nlwrap::rtnl_link link(cache.get_by_ifindex(_ctx._ifindex));
 	cache.change(link, change);
+}
+
+void if_8023::clear_addresses()
+{
+	nlwrap::rtnl_addr_cache addr_cache;
+	nlwrap::rtnl_addr addr;
+
+	addr.set_ifindex(_ctx._ifindex);
+	addr_cache.clear(addr);
+}
+
+void if_8023::add_addresses(const std::vector<mih::ip_info> &addrs)
+{
+	std::vector<mih::ip_info> default_gateways;
+	nlwrap::rtnl_addr_cache addr_cache;
+
+	for (auto it = addrs.begin(); it != addrs.end(); it++) {
+		// address type/family
+		nlwrap::nl_addr::ADDRESS_FAMILY addr_family;
+		mih::ip_addr::type_ip_enum ip_type;
+		if (it->subnet.ipaddr.type() == mih::ip_addr::ipv4) {
+			addr_family = nlwrap::nl_addr::ADDRESS_FAMILY_AF_INET;
+			ip_type = mih::ip_addr::ipv4;
+		} else if (it->subnet.ipaddr.type() == mih::ip_addr::ipv6) {
+			addr_family = nlwrap::nl_addr::ADDRESS_FAMILY_AF_INET6;
+			ip_type = mih::ip_addr::ipv6;
+		} else {
+			log_(0, "(command) Unknown address type/family");
+			throw std::runtime_error("Unknown address type/family");
+		}
+
+		// queue the default gateway
+		mih::ip_info gw;
+		gw.gateway = it->gateway;
+		std::vector<unsigned char> no_target_raw(it->subnet.ipaddr.length(), 0);
+		gw.subnet.ipaddr = mih::ip_addr(ip_type, &no_target_raw[0], no_target_raw.size());
+		gw.subnet.ipprefixlen = 0;
+		default_gateways.push_back(gw);
+
+		// add the ip to the interface
+		const unsigned char *target_raw = static_cast<const unsigned char *>(it->subnet.ipaddr.get());
+		std::vector<unsigned char> target(target_raw, target_raw + it->subnet.ipaddr.length());
+		nlwrap::nl_addr local_addr(addr_family, &target[0], target.size());
+		nlwrap::rtnl_addr addr;
+		addr.set_local(local_addr);
+		addr.set_ifindex(_ctx._ifindex);
+		addr.set_prefixlen(it->subnet.ipprefixlen);
+
+		addr_cache.add(addr);
+	}
+
+	add_routes(default_gateways);
+}
+
+void if_8023::clear_routes()
+{
+	nlwrap::rtnl_route_cache route_cache;
+	nlwrap::rtnl_route route;
+
+	route.set_oifindex(_ctx._ifindex);
+	route_cache.clear(route);
+}
+
+void if_8023::add_routes(const std::vector<mih::ip_info> &routes)
+{
+	nlwrap::rtnl_route_cache route_cache;
+
+	for (auto it = routes.begin(); it != routes.end(); it++) {
+		// address type/family
+		nlwrap::nl_addr::ADDRESS_FAMILY addr_family;
+		nlwrap::rtnl_route::ROUTE_FAMILY route_family;
+		if (it->subnet.ipaddr.type() == mih::ip_addr::ipv4) {
+			addr_family = nlwrap::nl_addr::ADDRESS_FAMILY_AF_INET;
+			route_family = nlwrap::rtnl_route::ROUTE_FAMILY_AF_INET;
+		} else if (it->subnet.ipaddr.type() == mih::ip_addr::ipv6) {
+			addr_family = nlwrap::nl_addr::ADDRESS_FAMILY_AF_INET6;
+			route_family = nlwrap::rtnl_route::ROUTE_FAMILY_AF_INET6;
+		} else {
+			log_(0, "(command) Unknown address type/family");
+			throw std::runtime_error("Unknown address type/family");
+		}
+
+		// create the destination network
+		const unsigned char *_target_raw = static_cast<const unsigned char *>(it->subnet.ipaddr.get());
+		std::vector<unsigned char> target_raw(_target_raw, _target_raw + it->subnet.ipaddr.length());
+		nlwrap::nl_addr target(addr_family, &target_raw[0], target_raw.size(), it->subnet.ipprefixlen);
+
+		// gateway
+		const unsigned char *_gateway_raw = static_cast<const unsigned char*>(it->gateway.get());
+		std::vector<unsigned char> gateway_raw(_gateway_raw, _gateway_raw + it->gateway.length());
+		nlwrap::nl_addr gateway(addr_family, &gateway_raw[0], gateway_raw.size());
+
+		// route
+		nlwrap::rtnl_route::ROUTE_SCOPE route_scope(nlwrap::rtnl_route::ROUTE_SCOPE_UNIVERSE);
+		nlwrap::rtnl_route route(_ctx._ifindex, target, gateway, route_scope, route_family);
+
+		route_cache.add(route);
+	}
 }
 
 void if_8023::link_up_callback(const link_up_handler &h)
