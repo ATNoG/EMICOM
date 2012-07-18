@@ -127,26 +127,6 @@ void mih_user::scan(const default_handler &h, const mih::link_tuple_id &lti)
 	_mihf.async_send(m, h);
 }
 
-void mih_user::connect(const default_handler &h, const mih::link_tuple_id &lti, const mih::link_addr &poa)
-{
-	mih::link_action_req 	lar;
-	mih::link_action_list	larl;
-
-	lar.id = lti;
-	lar.addr = poa;
-	lar.action.type = mih::link_ac_type_power_up;
-	lar.ex_time = 0;
-
-	larl.push_back(lar);
-
-	mih::message m;
-	m << mih::request(mih::request::link_actions)
-		& mih::tlv_link_action_list(larl);
-	m.destination(mih::id("local-mihf"));
-
-	_mihf.async_send(m, h);
-}
-
 void mih_user::link_conf(const default_handler &h,
                          const mih::link_tuple_id &lti,
                          const boost::optional<std::string> &network,

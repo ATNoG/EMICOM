@@ -840,12 +840,12 @@ void handle_link_actions(boost::asio::io_service &ios,
 			dispatch_status_failure(tid, mih::confirm::link_actions);
 			return;
 		}
-		//if (poa) {
-		//	// not supported
-		//	log_(0, "(command) No support for specified attribute (poa addr)");
-		//	dispatch_status_failure(tid, mih::confirm::link_actions);
-		//	return;
-		//}
+		if (poa) {
+			// not supported
+			log_(0, "(command) No support for specified attribute (poa addr)");
+			dispatch_status_failure(tid, mih::confirm::link_actions);
+			return;
+		}
 
 		if (delay > 0) {
 			boost::asio::deadline_timer timer(ios);
@@ -857,87 +857,20 @@ void handle_link_actions(boost::asio::io_service &ios,
 		fi.set_op_mode(action.type.get());
 
 		// get scan results
-		bool scanned = false;
 		mih::link_scan_rsp_list scan_rsp_list;
 		if (action.type != mih::link_ac_type_power_down) {
 			if (action.attr.get(mih::link_ac_attr_scan)) {
 				fi.trigger_scan(true);
 				scan_rsp_list = fi.get_scan_results();
-				scanned = true;
 			}
 		}
 
-////////
 		if (action.type == mih::link_ac_type_power_down) {
 			try {
 				wpa_interface->Disconnect();
 			} catch (DBus::Error &e) {
 				// already disconnected
 			}
-		}
-
-		if (poa && action.type == mih::link_ac_type_power_up) {
-			mih::mac_addr connect_addr = boost::get<mih::mac_addr>(poa.get());
-			log_(0, "(command) Requested connection to ", connect_addr.address());
-
-			boost::optional<poa_info> bss = fi.known_bssid(connect_addr);
-
-			if (!bss && !scanned) {
-				fi.trigger_scan(true);
-				fi.get_scan_results(); // force scan results fetching
-				bss = fi.known_bssid(connect_addr);
-			}
-
-			if (!bss) {
-				log_(0, "(command) Cannot find a network for given BSSID.");
-				dispatch_status_failure(tid, mih::confirm::link_actions);
-				return;
-			}
-
-			wpa_interface->add_completion_handler(boost::bind(dispatch_link_action_completion, tid, scan_rsp_list, _1));
-
-			if (bss.get().net_capabilities.get(mih::net_caps_security)) {
-				log_(0, "(command) Auth required for ", connect_addr.address(), " [", bss.get().network_id, "]");
-				log_(0, "(command) Dispatching conf required event");
-
-				mih::link_id _lid = fi.link_id();
-				mih::link_tuple_id lid;
-				lid.type = _lid.type;
-				lid.addr = _lid.addr;
-				lid.poa_addr = poa.get();
-
-				boost::optional<mih::network_id> network = bss.get().network_id;
-				mih::configuration_list lconf;
-
-				mih::message m;
-				m << mih::indication(mih::indication::link_conf_required)
-					& mih::tlv_link_identifier(lid)
-					& mih::tlv_network_id(network)
-					& mih::tlv_configuration_list(lconf);
-
-				ls->async_send(m);
-			} else {
-				log_(0, "(command) Attempting connection to ",
-					connect_addr.address(), " [", bss.get().network_id, "]");
-
-				try {
-					std::map<std::string, DBus::Variant> m;
-					m["ssid"] = to_variant(bss.get().network_id);
-
-					mih::message success, failure;
-					success << mih::confirm(mih::confirm::link_conf)
-						& mih::tlv_status(mih::status(mih::status_success));
-					failure << mih::confirm(mih::confirm::link_conf)
-						& mih::tlv_status(mih::status(mih::status_failure));
-
-					DBus::Path wpa_network = wpa_interface->AddNetwork(m);
-					wpa_interface->SelectNetwork(wpa_network);
-				} catch (DBus::Error e) {
-					log_(0, "Error selecting network \"", e.name(), ": ", e.message(), "\"");
-				}
-			}
-
-			return;
 		}
 
 		log_(0, "(command) Dispatching status success");
@@ -972,16 +905,11 @@ void handle_link_conf(const boost::asio::io_service &ios,
 	log_(0, "(command) Handling link_conf");
 
 	try {
-		std::string ssid = network.get(); // deliberately fail if not set
-
-		log_(0, "(command) Attempting connection to [", ssid, "]");
-
 		std::map<std::string, DBus::Variant> network_map;
-		network_map["ssid"] = to_variant(ssid);
 		auto it = lconf.begin();
 		while (it != lconf.end()) {
 			log_(0, "(command) supplicant setting [", it->key, "=",
-			     it->key.compare("password") == 0 ? "\"secret\"" : it->value, "]");
+				boost::iequals(it->key, "password") ? "\"secret\"" : it->value, "]");
 
 			if (   boost::iequals(it->key, "scan_ssid")
 			    || boost::iequals(it->key, "mode")
@@ -997,6 +925,8 @@ void handle_link_conf(const boost::asio::io_service &ios,
 			}
 			it ++;
 		}
+
+		log_(0, "(command) Attempting connection");
 
 		try {
 			DBus::Path wpa_network = wpa_interface->AddNetwork(network_map);
@@ -1042,7 +972,7 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 		if (cfg_methods.get(mih::ip_cfg_ipv4_dynamic) || cfg_methods.get(mih::ip_cfg_ipv6_stateful)) {
 			log_(0, "(command) Configuring automatic IP");
 
-			//dhclient->Rebind(devname);
+			dhclient->Rebind(devname);
 		}
 
 		if (address_list) {

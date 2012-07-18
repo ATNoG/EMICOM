@@ -113,39 +113,6 @@ void DeviceWireless::Scan()
 		}, _lti);
 }
 
-void DeviceWireless::Connect(const ::DBus::Path &path, const completion_handler &h)
-{
-	boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
-
-	mih::mac_addr poa;
-	auto ap = _access_points_map.find(path);
-	if (ap == _access_points_map.end()) {
-		throw std::runtime_error("AP not found.");
-	}
-	poa.address(ap->second->HwAddress());
-
-	state(NM_DEVICE_STATE_PREPARE, NM_DEVICE_STATE_REASON_UNKNOWN);
-
-	_ctrl.connect(
-		[&, h, path](mih::message &pm, const boost::system::error_code &ec) {
-			mih::status st;
-			pm >> mih::confirm(mih::confirm::link_actions)
-				& mih::tlv_status(st);
-
-			if (st != mih::status_success) {
-				h(false);
-				return;
-			}
-
-			state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN);
-
-			// announce active AP
-			property("ActiveAccessPoint", to_variant(path));
-
-			h(true);
-		}, _lti, poa);
-}
-
 void DeviceWireless::property(const std::string &property, const DBus::Variant &value)
 {
 	DBus::MessageIter it = value.reader();

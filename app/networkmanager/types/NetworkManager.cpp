@@ -314,40 +314,7 @@ void NetworkManager::AddAndActivateConnection(
 			throw DBus::Error("org.freedesktop.NetworkManager.Error.UnknownDevice", "Unknown device");
 		}
 
-		switch (d->second->DeviceType()) {
-			case Device::NM_DEVICE_TYPE_ETHERNET:
-			{
-				// connect
-				d->second->Enable();
-			}
-			break;
-
-			case Device::NM_DEVICE_TYPE_MODEM:
-				break;
-			case Device::NM_DEVICE_TYPE_WIFI:
-			{
-				// connect
-				std::static_pointer_cast<DeviceWireless>(d->second)->Connect(specific_object,
-					[&, device, connection](bool success) {
-						if (!success) {
-							log_(0, "Connection failed");
-							state(NM_STATE_DISCONNECTED); // TODO check other interfaces
-							return;
-						}
-
-						log_(0, "Authenticated, now configuring IP address");
-						l3_conf(device, connection);
-
-						state(NM_STATE_CONNECTING); // TODO check other interfaces
-					});
-			}
-			break;
-
-			case Device::NM_DEVICE_TYPE_WIMAX:
-				break;
-			default:
-				log_(0, "Unsupported device type");
-		}
+		link_conf(device, connection);
 	} catch (std::exception &e) {
 		log_(0, "Exception: ", e.what());
 		throw;
@@ -843,25 +810,12 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 
 // TODO move this into the device!
 // this should only merge the settings and then command the Device!
-void NetworkManager::link_conf(const DBus::Path &device,
-                               const boost::optional<mih::network_id> &network,
-                               const mih::configuration_list &lconf)
+void NetworkManager::link_conf(const DBus::Path &device, const boost::optional<DBus::Path> &connection)
 {
 	auto dev = _device_map.find(device);
 	if (dev == _device_map.end()) {
 		throw std::runtime_error("Device not found");
 	}
-
-	if (!(network && dev->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI)) {
-		log_(0, "Network name required for 802_11 configuration");
-		return;
-	}
-
-	// search by 802-11-wireless ssid
-	std::vector<unsigned char> ssid(network.get().begin(), network.get().end());
-
-	boost::optional<DBus::Path> connection;
-	connection = _settings.get_connection_by_attribute("802-11-wireless", "ssid", ssid);
 
 	if (!connection) {
 		// request user input
@@ -875,7 +829,6 @@ void NetworkManager::link_conf(const DBus::Path &device,
 	conf = _settings.wpa_conf(connection.get());
 
 	mih::configuration_list confl;
-
 	auto it = conf.begin();
 	while (it != conf.end()) {
 		mih::configuration c;
@@ -886,11 +839,18 @@ void NetworkManager::link_conf(const DBus::Path &device,
 		it ++;
 	}
 
+	boost::optional<mih::network_id> network;
+//	auto ssid = conf.find("ssid");
+//	if (ssid != conf.end()) {
+//		network = ssid->second;
+//	}
+
 	// respond
 	dev->second->link_conf(
-		[&](bool success) {
+		[&, device, connection](bool success) {
 			if (success) {
 				log_(0, "Authentication success");
+				l3_conf(device, connection.get());
 			} else {
 				log_(0, "Authentication failure");
 			}
@@ -1031,7 +991,15 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 		std::stringstream path;
 		path << _dbus_path << "/Devices/" << boost::algorithm::erase_all_copy(address.address(), ":");
 
-		link_conf(path.str(), network, lconf);
+		boost::optional<DBus::Path> connection;
+		if (network) {
+			std::vector<unsigned char> ssid(network.get().begin(), network.get().end());
+			connection = _settings.get_connection_by_attribute("802-11-wireless", "ssid", ssid);
+		} else {
+			// look for ongoing progress of a connection on this link!
+		}
+
+		link_conf(path.str(), connection);
 	}
 	break;
 

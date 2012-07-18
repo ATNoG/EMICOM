@@ -627,7 +627,7 @@ bool command_service::link_actions_request(meta_message_ptr &in,
 					utils::update_local_capabilities(_abook, _link_abook, _user_abook);
 				} else {
 					mih::link_addr* a = boost::get<mih::link_addr>(&(*lar).addr);
-					if (a/* && ((*lar).action.attr.get(mih::link_ac_attr_data_fwd_req)) */) {
+					if (a && ((*lar).action.attr.get(mih::link_ac_attr_data_fwd_req))) {
 						*out << mih::request(mih::request::link_actions)
 									& mih::tlv_link_action((*lar).action)
 									& mih::tlv_time_interval((*lar).ex_time)

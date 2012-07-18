@@ -247,9 +247,7 @@ private:
 	/**
 	 * Proceed with the configuration of a link.
 	 */
-	void link_conf(const DBus::Path &device,
-	               const boost::optional<mih::network_id> &network,
-	               const mih::configuration_list &lconf);
+	void link_conf(const DBus::Path &device, const boost::optional<DBus::Path> &connection);
 
 	/**
 	 * Configure IPs, routes and DNS in a device.

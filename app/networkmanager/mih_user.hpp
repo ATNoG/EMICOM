@@ -74,11 +74,6 @@ public:
 	void scan(const default_handler &h, const mih::link_tuple_id &lti);
 
 	/**
-	 * Send a connect command to an interface.
-	 */
-	void connect(const default_handler &h, const mih::link_tuple_id &lti, const mih::link_addr &poa);
-
-	/**
 	 * Send a link conf command to an interface.
 	 */
 	void link_conf(const default_handler &h,

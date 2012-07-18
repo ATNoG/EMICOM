@@ -95,15 +95,6 @@ public:
 	void Scan();
 
 	/**
-	 * Connect to a given Access Point.
-	 *
-	 * @param poa The Access Point to connect to.
-	 */
-	// TODO deprecate this method
-	#warning deprecate
-	void Connect(const ::DBus::Path &path, const completion_handler &h);
-
-	/**
 	 * see Device::link_down()
 	 */
 	void link_down();
