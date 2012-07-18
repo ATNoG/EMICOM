@@ -60,3 +60,11 @@ lib wpa-supplicant
 	:
 	: : <include>wpa_supplicant
 	;
+
+lib dhcpcd
+	: dhcpcd/dhcpcd.cpp
+	  dbus-cpp
+	  ../../../lib/odtone//odtone_base
+	:
+	: : <include>dhcpcd
+	;

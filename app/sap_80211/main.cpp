@@ -40,7 +40,7 @@
 #include "timer_task.hpp"
 
 #include <wpa_supplicant.hpp>
-//#include "dhcpcd/dhcpcd.hpp"
+#include "dhcpcd/dhcpcd.hpp"
 #include <boost/filesystem/fstream.hpp>
 
 #define STOP_SCHED_SCAN_ON_L2_UP
@@ -84,7 +84,7 @@ std::unique_ptr<sap::link>  ls;
 std::unique_ptr<timer_task> threshold_check_task;
 std::unique_ptr<timer_task> scheduled_scan_task;
 
-//std::unique_ptr<dhcp::dhcpcd> dhclient;
+std::unique_ptr<dhcp::dhcpcd> dhclient;
 std::unique_ptr<wpa_supplicant::Interface> wpa_interface;
 std::string devname;
 
@@ -1275,16 +1275,18 @@ int main(int argc, char** argv)
 	fi.link_down_callback(boost::bind(&dispatch_link_down, _1, _2, _3));
 	fi.link_detected_callback(boost::bind(&dispatch_link_detected, _1));
 
-	// checking wpa_supplicant
+	devname = fi.ifname();
+
+	// checking wpa_supplicant and dhcpcd
 	sleep(1); // TODO: "ensure" the d-bus dispatcher has started
 
-	//std::unique_ptr<dhcp::dhcpcd> _dhclient(
-	//	new dhcp::dhcpcd(dbus_connection, "/name/marples/roy/dhcpcd", "name.marples.roy.dhcpcd"));
-	//dhclient = std::move(_dhclient);
+	std::unique_ptr<dhcp::dhcpcd> _dhclient(
+		new dhcp::dhcpcd(dbus_connection, "/name/marples/roy/dhcpcd", "name.marples.roy.dhcpcd"));
+	dhclient = std::move(_dhclient);
+	dhclient->Stop(devname);
 
 	wpa_supplicant::WPASupplicant wpa(dbus_connection, "/fi/w1/wpa_supplicant1", "fi.w1.wpa_supplicant1");
 
-	devname = fi.ifname();
 	DBus::Path wpa_interface_path;
 	try {
 		wpa_interface_path = wpa.GetInterface(devname);
