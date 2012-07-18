@@ -871,6 +871,11 @@ void handle_link_actions(boost::asio::io_service &ios,
 			} catch (DBus::Error &e) {
 				// already disconnected
 			}
+			try {
+				dhclient->Stop(devname);
+			} catch (DBus::Error &e) {
+				//
+			}
 		}
 
 		log_(0, "(command) Dispatching status success");
