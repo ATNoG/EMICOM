@@ -227,9 +227,6 @@ public:
 		int                   _ifindex;
 		std::string           _dev;
 		odtone::mih::mac_addr _mac;
-
-		boost::shared_mutex             _seen_bssids_access;
-		std::map<std::string, poa_info> _seen_bssids;
 	};
 
 private:

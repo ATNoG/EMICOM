@@ -705,7 +705,8 @@ enum link_cmd_list_enum {
 	cmd_link_configure_thresholds = 4,	/**< Configure thresholds.	*/
 	cmd_link_action               = 5,	/**< Action.				*/
 #ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
-	cmd_link_conf                 = 6,	/**< Configure link. */
+	cmd_link_conf                 = 6,	/**< Configure link. 		*/
+	cmd_l3_conf                   = 7,	/**< Configure l3.			*/
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 };
 

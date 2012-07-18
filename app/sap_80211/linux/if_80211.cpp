@@ -189,10 +189,6 @@ int handle_scan_results(::nl_msg *msg, void *arg)
 		// and the noise value (through NL80211_CMD_GET_SURVEY). (missing "interference")
 
 		d->l.push_back(i);
-
-		// save the mac:ssid pair
-		boost::unique_lock<boost::shared_mutex> lock(d->_ctx._seen_bssids_access);
-		d->_ctx._seen_bssids[poa_addr.address()] = i;
 	} catch(...) {
 		log_(0, "(command) Error parsing scan dump message");
 	}
@@ -242,11 +238,6 @@ void fetch_scan_results(scan_results_data &data)
 	m.put_ifindex(data._ctx._ifindex);
 
 	nlwrap::nl_cb cb(handle_scan_results, static_cast<void *>(&data));
-
-	// uncommenting this prevents the "known bssid" table to grow indefinitely.
-	// however, it poses concurrency issues, and access must be synchronized!
-	//{boost::unique_lock<boost::shared_mutex> lock(data._ctx._seen_bssids_access);
-	//data._ctx._seen_bssids.clear();}
 
 	s.send(m);
 
@@ -692,18 +683,6 @@ odtone::uint if_80211::get_current_data_rate(mih::mac_addr &addr)
 	}
 
 	return rate * 100;
-}
-
-boost::optional<poa_info> if_80211::known_bssid(mih::mac_addr &addr)
-{
-	boost::shared_lock<boost::shared_mutex> lock(_ctx._seen_bssids_access);
-
-	auto found = _ctx._seen_bssids.find(addr.address());
-	if (found != _ctx._seen_bssids.end()) {
-		return found->second;
-	} else {
-		return boost::optional<poa_info>();
-	}
 }
 
 void if_80211::clear_addresses()
