@@ -79,9 +79,7 @@ void Interface::PropertiesChanged(const std::map< std::string, ::DBus::Variant >
 		// The "disconnected" or "completed" states are not considered for completion
 		// unless the interface has been in the "associating" state first.
 		if (boost::iequals(value, "associating")) {
-			_completion_handlers.insert(_completion_handlers.end(),
-			                            _buffered_completion_handlers.begin(),
-			                            _buffered_completion_handlers.end());
+			_completion_handlers = _buffered_completion_handlers;
 			_buffered_completion_handlers.clear();
 		} else {
 
