@@ -34,14 +34,17 @@ void Device::Disconnect()
 {
 	log_(0, "Disconnecting");
 
+	// assume success
+	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+
 	_ctrl.disconnect(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
 			mih::status st;
 			pm >> mih::confirm(mih::confirm::link_actions)
 				& mih::tlv_status(st);
 
-			if (st == mih::status_success) {
-				state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+			if (st != mih::status_success) {
+				state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
 			}
 		}, _lti);
 }
@@ -50,14 +53,17 @@ void Device::Enable()
 {
 	log_(0, "Enabling");
 
+	// assume success
+	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+
 	_ctrl.power_up(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
 			mih::status st;
 			pm >> mih::confirm(mih::confirm::link_actions)
 				& mih::tlv_status(st);
 
-			if (st == mih::status_success) {
-				state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+			if (st != mih::status_success) {
+				state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
 			}
 		}, _lti);
 }
@@ -66,14 +72,17 @@ void Device::Disable()
 {
 	log_(0, "Disabling");
 
+	// assume success
+	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+
 	_ctrl.power_down(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
 			mih::status st;
 			pm >> mih::confirm(mih::confirm::link_actions)
 				& mih::tlv_status(st);
 
-			if (st == mih::status_success) {
-				state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+			if (st != mih::status_success) {
+				state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
 			}
 		}, _lti);
 }
