@@ -246,6 +246,40 @@ void dispatch_link_conf_completion(odtone::uint16 tid, bool connected)
 	ls->async_send(m);
 }
 
+void dispatch_l3_conf_completion(odtone::uint16 tid, bool success,
+                                 const boost::optional<mih::ip_info_list> &address_list,
+                                 const boost::optional<mih::ip_info_list> &route_list,
+                                 const boost::optional<mih::ip_addr_list> &dns_list,
+                                 const boost::optional<mih::fqdn_list> &domain_list)
+{
+	mih::message m;
+	m.tid(tid);
+
+	if (success) {
+		log_(0, "(command) Dispatching l3_conf status success");
+
+		m << mih::confirm(mih::confirm::l3_conf)
+			& mih::tlv_status(mih::status(mih::status_success))
+			& mih::tlv_ip_addr_list(address_list)
+			& mih::tlv_ip_route_list(route_list)
+			& mih::tlv_ip_dns_list(dns_list)
+			& mih::tlv_fqdn_list(domain_list);
+	} else {
+		log_(0, "(command) Dispatching l3_conf status failure");
+
+		try {
+			dhclient->Stop(devname);
+		} catch (DBus::Error &e) {
+			// was probably already disconnected
+		}
+
+		m << mih::confirm(mih::confirm::l3_conf)
+			& mih::tlv_status(mih::status(mih::status_failure));
+	}
+
+	ls->async_send(m);
+}
+
 // For cross-value-alert threshold types
 void global_thresholds_check(boost::asio::io_service &ios, if_80211 &fi)
 {
@@ -940,14 +974,7 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 		{ boost::filesystem::ofstream dns_resolv(resolv_conf_file, std::ios_base::trunc);
 		}
 
-		// handle automatic configurations
-		// dhcp TODO
-		if (cfg_methods.get(mih::ip_cfg_ipv4_dynamic) || cfg_methods.get(mih::ip_cfg_ipv6_stateful)) {
-			log_(0, "(command) Configuring automatic IP");
-
-			dhclient->Rebind(devname);
-		}
-
+		// handle static configurations
 		if (address_list) {
 			log_(0, "(command) Adding static addresses");
 			fi.add_addresses(address_list.get());
@@ -970,19 +997,26 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 			dns_resolv << "search " << searches << std::endl;
 		}
 
-		// TODO wait for IP results
+		// handle automatic configurations
+		if (cfg_methods.get(mih::ip_cfg_ipv4_dynamic) || cfg_methods.get(mih::ip_cfg_ipv6_stateful)) {
+			log_(0, "(command) Configuring automatic IP");
 
-		log_(0, "(command) Dispatching status success");
+			dhclient->add_completion_handler(devname,
+			                                 boost::bind(dispatch_l3_conf_completion, tid, _1, _2, _3, _4, _5));
+			dhclient->Rebind(devname);
+		} else {
+			log_(0, "(command) Dispatching status success");
 
-		mih::message m;
-		mih::status st = mih::status_success;
+			mih::message m;
+			mih::status st = mih::status_success;
 
-		m << mih::confirm(mih::confirm::l3_conf)
-			& mih::tlv_status(st);
+			m << mih::confirm(mih::confirm::l3_conf)
+				& mih::tlv_status(st);
 
-		m.tid(tid);
+			m.tid(tid);
 
-		ls->async_send(m);
+			ls->async_send(m);
+		}
 	} catch (std::exception &e) {
 		log_(0, "(command) Exception: ", e.what());
 		dispatch_status_failure(tid, mih::confirm::l3_conf);

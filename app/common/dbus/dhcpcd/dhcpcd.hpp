@@ -20,6 +20,9 @@
 
 #include "proxies/dhcpcd.hpp"
 #include <boost/noncopyable.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/function.hpp>
+#include <odtone/mih/types/ipconfig.hpp>
 
 using namespace name::marples::roy;
 
@@ -31,12 +34,27 @@ class dhcpcd : boost::noncopyable,
 	public DBus::IntrospectableProxy,
 	public DBus::ObjectProxy
 {
+	typedef boost::function<void(bool success,
+	                             const boost::optional<mih::ip_info_list> &address_list,
+	                             const boost::optional<mih::ip_info_list> &route_list,
+	                             const boost::optional<mih::ip_addr_list> &dns_list,
+	                             const boost::optional<mih::fqdn_list> &domain_list)> completion_handler;
+
 public:
 
 	/**
 	 * Public interface constructor.
 	 */
 	dhcpcd(DBus::Connection &connection, const char *path, const char *name);
+
+	/**
+	 * Add a new completion handler for an interface.
+
+	 * It is removed once called.
+	 *
+	 * @param h The callback handler.
+	 */
+	void add_completion_handler(const std::string &interface, const completion_handler &h);
 
 	/**
 	 *
@@ -52,6 +70,10 @@ public:
 	 *
 	 */
 	void ScanResultsSignal(const std::string& interface);
+
+private:
+	boost::shared_mutex                                    _completion_handlers_mutex;
+	std::map<std::string, std::vector<completion_handler>> _completion_handlers;
 };
 
 }; };
