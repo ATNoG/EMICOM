@@ -240,7 +240,10 @@ void NetworkManager::AddAndActivateConnection(
 				if (settings) {
 					path = settings.get();
 				} else { // go ahead and use the provided one
-					path = _settings.AddConnection(connection);
+					// add at least the SSID, since nm-applet won't do it
+					settings_map sm = connection;
+					sm["802-11-wireless"]["ssid"] = to_variant(ssid_vector);
+					path = _settings.AddConnection(sm);
 				}
 
 				active_connection = ActivateConnection(path, device, specific_object);
