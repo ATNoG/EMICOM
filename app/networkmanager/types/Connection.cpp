@@ -185,6 +185,7 @@ std::map<std::string, std::string> Connection::supplicant_conf()
 	//
 
 	// key-mgmt
+	supp["key_mgmt"] = "NONE";
 	if (s.set_wireless_security._key_mgmt) {
 		std::string case_sensitive = s.set_wireless_security._key_mgmt.get();
 		boost::to_upper(case_sensitive);
