@@ -792,7 +792,7 @@ int main(int argc, char** argv)
 		std::map<std::string, DBus::Variant> m;
 
 		m["Ifname"] = to_variant(devname);
-		//m["Driver"] = to_variant(std::string("nl80211"));
+		m["Driver"] = to_variant(std::string("wired"));
 
 		wpa_interface_path = wpa.CreateInterface(m);
 
