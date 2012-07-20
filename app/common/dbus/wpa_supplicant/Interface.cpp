@@ -67,7 +67,6 @@ void Interface::NetworkSelected(const ::DBus::Path& path)
 
 void Interface::PropertiesChanged(const std::map< std::string, ::DBus::Variant >& properties)
 {
-
 	boost::unique_lock<boost::shared_mutex> lock(_completion_handlers_mutex);
 
 	auto pt = properties.find("State");
@@ -82,9 +81,8 @@ void Interface::PropertiesChanged(const std::map< std::string, ::DBus::Variant >
 			_completion_handlers = _buffered_completion_handlers;
 			_buffered_completion_handlers.clear();
 		} else {
-
-			bool success;
-			if ((success = boost::iequals(value, "completed")) || boost::iequals(value, "disconnected")) {
+			bool success = boost::iequals(value, "completed");
+			if (success || boost::iequals(value, "disconnected")) {
 				auto it = _completion_handlers.begin();
 				while (it != _completion_handlers.end()) {
 					(*it)(success);
