@@ -192,8 +192,8 @@ std::map<std::string, std::string> Connection::supplicant_conf()
 
 		// wpa
 		if (boost::iequals(s.set_wireless_security._key_mgmt.get(), "wpa-none") ||
-			boost::iequals(s.set_wireless_security._key_mgmt.get(), "wpa-psk") ||
-			boost::iequals(s.set_wireless_security._key_mgmt.get(), "wpa-eap")) {
+		    boost::iequals(s.set_wireless_security._key_mgmt.get(), "wpa-psk") ||
+		    boost::iequals(s.set_wireless_security._key_mgmt.get(), "wpa-eap")) {
 			// proto
 			if (s.set_wireless_security._proto) {
 				case_sensitive = boost::algorithm::join(s.set_wireless_security._proto.get(), " ");
@@ -270,8 +270,9 @@ std::map<std::string, std::string> Connection::supplicant_conf()
 		//
 		// 8021x
 		//
-		if (boost::iequals(s.set_wireless_security._key_mgmt.get(), "ieee8021x") ||
-			boost::iequals(s.set_wireless_security._key_mgmt.get(), "wpa-eap")) {
+		if (s.set_wireless_security._key_mgmt &&
+		   (boost::iequals(s.set_wireless_security._key_mgmt.get(), "ieee8021x") ||
+		    boost::iequals(s.set_wireless_security._key_mgmt.get(), "wpa-eap"))) {
 			// password
 			if (s.set_8021x._password) {
 				supp["password"] = s.set_8021x._password.get();

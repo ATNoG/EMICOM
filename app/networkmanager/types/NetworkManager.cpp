@@ -228,24 +228,21 @@ void NetworkManager::AddAndActivateConnection(
 				break;
 			case Device::NM_DEVICE_TYPE_WIFI:
 			{
-//				// if there's no indication of SSID, try to find settings that do
-//				auto s = connection.find("802-11-wireless");
-//				if (s == connection.end() || s->second.find("ssid") == s->second.end()) {
-					// find a previous configuration with the given SSID
-					// get the ssid
-					std::shared_ptr<DeviceWireless> _d = std::static_pointer_cast<DeviceWireless>(d->second);
-					AccessPoint::bss_id bss = _d->get_access_point(specific_object);
-					// get the path of settings with such ssid
-					boost::optional<DBus::Path> settings;
-					std::vector<unsigned char> ssid_vector(bss.ssid.begin(), bss.ssid.end());
-					settings = _settings.get_connection_by_attribute("802-11-wireless", "ssid", ssid_vector);
-					if (settings) {
-						path = settings.get();
-					}
-//				}
-				if (boost::iequals(path, "/")) { // go ahead and use the provided one
+				// find a previous configuration with the given SSID
+				std::shared_ptr<DeviceWireless> _d = std::static_pointer_cast<DeviceWireless>(d->second);
+				AccessPoint::bss_id bss = _d->get_access_point(specific_object);
+
+				// get the path of settings with such ssid
+				boost::optional<DBus::Path> settings;
+				std::vector<unsigned char> ssid_vector(bss.ssid.begin(), bss.ssid.end());
+				settings = _settings.get_connection_by_attribute("802-11-wireless", "ssid", ssid_vector);
+
+				if (settings) {
+					path = settings.get();
+				} else { // go ahead and use the provided one
 					path = _settings.AddConnection(connection);
 				}
+
 				active_connection = ActivateConnection(path, device, specific_object);
 			}
 			break;

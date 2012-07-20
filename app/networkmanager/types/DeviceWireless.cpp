@@ -232,5 +232,5 @@ AccessPoint::bss_id DeviceWireless::get_access_point(const ::DBus::Path &path)
 		return bss->second->get_id();
 	}
 
-	throw std::runtime_error("No such ap");
+	throw std::runtime_error("No such ap, " + path);
 }
