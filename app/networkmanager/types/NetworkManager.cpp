@@ -719,13 +719,13 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 			cfg_methods.set(mih::ip_cfg_ipv6_stateful);
 		} else if (boost::iequals(method, "manual")) {
 			cfg_methods.set(mih::ip_cfg_ipv6_manual);
-		} else if (boost::iequals(method, "ignored")) {
+		} else if (boost::iequals(method, "ignore")) {
 			// do nothing
 		//} else if (boost::iequals(method, "link-local")) {
 		//	// assign a link-local address
 		} else {
 			log_(0, "Unsupported ipv6 method specified");
-			throw std::runtime_error("Unsupported ipv6 method specified");
+			throw std::runtime_error("Unsupported ipv6 method specified: \"" + method + "\"");
 		}
 
 		// Parse the specific addresses field
