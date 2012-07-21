@@ -521,6 +521,14 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 	try {
 		log_(0, "(command) Clearing previous configurations");
 
+		// this is necessary because dhcpcd automatically
+		// retries binding once L2 is up
+		try {
+			dhclient->Stop(devname);
+		} catch (DBus::Error &e) {
+			// nothing
+		}
+
 		// clear addresses
 		fi.clear_addresses();
 
