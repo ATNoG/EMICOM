@@ -70,37 +70,9 @@ void NetworkManager::state(NM_STATE newstate)
 	NetworkManager_adaptor::StateChanged(newstate);
 }
 
-/**
- * ActiveConnections is a special case and "value" is ignored.
- * The list is fetched from the map!
- */
 template <class T>
 void NetworkManager::property(const std::string &property, const T &value)
 {
-/*	if (boost::iequals(property, "NetworkingEnabled")) {
-		NetworkManager_adaptor::NetworkingEnabled = value;
-	} else if (boost::iequals(property, "WirelessEnabled")) {
-		NetworkManager_adaptor::WirelessEnabled = value;
-	} else if (boost::iequals(property, "WirelessHardwareEnabled")) {
-		NetworkManager_adaptor::WirelessHardwareEnabled = value;
-	} else if (boost::iequals(property, "WwanEnabled")) {
-		NetworkManager_adaptor::WwanEnabled = value;
-	} else if (boost::iequals(property, "WwanHardwareEnabled")) {
-		NetworkManager_adaptor::WwanHardwareEnabled = value;
-	} else if (boost::iequals(property, "WimaxEnabled")) {
-		NetworkManager_adaptor::WimaxEnabled = value;
-	} else if (boost::iequals(property, "WimaxHardwareEnabled")) {
-		NetworkManager_adaptor::WimaxHardwareEnabled = value;
-	} else if (boost::iequals(property, "ActiveConnections")) {
-		NetworkManager_adaptor::ActiveConnections = value;
-	} else if (boost::iequals(property, "Version")) {
-		NetworkManager_adaptor::Version = value;
-	} else if (boost::iequals(property, "State")) {
-		NetworkManager_adaptor::State = value;
-	//} else {
-	//	// fail
-	}*/
-
 	std::map<std::string, DBus::Variant> props;
 	props[property] = to_variant(value);
 	NetworkManager_adaptor::PropertiesChanged(props);
