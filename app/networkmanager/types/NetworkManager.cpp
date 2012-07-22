@@ -512,6 +512,7 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 		while (it != _device_map.end()) {
 			if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
 				if (!value) {
+					connection_failed(it->first);
 					it->second->Disable();//Disconnect();
 				} else {
 					it->second->Enable();
