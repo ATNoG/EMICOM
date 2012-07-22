@@ -156,8 +156,6 @@ void NetworkManager::AddAndActivateConnection(
 	path = "/";
 	active_connection = "/";
 
-	state(NM_STATE_CONNECTING);
-
 	try {
 		// TODO check if device exists
 		auto d = _device_map.find(device);
@@ -217,6 +215,8 @@ void NetworkManager::AddAndActivateConnection(
 	const ::DBus::Path& specific_object)
 {
 	log_(0, "Activating connection");
+
+	state(NM_STATE_CONNECTING);
 
 	::DBus::Path active_connection;
 
@@ -528,6 +528,8 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 		// Unsupported
 	}
 
+	// TODO: check if no other connection active and change state
+
 	PropertiesAdaptor::on_set_property(interface, prop, value);
 }
 
@@ -797,12 +799,15 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 		[&, device](bool success) {
 			if (success) {
 				log_(0, "Success configuring L3");
+
 				auto active_connection_it = _active_connections.find(device);
 				if (active_connection_it != _active_connections.end()) {
 					auto aci = active_connection_it->second.begin();
 					// assert aci != active_connection_it->second.end()
 					aci->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED);
 				}
+
+				state(NM_STATE_CONNECTED_GLOBAL);
 			} else {
 				log_(0, "Error configuring L3");
 				connection_failed(device);
