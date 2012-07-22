@@ -1,7 +1,7 @@
 #==============================================================================
-# Brief   : nl80211-based Link SAP Implementation
+# Brief   : DHClient wrapper
 # Authors : André Prata <andreprata@av.it.pt>
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # ODTONE - Open Dot Twenty One
 #
 # Copyright (C) 2009-2012 Universidade Aveiro
@@ -15,23 +15,10 @@
 # This software is distributed without any warranty.
 #==============================================================================
 
-exe sap_80211
-	: main.cpp
-	  timer_task.cpp
-	  linux/if_80211.cpp
-	  ../common/libnl//nlwrap
-	  ../common/libnl//libnl
-	  ../common/dbus//dbus-cpp
-	  ../common/dbus//wpa-supplicant
-	  ../common/dhcp//dhcpclient
-	  ../../lib/odtone//odtone_base
-	  ../../lib/odtone/mih//odtone_mih
-	  ../../lib/odtone/sap//odtone_sap
+lib dhcpclient
+	: dhclient.cpp
+	  ../../../lib/odtone//odtone_base
+	:
+	:
+	: <include>.
 	;
-
-install install
-	: sap_80211
-	  sap_80211.conf
-	: <location>../../dist
-	;
-

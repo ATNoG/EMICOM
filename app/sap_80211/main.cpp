@@ -40,7 +40,7 @@
 #include "timer_task.hpp"
 
 #include <wpa_supplicant.hpp>
-#include <dhcpcd.hpp>
+#include <dhclient.hpp>
 #include <boost/filesystem/fstream.hpp>
 
 #define STOP_SCHED_SCAN_ON_L2_UP
@@ -84,7 +84,7 @@ std::unique_ptr<sap::link>  ls;
 std::unique_ptr<timer_task> threshold_check_task;
 std::unique_ptr<timer_task> scheduled_scan_task;
 
-std::unique_ptr<dhcp::dhcpcd> dhclient;
+std::unique_ptr<dhcp::dhcpclient> dhc;
 std::unique_ptr<wpa_supplicant::Interface> wpa_interface;
 std::string resolv_conf_file;
 std::string devname;
@@ -240,40 +240,6 @@ void dispatch_link_conf_completion(odtone::uint16 tid, bool connected)
 		}
 
 		m << mih::confirm(mih::confirm::link_conf)
-			& mih::tlv_status(mih::status(mih::status_failure));
-	}
-
-	ls->async_send(m);
-}
-
-void dispatch_l3_conf_completion(odtone::uint16 tid, bool success,
-                                 const boost::optional<mih::ip_info_list> &address_list,
-                                 const boost::optional<mih::ip_info_list> &route_list,
-                                 const boost::optional<mih::ip_addr_list> &dns_list,
-                                 const boost::optional<mih::fqdn_list> &domain_list)
-{
-	mih::message m;
-	m.tid(tid);
-
-	if (success) {
-		log_(0, "(command) Dispatching l3_conf status success");
-
-		m << mih::confirm(mih::confirm::l3_conf)
-			& mih::tlv_status(mih::status(mih::status_success))
-			& mih::tlv_ip_addr_list(address_list)
-			& mih::tlv_ip_route_list(route_list)
-			& mih::tlv_ip_dns_list(dns_list)
-			& mih::tlv_fqdn_list(domain_list);
-	} else {
-		log_(0, "(command) Dispatching l3_conf status failure");
-
-		try {
-			dhclient->Stop(devname);
-		} catch (DBus::Error &e) {
-			// was probably already disconnected
-		}
-
-		m << mih::confirm(mih::confirm::l3_conf)
 			& mih::tlv_status(mih::status(mih::status_failure));
 	}
 
@@ -867,14 +833,16 @@ void handle_link_actions(boost::asio::io_service &ios,
 			}
 		}
 
-		if (action.type == mih::link_ac_type_power_down) {
+		if (   action.type == mih::link_ac_type_power_down
+		    || action.type == mih::link_ac_type_disconnect) {
 			try {
 				wpa_interface->Disconnect();
 			} catch (DBus::Error &e) {
 				// already disconnected
 			}
 			try {
-				dhclient->Stop(devname);
+				dhc->release(dhcp::dhcpclient::DHCPv4);
+				dhc->release(dhcp::dhcpclient::DHCPv6);
 			} catch (DBus::Error &e) {
 				//
 			}
@@ -916,7 +884,8 @@ void handle_link_conf(const boost::asio::io_service &ios,
 		auto it = lconf.begin();
 		while (it != lconf.end()) {
 			log_(0, "(command) supplicant setting [", it->key, "=",
-				boost::iequals(it->key, "password") ? "\"secret\"" : it->value, "]");
+				   boost::iequals(it->key, "password")
+				|| boost::iequals(it->key, "psk") ? "\"secret\"" : it->value, "]");
 
 			if (   boost::iequals(it->key, "scan_ssid")
 			    || boost::iequals(it->key, "mode")
@@ -964,14 +933,6 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 	try {
 		log_(0, "(command) Clearing previous configurations");
 
-		// this is necessary because dhcpcd automatically
-		// retries binding once L2 is up
-		try {
-			dhclient->Stop(devname);
-		} catch (DBus::Error &e) {
-			// nothing
-		}
-
 		// clear addresses
 		fi.clear_addresses();
 
@@ -980,6 +941,16 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 
 		// clear dns servers and domains
 		{ boost::filesystem::ofstream dns_resolv(resolv_conf_file, std::ios_base::trunc);
+		}
+
+		// handle automatic configurations
+		if (cfg_methods.get(mih::ip_cfg_ipv4_dynamic)) {
+			log_(0, "(command) Adding dynamic IPv4 configuration");
+			dhc->bind(dhcp::dhcpclient::DHCPv4);
+		}
+		if (cfg_methods.get(mih::ip_cfg_ipv6_stateful)) {
+			log_(0, "(command) Adding dynamic IPv6 configuration");
+			dhc->bind(dhcp::dhcpclient::DHCPv6);
 		}
 
 		// handle static configurations
@@ -1005,26 +976,17 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 			dns_resolv << "search " << searches << std::endl;
 		}
 
-		// handle automatic configurations
-		if (cfg_methods.get(mih::ip_cfg_ipv4_dynamic) || cfg_methods.get(mih::ip_cfg_ipv6_stateful)) {
-			log_(0, "(command) Configuring automatic IP");
+		log_(0, "(command) Dispatching status success");
 
-			dhclient->add_completion_handler(devname,
-			                                 boost::bind(dispatch_l3_conf_completion, tid, _1, _2, _3, _4, _5));
-			dhclient->Rebind(devname);
-		} else {
-			log_(0, "(command) Dispatching status success");
+		mih::message m;
+		mih::status st = mih::status_success;
 
-			mih::message m;
-			mih::status st = mih::status_success;
+		m << mih::confirm(mih::confirm::l3_conf)
+			& mih::tlv_status(st);
 
-			m << mih::confirm(mih::confirm::l3_conf)
-				& mih::tlv_status(st);
+		m.tid(tid);
 
-			m.tid(tid);
-
-			ls->async_send(m);
-		}
+		ls->async_send(m);
 	} catch (std::exception &e) {
 		log_(0, "(command) Exception: ", e.what());
 		dispatch_status_failure(tid, mih::confirm::l3_conf);
@@ -1298,10 +1260,9 @@ int main(int argc, char** argv)
 	// checking wpa_supplicant and dhcpcd
 	sleep(1); // TODO: "ensure" the d-bus dispatcher has started
 
-	std::unique_ptr<dhcp::dhcpcd> _dhclient(
-		new dhcp::dhcpcd(dbus_connection, "/name/marples/roy/dhcpcd", "name.marples.roy.dhcpcd"));
-	dhclient = std::move(_dhclient);
-	dhclient->Stop(devname);
+
+	std::unique_ptr<dhcp::dhcpclient> _dhc(new dhcp::dhclient(devname));
+	dhc = std::move(_dhc);
 
 	wpa_supplicant::WPASupplicant wpa(dbus_connection, "/fi/w1/wpa_supplicant1", "fi.w1.wpa_supplicant1");
 

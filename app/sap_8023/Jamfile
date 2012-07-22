@@ -23,7 +23,7 @@ exe sap_8023
 	  ../common/libnl//libnl
 	  ../common/dbus//dbus-cpp
 	  ../common/dbus//wpa-supplicant
-	  ../common/dbus//dhcpcd
+	  ../common/dhcp//dhcpclient
 	  ../../lib/odtone//odtone_base
 	  ../../lib/odtone/mih//odtone_mih
 	  ../../lib/odtone/sap//odtone_sap
