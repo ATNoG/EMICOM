@@ -254,6 +254,12 @@ private:
 	 */
 	void l3_conf(const DBus::Path &device, const DBus::Path &connection);
 
+	/**
+	 * Perform the necessary cleanups due to a failed
+	 * or dropped connection attempt on a device.
+	 */
+	void connection_failed(const DBus::Path &device);
+
 private:
 	DBus::Connection &_connection;
 	std::string       _dbus_path;

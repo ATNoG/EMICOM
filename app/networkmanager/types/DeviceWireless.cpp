@@ -150,18 +150,17 @@ void DeviceWireless::property(const std::string &property, const DBus::Variant &
 
 void DeviceWireless::link_down()
 {
-	log_(0, "Link down, device is now disconnected");
-	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	Device::link_down();
+
 	DBus::Path no_active_access_point = "/";
 	property("ActiveAccessPoint", to_variant(no_active_access_point));
 }
 
 void DeviceWireless::link_up(const boost::optional<mih::mac_addr> &poa)
 {
-	log_(0, "Link up");
-	// todo use poa for ActiveAccessPoint...
-	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
-	//state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN); // preparing to connect?
+	Device::link_up(poa);
+
+	// TODO set ActiveAccessPoint
 }
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)

@@ -156,29 +156,6 @@ void NetworkManager::AddAndActivateConnection(
 	path = "/";
 	active_connection = "/";
 
-/*	// debug info
-	std::cerr << "settings:" << std::endl;
-	auto a = connection.begin();
-	while (a != connection.end()) {
-		std::cerr << a->first << " {" << std::endl;
-		auto b = a->second.begin();
-		while (b != a->second.end()) {
-			std::string key = b->first;
-			std::string value = b->second.signature();
-			if (value == "s") {
-				std::string val = b->second;
-				value = val;
-			}
-			std::cerr << key << ": " << value << std::endl;
-			b ++;
-		}
-		std::cerr << "}" << std::endl;
-		a ++;
-	}
-
-	std::cerr << "device: " << device << std::endl;
-	std::cerr << "specific object: " << specific_object << std::endl;*/
-
 	state(NM_STATE_CONNECTING);
 
 	try {
@@ -566,6 +543,56 @@ std::vector<DBus::Path> NetworkManager::active_connections()
 	return keys;
 }
 
+// TODO move this into the device!
+// this should only merge the settings and then command the Device!
+void NetworkManager::link_conf(const DBus::Path &device, const boost::optional<DBus::Path> &connection)
+{
+	auto dev = _device_map.find(device);
+	if (dev == _device_map.end()) {
+		throw std::runtime_error("Device not found");
+	}
+
+	if (!connection) {
+		// request user input
+		log_(0, "No configuration found, user input required");
+		return;
+	}
+
+	log_(0, "Configuration found");
+
+	std::map<std::string, std::string> conf;
+	conf = _settings.wpa_conf(connection.get());
+
+	mih::configuration_list confl;
+	auto it = conf.begin();
+	while (it != conf.end()) {
+		mih::configuration c;
+		c.key = it->first;
+		c.value = it->second;
+		confl.push_back(c);
+
+		it ++;
+	}
+
+	boost::optional<mih::network_id> network;
+//	auto ssid = conf.find("ssid");
+//	if (ssid != conf.end()) {
+//		network = ssid->second;
+//	}
+
+	// respond
+	dev->second->link_conf(
+		[&, device, connection](bool success) {
+			if (success) {
+				log_(0, "Authentication success");
+				l3_conf(device, connection.get());
+			} else {
+				log_(0, "Authentication failure");
+				connection_failed(device);
+			}
+		}, network, confl);
+}
+
 void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connection)
 {
 	mih::ip_cfg_methods cfg_methods;
@@ -766,11 +793,18 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 	}
 
 	dev->second->l3_conf(
-		[&](bool success) {
+		[&, device](bool success) {
 			if (success) {
 				log_(0, "Success configuring L3");
+				auto active_connection_it = _active_connections.find(device);
+				if (active_connection_it != _active_connections.end()) {
+					auto aci = active_connection_it->second.begin();
+					// assert aci != active_connection_it->second.end()
+					aci->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED);
+				}
 			} else {
 				log_(0, "Error configuring L3");
+				connection_failed(device);
 			}
 		},
 		cfg_methods,
@@ -780,53 +814,16 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 		boost::make_optional(domain_list.size()  > 0, domain_list));
 }
 
-// TODO move this into the device!
-// this should only merge the settings and then command the Device!
-void NetworkManager::link_conf(const DBus::Path &device, const boost::optional<DBus::Path> &connection)
+void NetworkManager::connection_failed(const DBus::Path &device)
 {
-	auto dev = _device_map.find(device);
-	if (dev == _device_map.end()) {
-		throw std::runtime_error("Device not found");
+	// delete the active_connection objects
+	auto active_connection_it = _active_connections.find(device);
+	if (active_connection_it != _active_connections.end()) {
+		_active_connections.erase(active_connection_it);
+		std::vector<DBus::Path> active_connection_list = active_connections();
+		ActiveConnections = active_connection_list;
+		property("ActiveConnections", active_connection_list);
 	}
-
-	if (!connection) {
-		// request user input
-		log_(0, "No configuration found, user input required");
-		return;
-	}
-
-	log_(0, "Configuration found");
-
-	std::map<std::string, std::string> conf;
-	conf = _settings.wpa_conf(connection.get());
-
-	mih::configuration_list confl;
-	auto it = conf.begin();
-	while (it != conf.end()) {
-		mih::configuration c;
-		c.key = it->first;
-		c.value = it->second;
-		confl.push_back(c);
-
-		it ++;
-	}
-
-	boost::optional<mih::network_id> network;
-//	auto ssid = conf.find("ssid");
-//	if (ssid != conf.end()) {
-//		network = ssid->second;
-//	}
-
-	// respond
-	dev->second->link_conf(
-		[&, device, connection](bool success) {
-			if (success) {
-				log_(0, "Authentication success");
-				l3_conf(device, connection.get());
-			} else {
-				log_(0, "Authentication failure");
-			}
-		}, network, confl);
 }
 
 void NetworkManager::event_handler(mih::message &msg, const boost::system::error_code &ec)

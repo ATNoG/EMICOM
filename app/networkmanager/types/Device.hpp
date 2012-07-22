@@ -184,12 +184,12 @@ public:
 	/**
 	 * Inform this device that L2 connectivity was dropped.
 	 */
-	virtual void link_down() = 0;
+	virtual void link_down();
 
 	/**
 	 * Inform this device that L2 connectivity is up.
 	 */
-	virtual void link_up(const boost::optional<mih::mac_addr> &poa) = 0;
+	virtual void link_up(const boost::optional<mih::mac_addr> &poa);
 
 	/**
 	 * Send a link_conf command to this device.
