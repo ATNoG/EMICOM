@@ -152,15 +152,26 @@ void DeviceWireless::link_down()
 {
 	Device::link_down();
 
-	DBus::Path no_active_access_point = "/";
-	property("ActiveAccessPoint", to_variant(no_active_access_point));
+	property("ActiveAccessPoint", to_variant(DBus::Path("/")));
 }
 
 void DeviceWireless::link_up(const boost::optional<mih::mac_addr> &poa)
 {
 	Device::link_up(poa);
 
-	// TODO set ActiveAccessPoint
+	// set the active access point
+	if (!poa) {
+		return;
+	}
+
+	boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
+
+	for (auto it = _access_points_map.begin(); it != _access_points_map.end(); ++ it) {
+		if (boost::iequals(it->second->HwAddress(), poa.get().address())) {
+			property("ActiveAccessPoint", to_variant(it->first));
+			it = _access_points_map.end();
+		}
+	}
 }
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
