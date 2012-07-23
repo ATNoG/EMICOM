@@ -287,11 +287,9 @@ std::vector< ::DBus::Path > NetworkManager::GetDevices()
 {
 	log_(0, "Getting all devices");
 
-	std::vector< ::DBus::Path > r;
+	std::vector<DBus::Path> r;
 
-	for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
-		r.push_back(it->first);
-	}
+	boost::copy(_device_map | boost::adaptors::map_keys, std::back_inserter(r));
 
 	log_(0, "Done");
 	return r;
@@ -519,13 +517,11 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 
 std::vector<DBus::Path> NetworkManager::active_connections()
 {
-	std::vector<DBus::Path> keys;
+	std::vector<DBus::Path> r;
 
-	for (auto it = _active_connections.begin(); it != _active_connections.end(); ++it) {
-		keys.push_back(it->first);
-	}
+	boost::copy(_active_connections | boost::adaptors::map_keys, std::back_inserter(r));
 
-	return keys;
+	return r;
 }
 
 // TODO move this into the device!

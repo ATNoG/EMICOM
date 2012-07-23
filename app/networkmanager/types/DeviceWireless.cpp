@@ -20,6 +20,8 @@
 
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/algorithm/copy.hpp>
 #include <cstring>
 #include <exception>
 
@@ -71,9 +73,7 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 
 	boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
 
-	for (auto it = _access_points_map.begin(); it != _access_points_map.end(); ++it) {
-		r.push_back(it->first);
-	}
+	boost::copy(_access_points_map | boost::adaptors::map_keys, std::back_inserter(r));
 
 	return r;
 }

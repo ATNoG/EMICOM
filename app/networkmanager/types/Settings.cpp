@@ -19,6 +19,9 @@
 
 #include "NetworkManager.hpp"
 
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/algorithm/copy.hpp>
+
 using namespace odtone::networkmanager;
 
 Settings::Settings(DBus::Connection &connection, const char *path, const char *working_dir) :
@@ -119,9 +122,7 @@ std::vector< ::DBus::Path > Settings::ListConnections()
 
 	std::vector< ::DBus::Path > r;
 
-	for (auto it = _connections.begin(); it != _connections.end(); ++it) {
-		r.push_back(it->first);
-	}
+	boost::copy(_connections | boost::adaptors::map_keys, std::back_inserter(r));
 
 	log_(0, "Done");
 
