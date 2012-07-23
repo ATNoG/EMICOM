@@ -105,6 +105,11 @@ public:
 	void link_up(const boost::optional<mih::mac_addr> &poa);
 
 	/**
+	 * Inform this device that L3 connectivity is up.
+	 */
+	void connection_completed(const DBus::Path &connection_active);
+
+	/**
 	 * Update the access point list.
 	 *
 	 * @param ldi A new or existing (update) AP info.
@@ -135,9 +140,13 @@ protected:
 	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
 
 	/**
-	 * Send a properties change signal on this DeviceWireless instance.
+	 * Change a DeviceWireless property and notify with the associated signal.
+	 *
+	 * @param property The property that is to be changed.
+	 * @param value    The new value of the referred property.
 	 */
-	void property(const std::string &property, const DBus::Variant &value);
+	template <class T>
+	void property(const std::string &property, const T &value);
 
 private:
 	DBus::Connection &_connection;

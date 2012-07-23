@@ -192,6 +192,11 @@ public:
 	virtual void link_up(const boost::optional<mih::mac_addr> &poa);
 
 	/**
+	 * Inform this device that L3 connectivity is up.
+	 */
+	virtual void connection_completed(const DBus::Path &connection_active);
+
+	/**
 	 * Send a link_conf command to this device.
 	 */
 	virtual void link_conf(const completion_handler &h,

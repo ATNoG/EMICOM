@@ -801,11 +801,19 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 				log_(0, "Success configuring L3");
 
 				auto active_connection_it = _active_connections.find(device);
-				if (active_connection_it != _active_connections.end()) {
-					auto aci = active_connection_it->second.begin();
-					// assert aci != active_connection_it->second.end()
-					aci->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED);
+				if (active_connection_it == _active_connections.end()) {
+					throw std::runtime_error("No ConnectionActive object created for this state");
 				}
+
+				auto aci = active_connection_it->second.begin();
+				// assert aci != active_connection_it->second.end()
+				aci->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED);
+
+				auto dev = _device_map.find(device);
+				if (dev == _device_map.end()) {
+					throw std::runtime_error("Device object not found \"" + device + "\"");
+				}
+				dev->second->connection_completed(aci->first);
 
 				state(NM_STATE_CONNECTED_GLOBAL);
 			} else {

@@ -109,6 +109,15 @@ void Device::link_up(const boost::optional<mih::mac_addr> &poa)
 	state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN); // preparing to connect?
 }
 
+void Device::connection_completed(const DBus::Path &connection_active)
+{
+	log_(0, "Connection completed");
+
+	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+
+	ActiveConnection = connection_active;
+}
+
 void Device::link_conf(const completion_handler &h,
                        const boost::optional<mih::network_id> &network,
                        const mih::configuration_list &lconf)

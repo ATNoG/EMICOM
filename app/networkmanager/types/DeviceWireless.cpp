@@ -40,7 +40,8 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection,
 	Device_adaptor::Dhcp6Config = "/";       // TODO
 	Device_adaptor::Ip6Config = "/";         // TODO
 	Device_adaptor::Dhcp4Config = "/";       // TODO
-	Device_adaptor::ActiveConnection = "/";  // TODO
+	Device_adaptor::Ip4Config = "/";         // TODO
+	Device_adaptor::ActiveConnection = "/";
 
 	State = NM_DEVICE_STATE_UNKNOWN; // TODO
 
@@ -53,7 +54,7 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection,
 
 	// inherited from Wireless adaptor
 	Wireless_adaptor::WirelessCapabilities = 0; // TODO
-	Wireless_adaptor::ActiveAccessPoint = "/";  // TODO
+	Wireless_adaptor::ActiveAccessPoint = "/";
 	Wireless_adaptor::PermHwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
 	Wireless_adaptor::HwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
 	Wireless_adaptor::Bitrate = 0; // TODO no support for bitrates yet
@@ -113,46 +114,20 @@ void DeviceWireless::Scan()
 		}, _lti);
 }
 
-void DeviceWireless::property(const std::string &property, const DBus::Variant &value)
+template <class T>
+void DeviceWireless::property(const std::string &property, const T &value)
 {
-	DBus::MessageIter it = value.reader();
-
-	if (boost::iequals(property, "ActiveAccessPoint")) {
-		DBus::Path p;
-		it >> p;
-		ActiveAccessPoint = p;
-	} else if (boost::iequals(property, "HwAddress")) {
-		std::string s;
-		it >> s;
-		HwAddress = s;
-	} else if (boost::iequals(property, "PermHwAddress")) {
-		std::string s;
-		it >> s;
-		PermHwAddress = s;
-	} else if (boost::iequals(property, "Mode")) {
-		uint8_t u;
-		it >> u;
-		Mode = u;
-	} else if (boost::iequals(property, "Bitrate")) {
-		uint8_t u;
-		it >> u;
-		Bitrate = u;
-	} else if (boost::iequals(property, "WirelessCapabilities")) {
-		uint8_t u;
-		it >> u;
-		WirelessCapabilities = u;
-	}
-
-	std::map<std::string, DBus::Variant> m;
-	m[property] = value;
-	PropertiesChanged(m);
+	std::map<std::string, DBus::Variant> props;
+	props[property] = to_variant(value);
+	PropertiesChanged(props);
 }
 
 void DeviceWireless::link_down()
 {
 	Device::link_down();
 
-	property("ActiveAccessPoint", to_variant(DBus::Path("/")));
+	ActiveAccessPoint = "/";
+	property("ActiveAccessPoint", ActiveAccessPoint());
 }
 
 void DeviceWireless::link_up(const boost::optional<mih::mac_addr> &poa)
@@ -168,10 +143,19 @@ void DeviceWireless::link_up(const boost::optional<mih::mac_addr> &poa)
 
 	for (auto it = _access_points_map.begin(); it != _access_points_map.end(); ++ it) {
 		if (boost::iequals(it->second->HwAddress(), poa.get().address())) {
-			property("ActiveAccessPoint", to_variant(it->first));
+			ActiveAccessPoint = it->first;
+			property("ActiveAccessPoint", ActiveAccessPoint());
 			it = _access_points_map.end();
 		}
 	}
+}
+
+void DeviceWireless::connection_completed(const DBus::Path &connection_active)
+{
+	Device::connection_completed(connection_active);
+
+	// property is set in the parent method, just signal
+	property("ActiveConnection", ActiveConnection());
 }
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
