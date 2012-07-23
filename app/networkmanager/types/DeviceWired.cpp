@@ -34,6 +34,11 @@ DeviceWired::DeviceWired(DBus::Connection &connection, const char* path, mih_use
 
 	State = NM_DEVICE_STATE_UNKNOWN; // TODO
 
+	DBus::Struct<uint32_t, uint32_t> sr;
+	sr._1 = State();
+	sr._2 = NM_DEVICE_STATE_REASON_UNKNOWN;
+	StateReason = sr;
+
 	Ip4Address = 0;
 	Capabilities = Device::NM_DEVICE_CAP_NM_SUPPORTED | Device::NM_DEVICE_CAP_CARRIER_DETECT;
 	Driver = "odtone";

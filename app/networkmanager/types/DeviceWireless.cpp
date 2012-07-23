@@ -35,32 +35,37 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection,
 {
 	// FIXME
 	// inherited from Device adaptor
-	Device_adaptor::DeviceType      = NM_DEVICE_TYPE_WIFI; // by definition
-	Device_adaptor::FirmwareMissing = false;
-	Device_adaptor::Managed         = true;
+	DeviceType      = NM_DEVICE_TYPE_WIFI; // by definition
+	FirmwareMissing = false;
+	Managed         = true;
 
-	Device_adaptor::Dhcp6Config = "/";       // TODO
-	Device_adaptor::Ip6Config = "/";         // TODO
-	Device_adaptor::Dhcp4Config = "/";       // TODO
-	Device_adaptor::Ip4Config = "/";         // TODO
-	Device_adaptor::ActiveConnection = "/";
+	Dhcp6Config = "/";       // TODO
+	Ip6Config = "/";         // TODO
+	Dhcp4Config = "/";       // TODO
+	Ip4Config = "/";         // TODO
+	ActiveConnection = "/";
 
 	State = NM_DEVICE_STATE_UNKNOWN; // TODO
 
-	Device_adaptor::Capabilities = NM_DEVICE_CAP_NM_SUPPORTED;
+	DBus::Struct<uint32_t, uint32_t> sr;
+	sr._1 = State();
+	sr._2 = NM_DEVICE_STATE_REASON_UNKNOWN;
+	StateReason = sr;
 
-	Device_adaptor::Driver = "odtone";
-	Device_adaptor::IpInterface = "";   // TODO
+	Capabilities = NM_DEVICE_CAP_NM_SUPPORTED;
+
+	Driver = "odtone";
+	IpInterface = "";   // TODO
 	Device_adaptor::Interface = "";     // TODO
-	Device_adaptor::Udi = "";           // TODO
+	Udi = "";           // TODO
 
 	// inherited from Wireless adaptor
-	Wireless_adaptor::WirelessCapabilities = 0; // TODO
-	Wireless_adaptor::ActiveAccessPoint = "/";
-	Wireless_adaptor::PermHwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
-	Wireless_adaptor::HwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
-	Wireless_adaptor::Bitrate = 0; // TODO no support for bitrates yet
-	Wireless_adaptor::Mode = NM_802_11_MODE_INFRA;
+	WirelessCapabilities = 0; // TODO
+	ActiveAccessPoint = "/";
+	PermHwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
+	HwAddress = boost::get<mih::mac_addr>(_lti.addr).address();
+	Bitrate = 0; // TODO no support for bitrates yet
+	Mode = NM_802_11_MODE_INFRA;
 }
 
 DeviceWireless::~DeviceWireless()

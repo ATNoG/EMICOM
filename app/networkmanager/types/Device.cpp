@@ -93,6 +93,12 @@ void Device::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)
 
 	if (newstate != oldstate) {
 		State = newstate;
+
+		DBus::Struct<uint32_t, uint32_t> sr;
+		sr._1 = State();
+		sr._2 = NM_DEVICE_STATE_REASON_UNKNOWN;
+		StateReason = sr;
+
 		StateChanged(oldstate, newstate, reason);
 	}
 }
