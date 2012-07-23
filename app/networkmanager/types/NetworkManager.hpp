@@ -247,18 +247,18 @@ private:
 	/**
 	 * Proceed with the configuration of a link.
 	 */
-	void link_conf(const DBus::Path &device, const boost::optional<DBus::Path> &connection);
+	void link_conf(const DBus::Path &device, const DBus::Path &connection_active);
 
 	/**
 	 * Configure IPs, routes and DNS in a device.
 	 */
-	void l3_conf(const DBus::Path &device, const DBus::Path &connection);
+	void l3_conf(const DBus::Path &device, const DBus::Path &connection_active);
 
 	/**
 	 * Perform the necessary cleanups due to a failed
 	 * or dropped connection attempt on a device.
 	 */
-	void connection_failed(const DBus::Path &device);
+	void clear_connections(const DBus::Path &device);
 
 private:
 	DBus::Connection &_connection;
@@ -271,10 +271,9 @@ private:
 
 	mih_user          _mih_user;
 
-	std::map<DBus::Path, std::shared_ptr<Device>> _device_map;
-
-	// address by Device first, then by ActiveConnection object's dbus address
-	std::map<DBus::Path, std::map<DBus::Path, std::shared_ptr<ConnectionActive>>> _active_connections;
+	std::map<DBus::Path, std::shared_ptr<Device>>           _device_map;
+	std::map<DBus::Path, std::shared_ptr<ConnectionActive>> _active_connections;
+	std::map<DBus::Path, DBus::Path>                        _device_active_connection; // Device,ConnectionActive
 };
 
 }; };

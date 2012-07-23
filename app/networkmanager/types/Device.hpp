@@ -194,14 +194,15 @@ public:
 	/**
 	 * Inform this device that L3 connectivity is up.
 	 */
-	virtual void connection_completed(const DBus::Path &connection_active);
+	virtual void l3_up();
 
 	/**
 	 * Send a link_conf command to this device.
 	 */
 	virtual void link_conf(const completion_handler &h,
 	                       const boost::optional<mih::network_id> &network,
-	                       const mih::configuration_list &lconf);
+	                       const mih::configuration_list &lconf,
+	                       const DBus::Path &connection_active);
 
 	/**
 	 * Send an l3_conf command to this device.
@@ -229,22 +230,5 @@ protected:
 };
 
 }; };
-
-// unused
-/*#include "../adaptors/Device.hpp"
-
-class Device :
-	public org::freedesktop::NetworkManager::Device_adaptor,
-	public DBus::IntrospectableAdaptor,
-	public DBus::PropertiesAdaptor,
-	public DBus::ObjectAdaptor
-{
-public:
-	Device(DBus::Connection &connection, const char* path);
-	~Device();
-
-	// inherited from Device adaptor
-	void Disconnect();
-};*/
 
 #endif /* NETWORKMANAGER_DEVICE__HPP_ */

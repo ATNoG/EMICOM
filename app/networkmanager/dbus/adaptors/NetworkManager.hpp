@@ -54,20 +54,20 @@ public:
 		register_method(NetworkManager_adaptor, state, _state_stub);
 	}
 
-	::DBus::IntrospectedInterface *introspect() const 
+	::DBus::IntrospectedInterface *introspect() const
 	{
-		static ::DBus::IntrospectedArgument GetDevices_args[] = 
+		static ::DBus::IntrospectedArgument GetDevices_args[] =
 		{
 			{ "devices", "ao", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument GetDeviceByIpIface_args[] = 
+		static ::DBus::IntrospectedArgument GetDeviceByIpIface_args[] =
 		{
 			{ "iface", "s", true },
 			{ "device", "o", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument ActivateConnection_args[] = 
+		static ::DBus::IntrospectedArgument ActivateConnection_args[] =
 		{
 			{ "connection", "o", true },
 			{ "device", "o", true },
@@ -75,7 +75,7 @@ public:
 			{ "active_connection", "o", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument AddAndActivateConnection_args[] = 
+		static ::DBus::IntrospectedArgument AddAndActivateConnection_args[] =
 		{
 			{ "connection", "a{sa{sv}}", true },
 			{ "device", "o", true },
@@ -84,62 +84,62 @@ public:
 			{ "active_connection", "o", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument DeactivateConnection_args[] = 
+		static ::DBus::IntrospectedArgument DeactivateConnection_args[] =
 		{
 			{ "active_connection", "o", true },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument Sleep_args[] = 
+		static ::DBus::IntrospectedArgument Sleep_args[] =
 		{
 			{ "sleep", "b", true },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument Enable_args[] = 
+		static ::DBus::IntrospectedArgument Enable_args[] =
 		{
 			{ "enable", "b", true },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument GetPermissions_args[] = 
+		static ::DBus::IntrospectedArgument GetPermissions_args[] =
 		{
 			{ "permissions", "a{ss}", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument SetLogging_args[] = 
+		static ::DBus::IntrospectedArgument SetLogging_args[] =
 		{
 			{ "level", "s", true },
 			{ "domains", "s", true },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument state_args[] = 
+		static ::DBus::IntrospectedArgument state_args[] =
 		{
 			{ "state", "u", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument CheckPermissions_args[] = 
+		static ::DBus::IntrospectedArgument CheckPermissions_args[] =
 		{
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument StateChanged_args[] = 
+		static ::DBus::IntrospectedArgument StateChanged_args[] =
 		{
 			{ "state", "u", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument PropertiesChanged_args[] = 
+		static ::DBus::IntrospectedArgument PropertiesChanged_args[] =
 		{
 			{ "properties", "a{sv}", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument DeviceAdded_args[] = 
+		static ::DBus::IntrospectedArgument DeviceAdded_args[] =
 		{
 			{ "device_path", "o", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument DeviceRemoved_args[] = 
+		static ::DBus::IntrospectedArgument DeviceRemoved_args[] =
 		{
 			{ "device_path", "o", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedMethod NetworkManager_adaptor_methods[] = 
+		static ::DBus::IntrospectedMethod NetworkManager_adaptor_methods[] =
 		{
 			{ "GetDevices", GetDevices_args },
 			{ "GetDeviceByIpIface", GetDeviceByIpIface_args },
@@ -153,7 +153,7 @@ public:
 			{ "state", state_args },
 			{ 0, 0 }
 		};
-		static ::DBus::IntrospectedMethod NetworkManager_adaptor_signals[] = 
+		static ::DBus::IntrospectedMethod NetworkManager_adaptor_signals[] =
 		{
 			{ "CheckPermissions", CheckPermissions_args },
 			{ "StateChanged", StateChanged_args },
@@ -162,7 +162,7 @@ public:
 			{ "DeviceRemoved", DeviceRemoved_args },
 			{ 0, 0 }
 		};
-		static ::DBus::IntrospectedProperty NetworkManager_adaptor_properties[] = 
+		static ::DBus::IntrospectedProperty NetworkManager_adaptor_properties[] =
 		{
 			{ "NetworkingEnabled", "b", true, false },
 			{ "WirelessEnabled", "b", true, true },
@@ -176,7 +176,7 @@ public:
 			{ "State", "u", true, false },
 			{ 0, 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedInterface NetworkManager_adaptor_interface = 
+		static ::DBus::IntrospectedInterface NetworkManager_adaptor_interface =
 		{
 			"org.freedesktop.NetworkManager",
 			NetworkManager_adaptor_methods,
@@ -370,5 +370,5 @@ private:
 	}
 };
 
-} } 
+} }
 #endif //__dbusxx_____adaptors_NetworkManager_hpp__ADAPTOR_MARSHAL_H

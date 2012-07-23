@@ -100,6 +100,7 @@ void Device::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)
 void Device::link_down()
 {
 	log_(0, "Link down, device is now disconnected");
+	ActiveConnection = "/";
 	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
 }
 
@@ -109,20 +110,20 @@ void Device::link_up(const boost::optional<mih::mac_addr> &poa)
 	state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN); // preparing to connect?
 }
 
-void Device::connection_completed(const DBus::Path &connection_active)
+void Device::l3_up()
 {
 	log_(0, "Connection completed");
-
 	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
-
-	ActiveConnection = connection_active;
 }
 
 void Device::link_conf(const completion_handler &h,
                        const boost::optional<mih::network_id> &network,
-                       const mih::configuration_list &lconf)
+                       const mih::configuration_list &lconf,
+                       const DBus::Path &connection_active)
 {
 	log_(0, "Associating/Authenticating");
+
+	ActiveConnection = connection_active;
 
 	_ctrl.link_conf(
 		[h](mih::message &pm, const boost::system::error_code &ec) {

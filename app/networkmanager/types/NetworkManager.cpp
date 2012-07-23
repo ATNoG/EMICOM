@@ -110,6 +110,7 @@ void NetworkManager::Enable(const bool& enable)
 		auto it = _device_map.begin();
 		while (it != _device_map.end()) {
 			it->second->Disconnect();
+			clear_connections(it->first);
 			it++;
 		}
 	} else {
@@ -128,6 +129,7 @@ void NetworkManager::Sleep(const bool& sleep)
 		auto it = _device_map.begin();
 		while (it != _device_map.end()) {
 			it->second->Disconnect();
+			clear_connections(it->first);
 			it++;
 		}
 
@@ -221,6 +223,9 @@ void NetworkManager::AddAndActivateConnection(
 	::DBus::Path active_connection;
 
 	try {
+		// clear the active connections for this device
+		clear_connections(device);
+
 		settings_map settings = _settings.GetSettings(connection);
 		std::string uuid = settings.find("connection")->second.find("uuid")->second;
 		boost::algorithm::erase_all(uuid, "-"); // remove dashes
@@ -228,15 +233,6 @@ void NetworkManager::AddAndActivateConnection(
 
 		std::vector<DBus::Path> devices;
 		devices.push_back(device);
-
-		// clear the active connections for this device
-		auto previous_active_connections = _active_connections.find(device);
-		if (previous_active_connections != _active_connections.end()) {
-			_active_connections.erase(previous_active_connections);
-			std::vector<DBus::Path> active_connection_list = active_connections();
-			ActiveConnections = active_connection_list;
-			property("ActiveConnections", active_connection_list);
-		}
 
 		// create a new active connection object for this device
 		std::shared_ptr<ConnectionActive> connection_active(
@@ -252,7 +248,11 @@ void NetworkManager::AddAndActivateConnection(
 								 false
 			));
 
-		_active_connections[device][active_connection] = connection_active;
+		// add the new active connection
+		_active_connections[active_connection] = connection_active;
+		_device_active_connection[device] = active_connection;
+
+		// signal the change
 		std::vector<DBus::Path> active_connection_list = active_connections();
 		ActiveConnections = active_connection_list;
 		property("ActiveConnections", active_connection_list);
@@ -263,7 +263,7 @@ void NetworkManager::AddAndActivateConnection(
 			throw DBus::Error("org.freedesktop.NetworkManager.Error.UnknownDevice", "Unknown device");
 		}
 
-		link_conf(device, connection);
+		link_conf(device, active_connection);
 	} catch (std::exception &e) {
 		log_(0, "Exception: ", e.what());
 		throw;
@@ -512,7 +512,7 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 		while (it != _device_map.end()) {
 			if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
 				if (!value) {
-					connection_failed(it->first);
+					clear_connections(it->first);
 					it->second->Disable();//Disconnect();
 				} else {
 					it->second->Enable();
@@ -537,10 +537,8 @@ std::vector<DBus::Path> NetworkManager::active_connections()
 {
 	std::vector<DBus::Path> keys;
 
-	auto it = _active_connections.begin();
-	while (it != _active_connections.end()) {
-		boost::copy(it->second | boost::adaptors::map_keys, std::back_inserter(keys));
-		it ++;
+	for (auto it = _active_connections.begin(); it != _active_connections.end(); ++it) {
+		keys.push_back(it->first);
 	}
 
 	return keys;
@@ -548,23 +546,23 @@ std::vector<DBus::Path> NetworkManager::active_connections()
 
 // TODO move this into the device!
 // this should only merge the settings and then command the Device!
-void NetworkManager::link_conf(const DBus::Path &device, const boost::optional<DBus::Path> &connection)
+void NetworkManager::link_conf(const DBus::Path &device, const DBus::Path &connection_active)
 {
 	auto dev = _device_map.find(device);
 	if (dev == _device_map.end()) {
 		throw std::runtime_error("Device not found");
 	}
 
-	if (!connection) {
-		// request user input
-		log_(0, "No configuration found, user input required");
-		return;
+	auto connection_active_it = _active_connections.find(connection_active);
+	if (connection_active_it == _active_connections.end()) {
+		throw std::runtime_error("Unkonwn ConnectionActive \"" + connection_active + "\"");
 	}
+	DBus::Path connection = connection_active_it->second->Connection();
 
 	log_(0, "Configuration found");
 
 	std::map<std::string, std::string> conf;
-	conf = _settings.wpa_conf(connection.get());
+	conf = _settings.wpa_conf(connection);
 
 	mih::configuration_list confl;
 	auto it = conf.begin();
@@ -585,18 +583,19 @@ void NetworkManager::link_conf(const DBus::Path &device, const boost::optional<D
 
 	// respond
 	dev->second->link_conf(
-		[&, device, connection](bool success) {
+		[&, device, connection_active](bool success) {
 			if (success) {
 				log_(0, "Authentication success");
-				l3_conf(device, connection.get());
+				l3_conf(device, connection_active);
 			} else {
 				log_(0, "Authentication failure");
-				connection_failed(device);
+				clear_connections(device);
+				// TODO?
 			}
-		}, network, confl);
+		}, network, confl, connection_active);
 }
 
-void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connection)
+void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connection_active)
 {
 	mih::ip_cfg_methods cfg_methods;
 	mih::ip_info_list address_list;
@@ -607,8 +606,15 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 	// get the device
 	auto dev = _device_map.find(device);
 	if (dev == _device_map.end()) {
-		throw std::runtime_error("Device not found");
+		throw std::runtime_error("Device not found \"" + device + "\"");
 	}
+
+	// get the connection
+	auto connection_active_it = _active_connections.find(connection_active);
+	if (connection_active_it == _active_connections.end()) {
+		throw std::runtime_error("ConnectionActive not found \"" + connection_active + "\"");
+	}
+	DBus::Path connection = connection_active_it->second->Connection();
 
 	//
 	// Parse IPv4 configurations
@@ -796,29 +802,27 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 	}
 
 	dev->second->l3_conf(
-		[&, device](bool success) {
+		[&, device, connection_active](bool success) {
 			if (success) {
 				log_(0, "Success configuring L3");
 
-				auto active_connection_it = _active_connections.find(device);
+				auto active_connection_it = _active_connections.find(connection_active);
 				if (active_connection_it == _active_connections.end()) {
 					throw std::runtime_error("No ConnectionActive object created for this state");
 				}
-
-				auto aci = active_connection_it->second.begin();
-				// assert aci != active_connection_it->second.end()
-				aci->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED);
+				active_connection_it->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED);
 
 				auto dev = _device_map.find(device);
 				if (dev == _device_map.end()) {
 					throw std::runtime_error("Device object not found \"" + device + "\"");
 				}
-				dev->second->connection_completed(aci->first);
+				dev->second->l3_up();
 
 				state(NM_STATE_CONNECTED_GLOBAL);
 			} else {
 				log_(0, "Error configuring L3");
-				connection_failed(device);
+				clear_connections(device);
+				// TODO?
 			}
 		},
 		cfg_methods,
@@ -828,12 +832,17 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 		boost::make_optional(domain_list.size()  > 0, domain_list));
 }
 
-void NetworkManager::connection_failed(const DBus::Path &device)
+void NetworkManager::clear_connections(const DBus::Path &device)
 {
-	// delete the active_connection objects
-	auto active_connection_it = _active_connections.find(device);
-	if (active_connection_it != _active_connections.end()) {
-		_active_connections.erase(active_connection_it);
+	// WARNING when changing this method, check for the effects on every usage!
+
+	// clear the active connections for this device
+	auto ac = _device_active_connection.find(device);
+	if (ac != _device_active_connection.end()) {
+		_active_connections.erase(_active_connections.find(ac->second));
+		_device_active_connection.erase(ac);
+
+		// signal the change
 		std::vector<DBus::Path> active_connection_list = active_connections();
 		ActiveConnections = active_connection_list;
 		property("ActiveConnections", active_connection_list);
@@ -973,16 +982,27 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 		mih::mac_addr address = boost::get<mih::mac_addr>(lti.addr);
 		std::stringstream path;
 		path << _dbus_path << "/Devices/" << boost::algorithm::erase_all_copy(address.address(), ":");
+		DBus::Path device = path.str();
 
 		boost::optional<DBus::Path> connection;
 		if (network) {
 			std::vector<unsigned char> ssid(network.get().begin(), network.get().end());
 			connection = _settings.get_connection_by_attribute("802-11-wireless", "ssid", ssid);
+			if (connection) {
+				// TODO get the specific_object
+				ActivateConnection(connection.get(), device, "/");
+			//} else {
+			//	// TODO fail? user input?
+			}
 		} else {
 			// look for ongoing progress of a connection on this link!
+			auto ac = _device_active_connection.find(device);
+			if (ac != _device_active_connection.end()) {
+				link_conf(device, ac->first);
+			//} else {
+			//	// TODO user input?
+			}
 		}
-
-		link_conf(path.str(), connection);
 	}
 	break;
 

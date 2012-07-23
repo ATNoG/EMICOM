@@ -150,14 +150,6 @@ void DeviceWireless::link_up(const boost::optional<mih::mac_addr> &poa)
 	}
 }
 
-void DeviceWireless::connection_completed(const DBus::Path &connection_active)
-{
-	Device::connection_completed(connection_active);
-
-	// property is set in the parent method, just signal
-	property("ActiveConnection", ActiveConnection());
-}
-
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
 {
 	// TODO bypass to wpa_supplicant?

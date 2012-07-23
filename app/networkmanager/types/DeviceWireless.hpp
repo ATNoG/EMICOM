@@ -105,11 +105,6 @@ public:
 	void link_up(const boost::optional<mih::mac_addr> &poa);
 
 	/**
-	 * Inform this device that L3 connectivity is up.
-	 */
-	void connection_completed(const DBus::Path &connection_active);
-
-	/**
 	 * Update the access point list.
 	 *
 	 * @param ldi A new or existing (update) AP info.
