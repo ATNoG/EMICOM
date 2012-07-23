@@ -71,10 +71,8 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 
 	boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
 
-	auto it = _access_points_map.begin();
-	while (it != _access_points_map.end()) {
+	for (auto it = _access_points_map.begin(); it != _access_points_map.end(); ++it) {
 		r.push_back(it->first);
-		it++;
 	}
 
 	return r;
@@ -166,18 +164,16 @@ void DeviceWireless::add_ap(mih::link_det_info ldi)
 	remove_aps_older_than(boost::posix_time::seconds(30));
 
 	// if it exists in the list, update
-	auto map_it = _access_points_map.begin();
-	while (map_it != _access_points_map.end()) {
-		std::string map_addr = map_it->second->HwAddress();
+	for (auto it = _access_points_map.begin(); it != _access_points_map.end(); ++it) {
+		std::string map_addr = it->second->HwAddress();
 		mih::mac_addr poa_addr = boost::get<mih::mac_addr>(boost::get<mih::link_addr>(ldi.id.poa_addr));
 
 		if (boost::iequals(map_addr, poa_addr.address())) {
 			// update AP
-			map_it->second->Update(ldi);
+			it->second->Update(ldi);
 
 			return;
 		}
-		map_it++;
 	}
 
 	// not found
@@ -197,14 +193,13 @@ void DeviceWireless::add_ap(mih::link_det_info ldi)
 
 void DeviceWireless::remove_aps_older_than(boost::posix_time::time_duration d)
 {
-	auto map_it = _access_points_map.begin();
-	while (map_it != _access_points_map.end()) {
-		if (map_it->second->last_change() > d) {
-			Wireless_adaptor::AccessPointRemoved(map_it->first);
+	for (auto it = _access_points_map.begin(); it != _access_points_map.end(); ) {
+		if (it->second->last_change() > d) {
+			Wireless_adaptor::AccessPointRemoved(it->first);
 
-			map_it = _access_points_map.erase(map_it);
+			it = _access_points_map.erase(it);
 		} else {
-			map_it++;
+			++it;
 		}
 	}
 }

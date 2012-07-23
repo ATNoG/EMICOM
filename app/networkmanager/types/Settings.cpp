@@ -98,13 +98,11 @@ void Settings::SaveHostname(const std::string& hostname)
 	log_(0, "Getting connection by UUID");
 
 	try {
-		auto it = _connections.begin();
-		while (it != _connections.end()) {
+		for (auto it = _connections.begin(); it != _connections.end(); ++it) {
 			if(it->second->GetUuid() == uuid) {
 				log_(0, "Connection found at \"", it->first, "\"");
 				return it->first;
 			}
-			it++;
 		}
 	} catch (...) {
 		// TODO the connection probably has no uuid, so it should be deleted...
@@ -121,10 +119,8 @@ std::vector< ::DBus::Path > Settings::ListConnections()
 
 	std::vector< ::DBus::Path > r;
 
-	auto it = _connections.begin();
-	while (it != _connections.end()) {
+	for (auto it = _connections.begin(); it != _connections.end(); ++it) {
 		r.push_back(it->first);
-		it++;
 	}
 
 	log_(0, "Done");

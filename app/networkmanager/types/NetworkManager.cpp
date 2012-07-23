@@ -107,11 +107,9 @@ void NetworkManager::Enable(const bool& enable)
 
 		state(NM_STATE_DISCONNECTING);
 
-		auto it = _device_map.begin();
-		while (it != _device_map.end()) {
+		for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
 			it->second->Disconnect();
 			clear_connections(it->first);
-			it++;
 		}
 	} else {
 		log_(0, "Enabling");
@@ -126,11 +124,9 @@ void NetworkManager::Sleep(const bool& sleep)
 
 		state(NM_STATE_DISCONNECTING);
 
-		auto it = _device_map.begin();
-		while (it != _device_map.end()) {
+		for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
 			it->second->Disconnect();
 			clear_connections(it->first);
-			it++;
 		}
 
 		state(NM_STATE_ASLEEP);
@@ -276,13 +272,11 @@ void NetworkManager::AddAndActivateConnection(
 {
 	log_(0, "Getting device by name (IpIface): ", iface);
 
-	auto it = _device_map.begin();
-	while (it != _device_map.end()) {
+	for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
 		if (it->second->IpInterface() == iface) {
 			log_(0, iface, " found");
 			return it->first;
 		}
-		it++;
 	}
 
 	log_(0, iface, " not found");
@@ -295,10 +289,8 @@ std::vector< ::DBus::Path > NetworkManager::GetDevices()
 
 	std::vector< ::DBus::Path > r;
 
-	auto it = _device_map.begin();
-	while (it != _device_map.end()) {
+	for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
 		r.push_back(it->first);
-		it++;
 	}
 
 	log_(0, "Done");
@@ -398,8 +390,7 @@ void NetworkManager::link_up(const mih::mac_addr &dev, const boost::optional<mih
 
 	// look for device and inform/check
 	bool match;
-	auto it = _device_map.begin();
-	while (it != _device_map.end() && !match) {
+	for (auto it = _device_map.begin(); it != _device_map.end() && !match; ++it) {
 		switch (it->second->DeviceType()) {
 			case Device::NM_DEVICE_TYPE_WIFI:
 			{
@@ -440,8 +431,6 @@ void NetworkManager::link_up(const mih::mac_addr &dev, const boost::optional<mih
 				// unsupported
 				break;
 		}
-
-		it++;
 	}
 }
 
@@ -451,8 +440,7 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 
 	// look for device and inform/check
 	bool match = false;
-	auto it = _device_map.begin();
-	while (it != _device_map.end() && !match) {
+	for (auto it = _device_map.begin(); it != _device_map.end() && !match; ++it) {
 		switch (it->second->DeviceType()) {
 			case Device::NM_DEVICE_TYPE_WIFI:
 			{
@@ -493,8 +481,6 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 				// unsupported
 				break;
 		}
-
-		it++;
 	}
 
 	// TODO
@@ -508,8 +494,7 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 	log_(0, "Setting property \"", prop, "\"");
 
 	if (boost::iequals(prop, "WirelessEnabled")) {
-		auto it = _device_map.begin();
-		while (it != _device_map.end()) {
+		for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
 			if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
 				if (!value) {
 					clear_connections(it->first);
@@ -520,7 +505,6 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 				WirelessEnabled = static_cast<bool>(value);
 				property("WirelessEnabled", static_cast<bool>(value));
 			}
-			it ++;
 		}
 	} else if (boost::iequals(prop, "WwanEnabled")) {
 		// Unsupported
@@ -565,14 +549,11 @@ void NetworkManager::link_conf(const DBus::Path &device, const DBus::Path &conne
 	conf = _settings.wpa_conf(connection);
 
 	mih::configuration_list confl;
-	auto it = conf.begin();
-	while (it != conf.end()) {
+	for (auto it = conf.begin(); it != conf.end(); ++it) {
 		mih::configuration c;
 		c.key = it->first;
 		c.value = it->second;
 		confl.push_back(c);
-
-		it ++;
 	}
 
 	boost::optional<mih::network_id> network;
@@ -935,15 +916,13 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 		BOOST_FOREACH (mih::link_det_info ldi, ldil) {
 			mih::mac_addr dev_addr = boost::get<mih::mac_addr>(ldi.id.addr);
 
-			auto it = _device_map.begin();
-			while (it != _device_map.end()) {
+			for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
 				if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
 					std::shared_ptr<DeviceWireless> d = std::static_pointer_cast<DeviceWireless>(it->second);
 					if (boost::iequals(d->HwAddress(), dev_addr.address())) {
 						d->add_ap(ldi);
 					}
 				}
-				it++;
 			}
 		}
 	}
