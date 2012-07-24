@@ -22,10 +22,12 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/algorithm/copy.hpp>
+#include <boost/assign/list_of.hpp>
 #include <cstring>
 #include <exception>
 
 using namespace odtone::networkmanager;
+using namespace boost::assign;
 
 DeviceWireless::DeviceWireless(DBus::Connection &connection,
                                const char* path,
@@ -117,20 +119,12 @@ void DeviceWireless::Scan()
 		}, _lti);
 }
 
-template <class T>
-void DeviceWireless::property(const std::string &property, const T &value)
-{
-	std::map<std::string, DBus::Variant> props;
-	props[property] = to_variant(value);
-	PropertiesChanged(props);
-}
-
 void DeviceWireless::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)
 {
 	Device::state(newstate, reason);
 
-	property("StateReason", StateReason());
-	property("State", State());
+	PropertiesChanged(map_list_of("State",       to_variant(State()))
+	                             ("StateReason", to_variant(StateReason())));
 }
 
 void DeviceWireless::link_down()
@@ -138,8 +132,8 @@ void DeviceWireless::link_down()
 	Device::link_down();
 
 	ActiveAccessPoint = "/";
-	property("ActiveAccessPoint", ActiveAccessPoint());
-	property("ActiveConnection", ActiveConnection());
+	PropertiesChanged(map_list_of("ActiveAccessPoint", to_variant(ActiveAccessPoint()))
+	                             ("ActiveConnection",  to_variant(ActiveConnection())));
 }
 
 void DeviceWireless::link_conf(const completion_handler &h,
@@ -151,8 +145,8 @@ void DeviceWireless::link_conf(const completion_handler &h,
 	ActiveAccessPoint = specific_object;
 	ActiveConnection = connection_active;
 
-	property("ActiveAccessPoint", ActiveAccessPoint());
-	property("ActiveConnection", ActiveConnection());
+	PropertiesChanged(map_list_of("ActiveAccessPoint", to_variant(ActiveAccessPoint()))
+	                             ("ActiveConnection",  to_variant(ActiveConnection())));
 
 	Device::link_conf(h, poa, lconf, connection_active, specific_object);
 }

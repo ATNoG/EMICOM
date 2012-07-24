@@ -24,8 +24,10 @@
 
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/algorithm/copy.hpp>
+#include <boost/assign/list_of.hpp>
 
 using namespace odtone::networkmanager;
+using namespace boost::assign;
 
 NetworkManager::NetworkManager(DBus::Connection &connection, const mih::config &cfg, boost::asio::io_service &io) :
 	DBus::ObjectAdaptor(connection, cfg.get<std::string>(kConf_DBus_Path).c_str()),
@@ -68,14 +70,6 @@ void NetworkManager::state(NM_STATE newstate)
 
 	// signal
 	NetworkManager_adaptor::StateChanged(State());
-}
-
-template <class T>
-void NetworkManager::property(const std::string &property, const T &value)
-{
-	std::map<std::string, DBus::Variant> props;
-	props[property] = to_variant(value);
-	NetworkManager_adaptor::PropertiesChanged(props);
 }
 
 void NetworkManager::SetLogging(const std::string& level, const std::string& domains)
@@ -251,7 +245,7 @@ void NetworkManager::AddAndActivateConnection(
 		// signal the change
 		std::vector<DBus::Path> active_connection_list = active_connections();
 		ActiveConnections = active_connection_list;
-		property("ActiveConnections", active_connection_list);
+		PropertiesChanged(map_list_of("ActiveConnections", to_variant(active_connection_list)));
 
 		// TODO check if device exists
 		auto d = _device_map.find(device);
@@ -346,7 +340,7 @@ void NetworkManager::add_802_11_device(mih::mac_addr &address)
 	// wireless network hardware is now enabled
 	if (!NetworkManager_adaptor::WirelessHardwareEnabled()) {
 		WirelessHardwareEnabled = true;
-		property("WirelessHardwareEnabled", true);
+		PropertiesChanged(map_list_of("WirelessHardwareEnabled", to_variant(WirelessHardwareEnabled())));
 	}
 }
 
@@ -468,7 +462,7 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 	}
 	if (!match) {
 		WirelessEnabled = false;
-		property("WirelessEnabled", WirelessEnabled());
+		PropertiesChanged(map_list_of("WirelessEnabled", to_variant(WirelessEnabled())));
 	}
 
 	// update the NetworkManager state
@@ -505,7 +499,7 @@ void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
 					it->second->Enable();
 				}
 				WirelessEnabled = static_cast<bool>(value);
-				property("WirelessEnabled", static_cast<bool>(value));
+				PropertiesChanged(map_list_of("WirelessEnabled", to_variant(WirelessEnabled())));
 			}
 		}
 	} else if (boost::iequals(prop, "WwanEnabled")) {
@@ -801,7 +795,7 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 				// force WirelessEnabled signal, needed so that the applet
 				// doesn't stick to the "connecting..." text after success.
 				if (dev->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
-					property("WirelessEnabled", WirelessEnabled());
+					PropertiesChanged(map_list_of("WirelessEnabled", to_variant(WirelessEnabled())));
 				}
 			} else {
 				log_(0, "Error configuring L3");
@@ -829,7 +823,7 @@ void NetworkManager::clear_connections(const DBus::Path &device)
 		// signal the change
 		std::vector<DBus::Path> active_connection_list = active_connections();
 		ActiveConnections = active_connection_list;
-		property("ActiveConnections", active_connection_list);
+		PropertiesChanged(map_list_of("ActiveConnections", to_variant(ActiveConnections())));
 	}
 }
 

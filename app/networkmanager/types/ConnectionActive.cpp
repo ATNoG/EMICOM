@@ -18,7 +18,10 @@
 #include "ConnectionActive.hpp"
 #include "util.hpp"
 
+#include <boost/assign/list_of.hpp>
+
 using namespace odtone::networkmanager;
+using namespace boost::assign;
 
 ConnectionActive::ConnectionActive(DBus::Connection &connection,
                                    const char* path,
@@ -51,9 +54,6 @@ void ConnectionActive::state(NM_ACTIVE_CONNECTION_STATE s)
 	if (s != State()) {
 		State = s;
 
-		std::map<std::string, ::DBus::Variant> m;
-		m["State"] = to_variant(State());
-
-		PropertiesChanged(m);
+		PropertiesChanged(map_list_of("State", to_variant(State())));
 	}
 }

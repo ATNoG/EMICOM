@@ -139,15 +139,6 @@ protected:
 	void on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value);
 
 	/**
-	 * Change a DeviceWireless property and notify with the associated signal.
-	 *
-	 * @param property The property that is to be changed.
-	 * @param value    The new value of the referred property.
-	 */
-	template <class T>
-	void property(const std::string &property, const T &value);
-
-	/**
 	 * @see Device::state()
 	 */
 	void state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason);
