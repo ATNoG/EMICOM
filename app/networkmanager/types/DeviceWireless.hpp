@@ -100,11 +100,6 @@ public:
 	void link_down();
 
 	/**
-	 * see Device::link_up()
-	 */
-	void link_up(const boost::optional<mih::mac_addr> &poa);
-
-	/**
 	 * Update the access point list.
 	 *
 	 * @param ldi A new or existing (update) AP info.
@@ -153,7 +148,7 @@ protected:
 	void property(const std::string &property, const T &value);
 
 	/**
-	 * @see Device::state
+	 * @see Device::state()
 	 */
 	void state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason);
 

@@ -138,6 +138,7 @@ void Device::link_conf(const completion_handler &h,
 {
 	log_(0, "Associating/Authenticating");
 
+	ActiveConnection = connection_active;
 	state(NM_DEVICE_STATE_PREPARE, NM_DEVICE_STATE_REASON_UNKNOWN);
 
 	_ctrl.link_conf(

@@ -142,13 +142,6 @@ void DeviceWireless::link_down()
 	property("ActiveConnection", ActiveConnection());
 }
 
-void DeviceWireless::link_up(const boost::optional<mih::mac_addr> &poa)
-{
-	// set the active access point
-
-	Device::link_up(poa);
-}
-
 void DeviceWireless::link_conf(const completion_handler &h,
                                const boost::optional<mih::link_addr> &poa,
                                const mih::configuration_list &lconf,
@@ -156,17 +149,16 @@ void DeviceWireless::link_conf(const completion_handler &h,
                                const DBus::Path &specific_object)
 {
 	ActiveAccessPoint = specific_object;
-
-	Device::link_conf(h, poa, lconf, connection_active, specific_object);
+	ActiveConnection = connection_active;
 
 	property("ActiveAccessPoint", ActiveAccessPoint());
-	property("ConnectionActive", ActiveConnection());
+	property("ActiveConnection", ActiveConnection());
+
+	Device::link_conf(h, poa, lconf, connection_active, specific_object);
 }
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
 {
-	// TODO bypass to wpa_supplicant?
-
 	PropertiesAdaptor::on_get_property(interface, property, value);
 }
 
