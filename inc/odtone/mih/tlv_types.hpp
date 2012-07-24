@@ -108,12 +108,11 @@ static const tlv_cast_<mos_dscv,              tlv_<114> > tlv_mos_dscv = {};
 
 #ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
 static const tlv_cast_<configuration_list,    tlv_<115> > tlv_configuration_list = {};
-static const tlv_cast_<network_id,            tlv_<116> > tlv_network_id = {};
 
-static const tlv_cast_<ip_info_list,          tlv_<117> > tlv_ip_addr_list = {};
-static const tlv_cast_<ip_info_list,          tlv_<118> > tlv_ip_route_list = {};
-static const tlv_cast_<ip_addr_list,          tlv_<119> > tlv_ip_dns_list = {};
-static const tlv_cast_<fqdn_list,             tlv_<120> > tlv_fqdn_list = {};
+static const tlv_cast_<ip_info_list,          tlv_<116> > tlv_ip_addr_list = {};
+static const tlv_cast_<ip_info_list,          tlv_<117> > tlv_ip_route_list = {};
+static const tlv_cast_<ip_addr_list,          tlv_<118> > tlv_ip_dns_list = {};
+static const tlv_cast_<fqdn_list,             tlv_<119> > tlv_fqdn_list = {};
 #endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 
 

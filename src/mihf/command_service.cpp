@@ -1132,12 +1132,12 @@ bool command_service::link_conf_request(meta_message_ptr &in,
 		// Kick this message to MIH_Link SAP.
 		//
 		mih::link_tuple_id lti;
-		boost::optional<mih::network_id> network;
+		boost::optional<mih::link_addr> poa;
 		mih::configuration_list confl;
 
 		*in >> mih::request(mih::request::link_conf)
 			& mih::tlv_link_identifier(lti)
-			& mih::tlv_network_id(network)
+			& mih::tlv_poa(poa)
 			& mih::tlv_configuration_list(confl);
 
 		out->destination(mih::id(_link_abook.search_interface(lti.type, lti.addr)));
@@ -1155,7 +1155,7 @@ bool command_service::link_conf_request(meta_message_ptr &in,
 			} else {
 				*out << mih::request(mih::request::link_conf)
 					& mih::tlv_link_identifier(lti)
-					& mih::tlv_network_id(network)
+					& mih::tlv_poa(poa)
 					& mih::tlv_configuration_list(confl);
 			}
 

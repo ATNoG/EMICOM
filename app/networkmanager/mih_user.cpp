@@ -129,14 +129,14 @@ void mih_user::scan(const default_handler &h, const mih::link_tuple_id &lti)
 
 void mih_user::link_conf(const default_handler &h,
                          const mih::link_tuple_id &lti,
-                         const boost::optional<std::string> &network,
+                         const boost::optional<mih::link_addr> &poa,
                          const mih::configuration_list &conf)
 {
 	mih::message m;
 
 	m << mih::request(mih::request::link_conf)
 		& mih::tlv_link_identifier(lti)
-		& mih::tlv_network_id(network)
+		& mih::tlv_poa(poa)
 		& mih::tlv_configuration_list(conf);
 	m.destination(mih::id("local-mihf"));
 

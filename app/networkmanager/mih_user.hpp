@@ -78,7 +78,7 @@ public:
 	 */
 	void link_conf(const default_handler &h,
 	               const mih::link_tuple_id &lti,
-	               const boost::optional<std::string> &network,
+	               const boost::optional<mih::link_addr> &poa,
 	               const mih::configuration_list &conf);
 
 	/**

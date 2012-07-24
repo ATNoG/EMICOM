@@ -200,9 +200,10 @@ public:
 	 * Send a link_conf command to this device.
 	 */
 	virtual void link_conf(const completion_handler &h,
-	                       const boost::optional<mih::network_id> &network,
+	                       const boost::optional<mih::link_addr> &poa,
 	                       const mih::configuration_list &lconf,
-	                       const DBus::Path &connection_active);
+	                       const DBus::Path &connection_active,
+	                       const DBus::Path &specific_object);
 
 	/**
 	 * Send an l3_conf command to this device.
@@ -214,14 +215,21 @@ public:
 	                     const boost::optional<mih::ip_addr_list> &dns_list,
 	                     const boost::optional<mih::fqdn_list> &domain_list);
 
+	/**
+	 * Get the device address;
+	 */
+	std::string address();
+
 protected:
 
 	/**
 	 * Auxiliary function to change and notify (signal) state changes on this object.
 	 */
-	void state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason);
+	virtual void state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason);
 
 protected:
+	DBus::Connection   &_connection;
+
 	mih_user           &_ctrl;
 	mih::link_tuple_id  _lti;
 

@@ -18,16 +18,22 @@
 #include "Device.hpp"
 #include <iostream>
 
+#include "IP4Config.hpp"
+
 using namespace odtone::networkmanager;
 
-Device::Device(DBus::Connection &connection, const char* path, mih_user &ctrl, mih::link_tuple_id &lti)
-	: DBus::ObjectAdaptor(connection, path), _ctrl(ctrl), _lti(lti),  _dbus_path(path), log_(_dbus_path.c_str(), std::cout)
+Device::Device(DBus::Connection &connection, const char* path, mih_user &ctrl, mih::link_tuple_id &lti) :
+	DBus::ObjectAdaptor(connection, path),
+	_connection(connection),
+	_ctrl(ctrl),
+	_lti(lti),
+	_dbus_path(path),
+	log_(_dbus_path.c_str(), std::cout)
 {
 }
 
 Device::~Device()
 {
-	std::cerr << "Going to life!!" << std::endl;
 }
 
 void Device::Disconnect()
@@ -54,7 +60,7 @@ void Device::Enable()
 	log_(0, "Enabling");
 
 	// assume success
-	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
 
 	_ctrl.power_up(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
@@ -63,7 +69,7 @@ void Device::Enable()
 				& mih::tlv_status(st);
 
 			if (st != mih::status_success) {
-				state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+				state(NM_DEVICE_STATE_UNKNOWN, NM_DEVICE_STATE_REASON_UNKNOWN);
 			}
 		}, _lti);
 }
@@ -73,7 +79,7 @@ void Device::Disable()
 	log_(0, "Disabling");
 
 	// assume success
-	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	state(NM_DEVICE_STATE_UNAVAILABLE, NM_DEVICE_STATE_REASON_UNKNOWN);
 
 	_ctrl.power_down(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
@@ -82,7 +88,7 @@ void Device::Disable()
 				& mih::tlv_status(st);
 
 			if (st != mih::status_success) {
-				state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+				state(NM_DEVICE_STATE_UNKNOWN, NM_DEVICE_STATE_REASON_UNKNOWN);
 			}
 		}, _lti);
 }
@@ -107,7 +113,9 @@ void Device::link_down()
 {
 	log_(0, "Link down, device is now disconnected");
 	ActiveConnection = "/";
-	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	if (State() != NM_DEVICE_STATE_DISCONNECTED && State() != NM_DEVICE_STATE_UNAVAILABLE) {
+		state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	}
 }
 
 void Device::link_up(const boost::optional<mih::mac_addr> &poa)
@@ -123,13 +131,14 @@ void Device::l3_up()
 }
 
 void Device::link_conf(const completion_handler &h,
-                       const boost::optional<mih::network_id> &network,
+                       const boost::optional<mih::link_addr> &poa,
                        const mih::configuration_list &lconf,
-                       const DBus::Path &connection_active)
+                       const DBus::Path &connection_active,
+                       const DBus::Path &specific_object)
 {
 	log_(0, "Associating/Authenticating");
 
-	ActiveConnection = connection_active;
+	state(NM_DEVICE_STATE_PREPARE, NM_DEVICE_STATE_REASON_UNKNOWN);
 
 	_ctrl.link_conf(
 		[h](mih::message &pm, const boost::system::error_code &ec) {
@@ -142,7 +151,7 @@ void Device::link_conf(const completion_handler &h,
 			} else {
 				h(false);
 			}
-		}, _lti, network, lconf);
+		}, _lti, poa, lconf);
 }
 
 void Device::l3_conf(const completion_handler &h,
@@ -166,4 +175,9 @@ void Device::l3_conf(const completion_handler &h,
 				h(false);
 			}
 		}, _lti, cfg_methods, address_list, route_list, dns_list, domain_list);
+}
+
+std::string Device::address()
+{
+	return boost::get<mih::mac_addr>(_lti.addr).address();
 }

@@ -431,7 +431,7 @@ void handle_link_actions(boost::asio::io_service &ios,
 void handle_link_conf(const boost::asio::io_service &ios,
                       if_8023 &fi,
                       odtone::uint16 tid,
-                      const boost::optional<mih::network_id> &network,
+                      const boost::optional<mih::link_addr> &poa,
                       const mih::configuration_list &lconf)
 {
 	log_(0, "(command) Handling link_conf");
@@ -630,15 +630,15 @@ void default_handler(boost::asio::io_service &ios,
 			log_(0, "(command) Received link_conf message");
 
 			mih::link_tuple_id lti;
-			boost::optional<mih::network_id> network;
+			boost::optional<mih::link_addr> poa;
 			mih::configuration_list lconf;
 
 			msg >> mih::request()
 				& mih::tlv_link_identifier(lti)
-				& mih::tlv_network_id(network)
+				& mih::tlv_poa(poa)
 				& mih::tlv_configuration_list(lconf);
 
-			handle_link_conf(ios, fi, msg.tid(), network, lconf);
+			handle_link_conf(ios, fi, msg.tid(), poa, lconf);
 		}
 		break;
 

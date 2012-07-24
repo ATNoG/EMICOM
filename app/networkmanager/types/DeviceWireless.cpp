@@ -31,7 +31,7 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection,
                                const char* path,
                                mih_user &ctrl,
                                mih::link_tuple_id &lti)
-	: Device(connection, path, ctrl, lti), _connection(connection), _access_point_count(0)
+	: Device(connection, path, ctrl, lti), _access_point_count(0)
 {
 	// FIXME
 	// inherited from Device adaptor
@@ -93,7 +93,7 @@ void DeviceWireless::Enable()
 	log_(0, "Enabling, with scan request");
 
 	// assume success
-	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
 
 	_ctrl.power_up(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
@@ -101,9 +101,9 @@ void DeviceWireless::Enable()
 			pm >> mih::confirm(mih::confirm::link_actions)
 				& mih::tlv_status(st);
 
-			if (st != mih::status_success) {
-				state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
-			}
+			//if (st != mih::status_success) {
+			//	state(NM_DEVICE_STATE_UNKNOWN, NM_DEVICE_STATE_REASON_UNKNOWN);
+			//}
 		}, _lti, true);
 }
 
@@ -125,32 +125,42 @@ void DeviceWireless::property(const std::string &property, const T &value)
 	PropertiesChanged(props);
 }
 
+void DeviceWireless::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)
+{
+	Device::state(newstate, reason);
+
+	property("StateReason", StateReason());
+	property("State", State());
+}
+
 void DeviceWireless::link_down()
 {
 	Device::link_down();
 
 	ActiveAccessPoint = "/";
 	property("ActiveAccessPoint", ActiveAccessPoint());
+	property("ActiveConnection", ActiveConnection());
 }
 
 void DeviceWireless::link_up(const boost::optional<mih::mac_addr> &poa)
 {
-	Device::link_up(poa);
-
 	// set the active access point
-	if (!poa) {
-		return;
-	}
 
-	boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
+	Device::link_up(poa);
+}
 
-	for (auto it = _access_points_map.begin(); it != _access_points_map.end(); ++ it) {
-		if (boost::iequals(it->second->HwAddress(), poa.get().address())) {
-			ActiveAccessPoint = it->first;
-			property("ActiveAccessPoint", ActiveAccessPoint());
-			it = _access_points_map.end();
-		}
-	}
+void DeviceWireless::link_conf(const completion_handler &h,
+                               const boost::optional<mih::link_addr> &poa,
+                               const mih::configuration_list &lconf,
+                               const DBus::Path &connection_active,
+                               const DBus::Path &specific_object)
+{
+	ActiveAccessPoint = specific_object;
+
+	Device::link_conf(h, poa, lconf, connection_active, specific_object);
+
+	property("ActiveAccessPoint", ActiveAccessPoint());
+	property("ConnectionActive", ActiveConnection());
 }
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)

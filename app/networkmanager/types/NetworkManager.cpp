@@ -67,7 +67,7 @@ void NetworkManager::state(NM_STATE newstate)
 	NetworkManager_adaptor::State = newstate;
 
 	// signal
-	NetworkManager_adaptor::StateChanged(newstate);
+	NetworkManager_adaptor::StateChanged(State());
 }
 
 template <class T>
@@ -438,51 +438,55 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 
 	// look for device and inform/check
 	bool match = false;
+
+	// update the device and connection information
 	for (auto it = _device_map.begin(); it != _device_map.end() && !match; ++it) {
-		switch (it->second->DeviceType()) {
-			case Device::NM_DEVICE_TYPE_WIFI:
-			{
-				std::shared_ptr<DeviceWireless> d = std::static_pointer_cast<DeviceWireless>(it->second);
-				if (d->HwAddress() == dev.address()) {
-					match = true;
-					d->link_down();
-				}
-			}
-			break;
+		if (boost::iequals(it->second->address(), dev.address())) {
+			match = true;
+			it->second->link_down();
 
-			case Device::NM_DEVICE_TYPE_ETHERNET:
-			{
-				std::shared_ptr<DeviceWired> d = std::static_pointer_cast<DeviceWired>(it->second);
-				if (d->HwAddress() == dev.address()) {
-					match = true;
-					d->link_down();
-				}
+			if (    !NetworkingEnabled()
+			    || (!WirelessEnabled() && it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI)) {
+					// there's another, untestable condition, which is power off on the hardware
+				clear_connections(it->first);
+			} else {
+				// TODO get the connection and update the state.
+				// TODO reconnect, or simply wait!!!
 			}
-			break;
-
-			case Device::NM_DEVICE_TYPE_WIMAX:
-			{
-				std::shared_ptr<DeviceWiMax> d = std::static_pointer_cast<DeviceWiMax>(it->second);
-				if (d->HwAddress() == dev.address()) {
-					match = true;
-					d->link_down();
-				}
-			}
-			break;
-
-/*			case Device::NM_DEVICE_TYPE_BT:
-			case Device::NM_DEVICE_TYPE_OLPC_MESH:
-			case Device::NM_DEVICE_TYPE_INFINIBAND:
-			case Device::NM_DEVICE_TYPE_BOND:
-			case Device::NM_DEVICE_TYPE_VLAN:*/
-			default:
-				// unsupported
-				break;
 		}
 	}
 
-	// TODO
-	// if the device is available and a connection was active, attemp reconnection
+	// update the WirelessEnabled property
+	match = false; // if no wireless found, wireless disabled
+	for (auto it = _device_map.begin(); it != _device_map.end() && !match; ++it) {
+		if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
+			if (   it->second->State() > Device::NM_DEVICE_STATE_DISCONNECTED
+			    && it->second->State() < Device::NM_DEVICE_STATE_FAILED) {
+				match = true;
+			}
+		}
+	}
+	if (!match) {
+		WirelessEnabled = false;
+		property("WirelessEnabled", WirelessEnabled());
+	}
+
+	// update the NetworkManager state
+	NM_STATE newstate = NM_STATE_DISCONNECTED;
+	// if the current state is connected or connecting, check for still existing ConnectionActive
+	if (State() > NM_STATE_DISCONNECTED) {
+		for (auto it = _active_connections.begin(); it != _active_connections.end(); ++it) {
+			// upgrade to STATE_CONNECTING if any ACTIVATING found,
+			// and to CONNECTED_GLOBAL if any ACTIVATED found.
+			if (it->second->State() == ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATING) {
+				newstate = NM_STATE_CONNECTING;
+			} else if (it->second->State() == ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED) {
+				newstate = NM_STATE_CONNECTED_GLOBAL;
+				break;
+			}
+		}
+	}
+	state(newstate);
 }
 
 void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
@@ -538,6 +542,7 @@ void NetworkManager::link_conf(const DBus::Path &device, const DBus::Path &conne
 		throw std::runtime_error("Unkonwn ConnectionActive \"" + connection_active + "\"");
 	}
 	DBus::Path connection = connection_active_it->second->Connection();
+	DBus::Path specific_object = connection_active_it->second->SpecificObject();
 
 	log_(0, "Configuration found");
 
@@ -552,11 +557,7 @@ void NetworkManager::link_conf(const DBus::Path &device, const DBus::Path &conne
 		confl.push_back(c);
 	}
 
-	boost::optional<mih::network_id> network;
-//	auto ssid = conf.find("ssid");
-//	if (ssid != conf.end()) {
-//		network = ssid->second;
-//	}
+	boost::optional<mih::link_addr> network; // fetch from specific object
 
 	// respond
 	dev->second->link_conf(
@@ -569,7 +570,7 @@ void NetworkManager::link_conf(const DBus::Path &device, const DBus::Path &conne
 				clear_connections(device);
 				// TODO?
 			}
-		}, network, confl, connection_active);
+		}, network, confl, connection_active, specific_object);
 }
 
 void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connection_active)
@@ -783,17 +784,17 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 			if (success) {
 				log_(0, "Success configuring L3");
 
-				auto active_connection_it = _active_connections.find(connection_active);
-				if (active_connection_it == _active_connections.end()) {
-					throw std::runtime_error("No ConnectionActive object created for this state");
-				}
-				active_connection_it->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED);
-
 				auto dev = _device_map.find(device);
 				if (dev == _device_map.end()) {
 					throw std::runtime_error("Device object not found \"" + device + "\"");
 				}
 				dev->second->l3_up();
+
+				auto active_connection_it = _active_connections.find(connection_active);
+				if (active_connection_it == _active_connections.end()) {
+					throw std::runtime_error("No ConnectionActive object created for this state");
+				}
+				active_connection_it->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED);
 
 				state(NM_STATE_CONNECTED_GLOBAL);
 			} else {
@@ -946,12 +947,12 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 		log_(0, "Received a link_conf_required event");
 
 		mih::link_tuple_id lti;
-		boost::optional<mih::network_id> network;
+		boost::optional<mih::link_addr> poa;
 		mih::configuration_list lconf;
 
 		msg >> mih::indication()
 			& mih::tlv_link_identifier(lti)
-			& mih::tlv_network_id(network)
+			& mih::tlv_poa(poa)
 			& mih::tlv_configuration_list(lconf);
 
 		mih::mac_addr address = boost::get<mih::mac_addr>(lti.addr);
@@ -960,23 +961,13 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 		DBus::Path device = path.str();
 
 		boost::optional<DBus::Path> connection;
-		if (network) {
-			std::vector<unsigned char> ssid(network.get().begin(), network.get().end());
-			connection = _settings.get_connection_by_attribute("802-11-wireless", "ssid", ssid);
-			if (connection) {
-				// TODO get the specific_object
-				ActivateConnection(connection.get(), device, "/");
-			//} else {
-			//	// TODO fail? user input?
-			}
+		// look for ongoing progress of a connection on this link!
+		auto ac = _device_active_connection.find(device);
+		if (ac != _device_active_connection.end()) {
+			link_conf(device, ac->first);
 		} else {
-			// look for ongoing progress of a connection on this link!
-			auto ac = _device_active_connection.find(device);
-			if (ac != _device_active_connection.end()) {
-				link_conf(device, ac->first);
-			//} else {
-			//	// TODO user input?
-			}
+			throw std::runtime_error("No ongoing connection on this link");
+			// TODO this is from
 		}
 	}
 	break;

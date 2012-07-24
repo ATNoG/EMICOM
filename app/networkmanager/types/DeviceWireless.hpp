@@ -127,6 +127,15 @@ public:
 	 */
 	AccessPoint::bss_id get_access_point(const ::DBus::Path &path);
 
+	/**
+	 * Send a link_conf command to this device.
+	 */
+	void link_conf(const completion_handler &h,
+	               const boost::optional<mih::link_addr> &poa,
+	               const mih::configuration_list &lconf,
+	               const DBus::Path &connection_active,
+	               const DBus::Path &specific_object);
+
 protected:
 	/**
 	 * @see DBus::PropertyAdaptor
@@ -143,9 +152,12 @@ protected:
 	template <class T>
 	void property(const std::string &property, const T &value);
 
-private:
-	DBus::Connection &_connection;
+	/**
+	 * @see Device::state
+	 */
+	void state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason);
 
+private:
 	unsigned int     _access_point_count;
 
 	boost::shared_mutex _access_points_map_mutex;

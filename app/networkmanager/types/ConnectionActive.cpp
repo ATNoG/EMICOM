@@ -52,7 +52,7 @@ void ConnectionActive::state(NM_ACTIVE_CONNECTION_STATE s)
 		State = s;
 
 		std::map<std::string, ::DBus::Variant> m;
-		m["State"] = to_variant(s);
+		m["State"] = to_variant(State());
 
 		PropertiesChanged(m);
 	}
