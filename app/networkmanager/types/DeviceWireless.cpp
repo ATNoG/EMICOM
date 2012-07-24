@@ -92,7 +92,7 @@ void DeviceWireless::Enable()
 		remove_aps_older_than(boost::posix_time::seconds(0));
 	}
 
-	log_(0, "Enabling, with scan request");
+	log_(0, "Enabling");
 
 	// assume success
 	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
@@ -103,10 +103,12 @@ void DeviceWireless::Enable()
 			pm >> mih::confirm(mih::confirm::link_actions)
 				& mih::tlv_status(st);
 
-			//if (st != mih::status_success) {
-			//	state(NM_DEVICE_STATE_UNKNOWN, NM_DEVICE_STATE_REASON_UNKNOWN);
-			//}
-		}, _lti, true);
+			if (st != mih::status_success) {
+				state(NM_DEVICE_STATE_UNKNOWN, NM_DEVICE_STATE_REASON_UNKNOWN);
+			} else {
+				Scan();
+			}
+		}, _lti, false);
 }
 
 void DeviceWireless::Scan()
