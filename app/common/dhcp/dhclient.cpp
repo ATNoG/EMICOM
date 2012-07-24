@@ -53,7 +53,7 @@ void dhclient::release(DHCP_VERSION v)
 
 	int result = system(command.str().c_str());
 	if (result) {
-		throw std::runtime_error("Error configuring dynamic address: " + boost::lexical_cast<std::string>(result));
+		throw std::runtime_error("Error releasing dynamic address: " + boost::lexical_cast<std::string>(result));
 	}
 }
 
