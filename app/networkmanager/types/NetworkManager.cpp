@@ -772,12 +772,6 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 				active_connection_it->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED);
 
 				state(NM_STATE_CONNECTED_GLOBAL);
-
-				// force WirelessEnabled signal, needed so that the applet
-				// doesn't stick to the "connecting..." text after success.
-				if (dev->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
-					PropertiesChanged(map_list_of("WirelessEnabled", to_variant(WirelessEnabled())));
-				}
 			} else {
 				log_(0, "Error configuring L3");
 				clear_connections(device);

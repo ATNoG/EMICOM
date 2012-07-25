@@ -109,7 +109,7 @@ void Device::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)
 		sr._2 = NM_DEVICE_STATE_REASON_UNKNOWN;
 		StateReason = sr;
 
-		StateChanged(oldstate, newstate, reason);
+		StateChanged(newstate, oldstate, reason);
 	}
 }
 
