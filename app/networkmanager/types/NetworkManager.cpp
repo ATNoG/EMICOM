@@ -94,7 +94,8 @@ std::map< std::string, std::string > NetworkManager::GetPermissions()
 
 void NetworkManager::Enable(const bool& enable)
 {
-	NetworkManager_adaptor::NetworkingEnabled = enable;
+	NetworkingEnabled = enable;
+	PropertiesChanged(map_list_of("NetworkingEnabled", to_variant(NetworkingEnabled())));
 
 	if (!enable) {
 		log_(0, "Disabling");
@@ -102,7 +103,7 @@ void NetworkManager::Enable(const bool& enable)
 		state(NM_STATE_DISCONNECTING);
 
 		for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
-			it->second->Disconnect();
+			it->second->Disable();
 			clear_connections(it->first);
 		}
 	} else {
