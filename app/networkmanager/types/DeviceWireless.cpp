@@ -156,10 +156,10 @@ void DeviceWireless::link_conf(const completion_handler &h,
 	ActiveAccessPoint = specific_object;
 	ActiveConnection = connection_active;
 
+	Device::link_conf(h, poa, lconf, connection_active, specific_object);
+
 	PropertiesChanged(map_list_of("ActiveAccessPoint", to_variant(ActiveAccessPoint()))
 	                             ("ActiveConnection",  to_variant(ActiveConnection())));
-
-	Device::link_conf(h, poa, lconf, connection_active, specific_object);
 }
 
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
