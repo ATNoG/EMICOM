@@ -125,7 +125,9 @@ void Device::link_down()
 void Device::link_up(const boost::optional<mih::mac_addr> &poa)
 {
 	log_(0, "Link up");
-	state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN); // preparing to connect?
+	if (State() < NM_DEVICE_STATE_IP_CONFIG) {
+		state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN);
+	}
 }
 
 void Device::l3_up()
