@@ -497,8 +497,8 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 		fi.clear_routes();
 
 		// clear dns servers and domains
-		{ boost::filesystem::ofstream dns_resolv(resolv_conf_file, std::ios_base::trunc);
-		}
+		//{ boost::filesystem::ofstream dns_resolv(resolv_conf_file, std::ios_base::trunc);
+		//}
 
 		// handle automatic configurations
 		if (cfg_methods.get(mih::ip_cfg_ipv4_dynamic)) {
@@ -509,6 +509,7 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 			log_(0, "(command) Adding dynamic IPv6 configuration");
 			dhc->bind(dhcp::dhcpclient::DHCPv6);
 		}
+
 		// handle static configurations
 		if (address_list) {
 			log_(0, "(command) Adding static addresses");
@@ -565,7 +566,7 @@ void default_handler(boost::asio::io_service &ios,
 	case mih::request::capability_discover:
 		{
 			log_(0, "(command) Received capability_discover message");
-			handle_capability_discover(msg.tid());
+			ios.dispatch(boost::bind(&handle_capability_discover, msg.tid()));
 		}
 		break;
 
@@ -576,7 +577,7 @@ void default_handler(boost::asio::io_service &ios,
 				msg >> mih::request()
 				& mih::tlv_link_evt_list(events);
 
-			handle_event_subscribe(msg.tid(), events);
+			ios.dispatch(boost::bind(&handle_event_subscribe, msg.tid(), events));
 		}
 		break;
 
@@ -587,7 +588,7 @@ void default_handler(boost::asio::io_service &ios,
 			msg >> mih::request()
 				& mih::tlv_link_evt_list(events);
 
-			handle_event_unsubscribe(msg.tid(), events);
+			ios.dispatch(boost::bind(&handle_event_unsubscribe, msg.tid(), events));
 		}
 		break;
 
@@ -605,7 +606,8 @@ void default_handler(boost::asio::io_service &ios,
 				& mih::tlv_link_states_req(states_req)
 				& mih::tlv_link_descriptor_req(desc_req);
 
-			handle_link_get_parameters(fi, msg.tid(), param_list, states_req, desc_req);
+			ios.dispatch(boost::bind(&handle_link_get_parameters, boost::ref(fi), msg.tid(),
+			                                                      param_list, states_req, desc_req));
 		}
 		break;
 
@@ -621,7 +623,8 @@ void default_handler(boost::asio::io_service &ios,
 				& mih::tlv_time_interval(delay)
 				& mih::tlv_poa(poa);
 
-			handle_link_actions(ios, fi, msg.tid(), action, delay, poa);
+			ios.dispatch(boost::bind(&handle_link_actions, boost::ref(ios), boost::ref(fi), msg.tid(),
+			                                               action, delay, poa));
 		}
 		break;
 
@@ -638,7 +641,8 @@ void default_handler(boost::asio::io_service &ios,
 				& mih::tlv_poa(poa)
 				& mih::tlv_configuration_list(lconf);
 
-			handle_link_conf(ios, fi, msg.tid(), poa, lconf);
+			ios.dispatch(boost::bind(&handle_link_conf, boost::ref(ios), boost::ref(fi), msg.tid(),
+			                                            poa, lconf));
 		}
 		break;
 
@@ -661,7 +665,8 @@ void default_handler(boost::asio::io_service &ios,
 				& mih::tlv_ip_dns_list(dns_list)
 				& mih::tlv_fqdn_list(domain_list);
 
-			handle_l3_conf(ios, fi, msg.tid(), cfg_methods, address_list, route_list, dns_list, domain_list);
+			ios.dispatch(boost::bind(&handle_l3_conf, boost::ref(ios), boost::ref(fi), msg.tid(),
+			                                          cfg_methods, address_list, route_list, dns_list, domain_list));
 		}
 		break;
 
@@ -765,9 +770,7 @@ int main(int argc, char** argv)
 	if_8023 fi(ios, mih::mac_addr(cfg.get<std::string>(sap::kConf_Interface_Addr)));
 	mih::link_id id = fi.link_id();
 
-	std::unique_ptr<sap::link> _ls(new sap::link(cfg, ios,
-		boost::bind(&default_handler, boost::ref(ios), boost::ref(fi), _1, _2)));
-	ls = std::move(_ls);
+	ls.reset(new sap::link(cfg, ios, boost::bind(&default_handler, boost::ref(ios), boost::ref(fi), _1, _2)));
 	mihf_sap_init(id);
 
 	fi.link_up_callback(boost::bind(&dispatch_link_up, _1, _2, _3, _4, _5));
@@ -778,8 +781,7 @@ int main(int argc, char** argv)
 	// checking wpa_supplicant and dhcpcd
 	sleep(1); // TODO: "ensure" the d-bus dispatcher has started
 
-	std::unique_ptr<dhcp::dhcpclient> _dhc(new dhcp::dhclient(devname));
-	dhc = std::move(_dhc);
+	dhc.reset(new dhcp::dhclient(devname));
 
 	wpa_supplicant::WPASupplicant wpa(dbus_connection, "/fi/w1/wpa_supplicant1", "fi.w1.wpa_supplicant1");
 
@@ -800,9 +802,8 @@ int main(int argc, char** argv)
 		log_(0, "Apparently successul, at ", wpa_interface_path);
 	}
 
-	std::unique_ptr<wpa_supplicant::Interface> _wpa_interface(
+	wpa_interface.reset(
 		new wpa_supplicant::Interface(dbus_connection, wpa_interface_path.c_str(), "fi.w1.wpa_supplicant1"));
-	wpa_interface = std::move(_wpa_interface);
 
 	ios.run();
 }
