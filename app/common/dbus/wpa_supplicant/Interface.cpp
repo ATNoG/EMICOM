@@ -23,14 +23,19 @@ namespace odtone {
 namespace wpa_supplicant {
 
 Interface::Interface(DBus::Connection &connection, const char *path, const char *name)
-	: DBus::ObjectProxy(connection, path, name)
+	: DBus::ObjectProxy(connection, path, name), _wired(false)
 {
+	_wired = boost::iequals(Driver(), "wired") == true;
 }
 
 void Interface::add_completion_handler(const completion_handler &h)
 {
 	boost::unique_lock<boost::shared_mutex> lock(_completion_handlers_mutex);
-	_buffered_completion_handlers.push_back(h);
+	if (_wired) {
+		_completion_handlers.push_back(h);
+	} else {
+		_buffered_completion_handlers.push_back(h);
+	}
 }
 
 void Interface::ScanDone(const bool& success)
@@ -77,16 +82,17 @@ void Interface::PropertiesChanged(const std::map< std::string, ::DBus::Variant >
 
 		// The "disconnected" or "completed" states are not considered for completion
 		// unless the interface has been in the "associating" state first.
+		// except for "wired" devices, handled differently in the add_completion_handlers method.
 		if (boost::iequals(value, "associating")) {
 			_completion_handlers = _buffered_completion_handlers;
 			_buffered_completion_handlers.clear();
 		} else {
 			bool success = boost::iequals(value, "completed");
 			if (success || boost::iequals(value, "disconnected")) {
-				auto it = _completion_handlers.begin();
-				while (it != _completion_handlers.end()) {
+				for (auto it = _completion_handlers.begin();
+					 it != _completion_handlers.end();
+					 it = _completion_handlers.erase(it)) {
 					(*it)(success);
-					it = _completion_handlers.erase(it);
 				}
 			}
 		}

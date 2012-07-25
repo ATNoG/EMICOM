@@ -100,6 +100,7 @@ private:
 	boost::shared_mutex             _completion_handlers_mutex;
 	std::vector<completion_handler> _buffered_completion_handlers;
 	std::vector<completion_handler> _completion_handlers;
+	bool                            _wired;
 };
 
 }; };

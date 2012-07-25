@@ -16,8 +16,12 @@
 //==============================================================================
 
 #include "DeviceWired.hpp"
+#include "util.hpp"
+
+#include <boost/assign/list_of.hpp>
 
 using namespace odtone::networkmanager;
+using namespace boost::assign;
 
 DeviceWired::DeviceWired(DBus::Connection &connection, const char* path, mih_user &ctrl, mih::link_tuple_id &lti)
 	: Device(connection, path, ctrl, lti)
@@ -57,15 +61,35 @@ DeviceWired::~DeviceWired()
 {
 }
 
-void DeviceWired::link_down()
+void DeviceWired::Disable()
 {
-	log_(0, "Link down, device is now disconnected");
-	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	Device::Disable();
+
+	PropertiesChanged(map_list_of("ActiveConnection", to_variant(ActiveConnection())));
 }
 
-void DeviceWired::link_up(const boost::optional<mih::mac_addr> &poa)
+void DeviceWired::Disconnect()
 {
-	log_(0, "Link up, device is now preparing L3 connectivity");
-	//state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN);
-	state(NM_DEVICE_STATE_ACTIVATED, NM_DEVICE_STATE_REASON_UNKNOWN);
+	Device::Disconnect();
+
+	PropertiesChanged(map_list_of("ActiveConnection", to_variant(ActiveConnection())));
+}
+
+void DeviceWired::link_conf(const completion_handler &h,
+                            const boost::optional<mih::link_addr> &poa,
+                            const mih::configuration_list &lconf,
+                            const DBus::Path &connection_active,
+                            const DBus::Path &specific_object)
+{
+	Device::link_conf(h, poa, lconf, connection_active, specific_object);
+
+	PropertiesChanged(map_list_of("ActiveConnection", to_variant(ActiveConnection())));
+}
+
+void DeviceWired::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)
+{
+	Device::state(newstate, reason);
+
+	PropertiesChanged(map_list_of("State",       to_variant(State()))
+	                             ("StateReason", to_variant(StateReason())));
 }

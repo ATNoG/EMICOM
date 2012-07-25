@@ -363,9 +363,7 @@ void NetworkManager::add_ethernet_device(mih::mac_addr &address)
 	if (!NetworkManager_adaptor::NetworkingEnabled()) {
 		d->Disable();
 	} else {
-		//d->Enable();
-#warning fix this!
-		d->Disable();
+		d->Enable();
 	}
 
 	// save the device
@@ -430,10 +428,8 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 {
 	log_(0, "L2 connection dropped on device ", dev.address());
 
-	// look for device and inform/check
-	bool match = false;
-
 	// update the device and connection information
+	bool match = false;
 	for (auto it = _device_map.begin(); it != _device_map.end() && !match; ++it) {
 		if (boost::iequals(it->second->address(), dev.address())) {
 			match = true;
@@ -448,21 +444,6 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 				// TODO reconnect, or simply wait!!!
 			}
 		}
-	}
-
-	// update the WirelessEnabled property
-	match = false; // if no wireless found, wireless disabled
-	for (auto it = _device_map.begin(); it != _device_map.end() && !match; ++it) {
-		if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
-			if (   it->second->State() > Device::NM_DEVICE_STATE_DISCONNECTED
-			    && it->second->State() < Device::NM_DEVICE_STATE_FAILED) {
-				match = true;
-			}
-		}
-	}
-	if (!match) {
-		WirelessEnabled = false;
-		PropertiesChanged(map_list_of("WirelessEnabled", to_variant(WirelessEnabled())));
 	}
 
 	// update the NetworkManager state

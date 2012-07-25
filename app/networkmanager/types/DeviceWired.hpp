@@ -42,14 +42,30 @@ public:
 	~DeviceWired();
 
 	/**
-	 * see Device::link_down()
+	 * @see Device::Disable()
 	 */
-	void link_down();
+	void Disable();
 
 	/**
-	 * see Device::link_up()
+	 * @see Device::Disconnect()
 	 */
-	void link_up(const boost::optional<mih::mac_addr> &poa);
+	void Disconnect();
+
+	/**
+	 * @see Device::link_conf()
+	 */
+	virtual void link_conf(const completion_handler &h,
+	                       const boost::optional<mih::link_addr> &poa,
+	                       const mih::configuration_list &lconf,
+	                       const DBus::Path &connection_active,
+	                       const DBus::Path &specific_object);
+
+protected:
+
+	/**
+	 * @see Device::state()
+	 */
+	void state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason);
 };
 
 }; };

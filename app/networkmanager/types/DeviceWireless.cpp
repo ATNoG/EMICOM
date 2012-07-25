@@ -85,6 +85,24 @@ std::vector< ::DBus::Path > DeviceWireless::GetAccessPoints()
 	return r;
 }
 
+void DeviceWireless::Disable()
+{
+	Device::Disable();
+
+	ActiveAccessPoint = "/";
+	PropertiesChanged(map_list_of("ActiveAccessPoint", to_variant(ActiveAccessPoint()))
+	                             ("ActiveConnection",  to_variant(ActiveConnection())));
+}
+
+void DeviceWireless::Disconnect()
+{
+	Device::Disconnect();
+
+	ActiveAccessPoint = "/";
+	PropertiesChanged(map_list_of("ActiveAccessPoint", to_variant(ActiveAccessPoint()))
+	                             ("ActiveConnection",  to_variant(ActiveConnection())));
+}
+
 void DeviceWireless::Enable()
 {
 	{
@@ -127,15 +145,6 @@ void DeviceWireless::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reas
 
 	PropertiesChanged(map_list_of("State",       to_variant(State()))
 	                             ("StateReason", to_variant(StateReason())));
-}
-
-void DeviceWireless::link_down()
-{
-	Device::link_down();
-
-	ActiveAccessPoint = "/";
-	PropertiesChanged(map_list_of("ActiveAccessPoint", to_variant(ActiveAccessPoint()))
-	                             ("ActiveConnection",  to_variant(ActiveConnection())));
 }
 
 void DeviceWireless::link_conf(const completion_handler &h,

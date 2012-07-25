@@ -43,6 +43,8 @@ void Device::Disconnect()
 	// assume success
 	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
 
+	ActiveConnection = "/";
+
 	_ctrl.disconnect(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
 			mih::status st;
@@ -81,6 +83,8 @@ void Device::Disable()
 	// assume success
 	state(NM_DEVICE_STATE_UNAVAILABLE, NM_DEVICE_STATE_REASON_UNKNOWN);
 
+	ActiveConnection = "/";
+
 	_ctrl.power_down(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
 			mih::status st;
@@ -112,7 +116,7 @@ void Device::state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason)
 void Device::link_down()
 {
 	log_(0, "Link down, device is now disconnected");
-	ActiveConnection = "/";
+
 	if (State() != NM_DEVICE_STATE_DISCONNECTED && State() != NM_DEVICE_STATE_UNAVAILABLE) {
 		state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
 	}
