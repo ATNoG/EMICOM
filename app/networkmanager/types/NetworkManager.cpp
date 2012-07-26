@@ -31,6 +31,7 @@ using namespace boost::assign;
 
 NetworkManager::NetworkManager(DBus::Connection &connection, const mih::config &cfg, boost::asio::io_service &io) :
 	DBus::ObjectAdaptor(connection, cfg.get<std::string>(kConf_DBus_Path).c_str()),
+	_io(io),
 	_connection(connection),
 	_dbus_path(cfg.get<std::string>(kConf_DBus_Path)),
 	_settings_path(cfg.get<std::string>(kConf_Settings_Path)),
@@ -479,6 +480,24 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 	state(newstate);
 }
 
+void NetworkManager::links_detected(const std::vector<mih::link_det_info> &ldil)
+{
+	// tell DeviceWireless to update the list
+	// TODO target each specific DeviceWireless
+	BOOST_FOREACH (mih::link_det_info ldi, ldil) {
+		mih::mac_addr dev_addr = boost::get<mih::mac_addr>(ldi.id.addr);
+
+		for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
+			if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
+				std::shared_ptr<DeviceWireless> d = std::static_pointer_cast<DeviceWireless>(it->second);
+				if (boost::iequals(d->HwAddress(), dev_addr.address())) {
+					d->add_ap(ldi);
+				}
+			}
+		}
+	}
+}
+
 void NetworkManager::on_set_property(DBus::InterfaceAdaptor &interface,
                                      const std::string &prop,
                                      const DBus::Variant &value)
@@ -862,7 +881,7 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 			log_(0, "Unable to determine poa address");
 		}
 
-		link_up(*dev, opoa);
+		_io.dispatch(boost::bind(&NetworkManager::link_up, this, *dev, opoa));
 	}
 	break;
 
@@ -885,7 +904,7 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 			break;
 		}
 
-		link_down(*dev);
+		_io.dispatch(boost::bind(&NetworkManager::link_down, this, *dev));
 	}
 	break;
 
@@ -898,20 +917,7 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 		msg >> mih::indication()
 			& mih::tlv_link_det_info_list(ldil);
 
-		// tell DeviceWireless to update the list
-		// TODO target each specific DeviceWireless
-		BOOST_FOREACH (mih::link_det_info ldi, ldil) {
-			mih::mac_addr dev_addr = boost::get<mih::mac_addr>(ldi.id.addr);
-
-			for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
-				if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
-					std::shared_ptr<DeviceWireless> d = std::static_pointer_cast<DeviceWireless>(it->second);
-					if (boost::iequals(d->HwAddress(), dev_addr.address())) {
-						d->add_ap(ldi);
-					}
-				}
-			}
-		}
+		_io.dispatch(boost::bind(&NetworkManager::links_detected, this, ldil));
 	}
 	break;
 
@@ -954,7 +960,7 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 		// look for ongoing progress of a connection on this link!
 		auto ac = _device_active_connection.find(device);
 		if (ac != _device_active_connection.end()) {
-			link_conf(device, ac->first);
+			_io.dispatch(boost::bind(&NetworkManager::link_conf, this, device, ac->first));
 		} else {
 			throw std::runtime_error("No ongoing connection on this link");
 			// TODO this is from

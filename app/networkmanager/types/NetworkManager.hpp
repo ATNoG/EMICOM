@@ -202,6 +202,13 @@ private:
 	void link_down(const mih::mac_addr &dev);
 
 	/**
+	 * Method to inform the respective devices that links were detected.
+	 *
+	 * @param ldil The list of detected links.
+	 */
+	void links_detected(const std::vector<mih::link_det_info> &ldil);
+
+	/**
 	 * Default MIH event handler.
 	 *
 	 * @param msg Received message.
@@ -261,6 +268,7 @@ private:
 	void clear_connections(const DBus::Path &device);
 
 private:
+	boost::asio::io_service &_io;
 	DBus::Connection &_connection;
 	std::string       _dbus_path;
 	std::string       _settings_path;
