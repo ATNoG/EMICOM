@@ -430,35 +430,49 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 	log_(0, "L2 connection dropped on device ", dev.address());
 
 	// update the device and connection information
-	bool match = false;
-	for (auto it = _device_map.begin(); it != _device_map.end() && !match; ++it) {
-		if (boost::iequals(it->second->address(), dev.address())) {
-			match = true;
-			it->second->link_down();
-
-			if (    !NetworkingEnabled()
-			    || (!WirelessEnabled() && it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI)) {
-					// there's another, untestable condition, which is power off on the hardware
-				clear_connections(it->first);
-			} else {
-				// TODO get the connection and update the state.
-				// TODO reconnect, or simply wait!!!
-			}
+	for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
+		if (!boost::iequals(it->second->address(), dev.address())) {
+			continue;
 		}
+
+		it->second->link_down();
+
+		if (    !NetworkingEnabled()
+			|| (!WirelessEnabled() && it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI)) {
+				// there's another, untestable condition, which is power off on the hardware
+			clear_connections(it->first);
+		} else {
+			DBus::Path active_connection_path = it->second->ActiveConnection();
+			auto active_connection_it = _active_connections.find(active_connection_path);
+			if (active_connection_it != _active_connections.end()) {
+				active_connection_it->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_UNKNOWN);
+			}
+
+			// TODO reconnect, or simply wait!!!
+		}
+
+		break;
 	}
 
 	// update the NetworkManager state
 	NM_STATE newstate = NM_STATE_DISCONNECTED;
+
 	// if the current state is connected or connecting, check for still existing ConnectionActive
 	if (State() > NM_STATE_DISCONNECTED) {
-		for (auto it = _active_connections.begin(); it != _active_connections.end(); ++it) {
+		for (auto it = _active_connections.begin();
+		     it != _active_connections.end() && newstate != NM_STATE_CONNECTED_GLOBAL;
+		     ++it) {
 			// upgrade to STATE_CONNECTING if any ACTIVATING found,
 			// and to CONNECTED_GLOBAL if any ACTIVATED found.
 			if (it->second->State() == ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATING) {
 				newstate = NM_STATE_CONNECTING;
 			} else if (it->second->State() == ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED) {
 				newstate = NM_STATE_CONNECTED_GLOBAL;
-				break;
+
+				// restore IP configuration for this connection
+				if (it->second->Devices().size() > 0) {
+					l3_conf(it->second->Devices()[0], it->first);
+				}
 			}
 		}
 	}
