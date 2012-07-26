@@ -125,9 +125,6 @@ void Device::link_down()
 void Device::link_up(const boost::optional<mih::mac_addr> &poa)
 {
 	log_(0, "Link up");
-	if (State() < NM_DEVICE_STATE_IP_CONFIG) {
-		state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN);
-	}
 }
 
 void Device::l3_up()
@@ -169,6 +166,8 @@ void Device::l3_conf(const completion_handler &h,
                      const boost::optional<mih::fqdn_list> &domain_list)
 {
 	log_(0, "Configuring L3");
+
+	state(NM_DEVICE_STATE_IP_CONFIG, NM_DEVICE_STATE_REASON_UNKNOWN);
 
 	_ctrl.l3_conf(
 		[h](mih::message &pm, const boost::system::error_code &ec) {
