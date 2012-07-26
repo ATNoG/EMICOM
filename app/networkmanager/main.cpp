@@ -26,11 +26,17 @@
 #include <cstdlib> // for EXIT_{SUCCESS,FAILURE}
 #include <iostream>
 
+#include <boost/thread/mutex.hpp>
+
 using namespace odtone;
 namespace po = boost::program_options;
 namespace nm = odtone::networkmanager;
 
-logger log_("mih_nm", std::cout);
+void dbus_dispatch_pending(DBus::BusDispatcher &d, boost::mutex &m)
+{
+	d.dispatch_pending();
+	m.unlock();
+}
 
 int main(int argc, char *argv[])
 {
@@ -73,12 +79,16 @@ int main(int argc, char *argv[])
 
 	// launch the service
 	boost::asio::io_service ios;
-	networkmanager::NetworkManager manager(conn, cfg, ios);
+	nm::NetworkManager manager(conn, cfg, ios);
 
 	boost::thread io(boost::bind(&boost::asio::io_service::run, &ios));
 
-	// start the D-Bus dispatcher
-	dispatcher.enter();
+	boost::mutex m;
+	while (true) {
+		ios.dispatch(boost::bind(&dbus_dispatch_pending, boost::ref(dispatcher), boost::ref(m)));
+		m.lock();
+		dispatcher.dispatch();
+	}
 
 	return EXIT_SUCCESS;
 }

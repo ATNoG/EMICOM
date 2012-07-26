@@ -1175,6 +1175,12 @@ void set_supported_command_list()
 //// Main
 ///////////////////////////////////////////////////////////////////////////////
 
+void dbus_dispatch_pending(DBus::BusDispatcher &d, boost::mutex &m)
+{
+	d.dispatch_pending();
+	m.unlock();
+}
+
 int main(int argc, char** argv)
 {
 	setup_crash_handler();
@@ -1226,7 +1232,6 @@ int main(int argc, char** argv)
 	DBus::BusDispatcher dispatcher;
 	DBus::default_dispatcher = &dispatcher;
 	DBus::Connection dbus_connection = DBus::Connection::SystemBus();
-	boost::thread disp(boost::bind(&DBus::BusDispatcher::enter, &dispatcher));
 
 	boost::asio::io_service ios;
 
@@ -1285,7 +1290,14 @@ int main(int argc, char** argv)
 	wpa_interface.reset(
 		new wpa_supplicant::Interface(dbus_connection, wpa_interface_path.c_str(), "fi.w1.wpa_supplicant1"));
 
-	ios.run();
+	boost::thread io(boost::bind(&boost::asio::io_service::run, &ios));
+
+	boost::mutex m;
+	while (true) {
+		ios.dispatch(boost::bind(&dbus_dispatch_pending, boost::ref(dispatcher), boost::ref(m)));
+		m.lock();
+		dispatcher.dispatch();
+	}
 }
 
 // EOF ////////////////////////////////////////////////////////////////////////
