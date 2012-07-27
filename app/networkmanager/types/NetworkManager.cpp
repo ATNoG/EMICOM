@@ -436,9 +436,9 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 			continue;
 		}
 
-		it->second->link_down();
-
-		if (    !NetworkingEnabled()
+		// if the disconnect was deliberate, cleanup the ConnectionActive objects
+		if (   it->second->State() < Device::NM_DEVICE_STATE_PREPARE
+		    || !NetworkingEnabled()
 			|| (!WirelessEnabled() && it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI)) {
 				// there's another, untestable condition, which is power off on the hardware
 			clear_connections(it->first);
@@ -451,6 +451,8 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 
 			// TODO reconnect, or simply wait!!!
 		}
+
+		it->second->link_down();
 
 		break;
 	}
