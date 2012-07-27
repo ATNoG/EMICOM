@@ -154,7 +154,6 @@ void DeviceWireless::link_conf(const completion_handler &h,
                                const DBus::Path &specific_object)
 {
 	ActiveAccessPoint = specific_object;
-	ActiveConnection = connection_active;
 
 	Device::link_conf(h, poa, lconf, connection_active, specific_object);
 

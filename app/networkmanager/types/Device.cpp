@@ -40,10 +40,10 @@ void Device::Disconnect()
 {
 	log_(0, "Disconnecting");
 
+	ActiveConnection = "/";
+
 	// assume success
 	state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
-
-	ActiveConnection = "/";
 
 	_ctrl.disconnect(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
@@ -80,10 +80,10 @@ void Device::Disable()
 {
 	log_(0, "Disabling");
 
+	ActiveConnection = "/";
+
 	// assume success
 	state(NM_DEVICE_STATE_UNAVAILABLE, NM_DEVICE_STATE_REASON_UNKNOWN);
-
-	ActiveConnection = "/";
 
 	_ctrl.power_down(
 		[&](mih::message &pm, const boost::system::error_code &ec) {
