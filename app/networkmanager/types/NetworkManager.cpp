@@ -380,49 +380,23 @@ void NetworkManager::link_up(const mih::mac_addr &dev, const boost::optional<mih
 {
 	log_(0, "New L2 completed for device ", dev.address(), " with poa ", poa ? poa.get().address() : "[none]");
 
-	// look for device and inform/check
-	bool match;
-	for (auto it = _device_map.begin(); it != _device_map.end() && !match; ++it) {
-		switch (it->second->DeviceType()) {
-			case Device::NM_DEVICE_TYPE_WIFI:
-			{
-				std::shared_ptr<DeviceWireless> d = std::static_pointer_cast<DeviceWireless>(it->second);
-				if (d->address() == dev.address()) {
-					match = true;
-					d->link_up(poa);
-				}
-			}
-			break;
-
-			case Device::NM_DEVICE_TYPE_ETHERNET:
-			{
-				std::shared_ptr<DeviceWired> d = std::static_pointer_cast<DeviceWired>(it->second);
-				if (d->address() == dev.address()) {
-					match = true;
-					d->link_up(poa);
-				}
-			}
-			break;
-
-			case Device::NM_DEVICE_TYPE_WIMAX:
-			{
-				std::shared_ptr<DeviceWiMax> d = std::static_pointer_cast<DeviceWiMax>(it->second);
-				if (d->address() == dev.address()) {
-					match = true;
-					d->link_up(poa);
-				}
-			}
-			break;
-
-/*			case Device::NM_DEVICE_TYPE_BT:
-			case Device::NM_DEVICE_TYPE_OLPC_MESH:
-			case Device::NM_DEVICE_TYPE_INFINIBAND:
-			case Device::NM_DEVICE_TYPE_BOND:
-			case Device::NM_DEVICE_TYPE_VLAN:*/
-			default:
-				// unsupported
-				break;
+	// update the device and connection information
+	for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
+		if (!boost::iequals(it->second->address(), dev.address())) {
+			continue;
 		}
+
+		it->second->link_up(poa);
+
+		// if there was an active connection for this device, L2 is now up, so proceed with L3
+		auto device_active_connection_it = _device_active_connection.find(it->first);
+		if (device_active_connection_it != _device_active_connection.end()) {
+			l3_conf(it->first, device_active_connection_it->second);
+		} else {
+			// TODO if wired, might just try a saved configuration
+		}
+
+		break;
 	}
 }
 
