@@ -16,11 +16,15 @@
 //==============================================================================
 
 #include "AccessPoint.hpp"
+#include "util.hpp"
 
 #include "DeviceWireless.hpp"
+
 #include "boost/foreach.hpp"
+#include <boost/assign/list_of.hpp>
 
 using namespace odtone::networkmanager;
+using namespace boost::assign;
 
 AccessPoint::AccessPoint(DBus::Connection &connection, const char* path, mih::link_det_info i) :
 	DBus::ObjectAdaptor(connection, path),
@@ -195,6 +199,26 @@ void AccessPoint::Update(mih::link_det_info i)
 
 		_id.ssid = i.network_id;
 		_id.addr = mac;
+	}
+}
+
+void AccessPoint::update_strength(mih::sig_strength &s)
+{
+	log_(0, "Updating AP strength");
+
+	uint8_t _Strength;
+
+	mih::percentage *signal_pct = boost::get<mih::percentage>(&s);
+	if (signal_pct) {
+		_Strength = /*(uint)*/*signal_pct;
+	} else {
+		sint8 *signal_dbm = boost::get<sint8>(&s);
+		_Strength = dbm_to_percent(*signal_dbm);
+	}
+
+	if (Strength() != _Strength) {
+		Strength = _Strength;
+		PropertiesChanged(map_list_of("Strength", to_variant(Strength())));
 	}
 }
 

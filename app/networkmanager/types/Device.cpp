@@ -183,6 +183,11 @@ void Device::l3_conf(const completion_handler &h,
 		}, _lti, cfg_methods, address_list, route_list, dns_list, domain_list);
 }
 
+void Device::parameters_report(const mih::link_param_rpt_list &rpt_list)
+{
+	// nothing
+}
+
 std::string Device::address()
 {
 	return boost::get<mih::mac_addr>(_lti.addr).address();

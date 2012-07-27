@@ -241,7 +241,7 @@ void mih_user::capability_discover_confirm(mih::message& msg, const boost::syste
 
 		mih::link_param_802_11 lp = mih::link_param_802_11_rssi;
 		lcp.type = lp;
-		lcp.timer_interval = 30000; // every 30 sec
+		lcp.timer_interval = 5000; // every 5 sec
 		lcp.action = mih::th_action_normal;
 		lcpl.push_back(lcp);
 

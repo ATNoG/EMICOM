@@ -162,6 +162,24 @@ void DeviceWireless::link_conf(const completion_handler &h,
 	                             ("ActiveConnection",  to_variant(ActiveConnection())));
 }
 
+void DeviceWireless::parameters_report(const mih::link_param_rpt_list &rpt_list)
+{
+	log_(0, "Handling parameters report");
+
+	for (auto it = rpt_list.begin(); it != rpt_list.end(); ++it) {
+		mih::link_param_802_11 param_802_11 = boost::get<mih::link_param_802_11>(it->param.type);
+		if (param_802_11 == mih::link_param_802_11_rssi) {
+			boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
+			auto active_ap_it = _access_points_map.find(ActiveAccessPoint());
+			if (active_ap_it != _access_points_map.end()) {
+				mih::link_param_val _value = boost::get<mih::link_param_val>(it->param.value);
+				mih::sig_strength value = static_cast<odtone::sint8>(_value);
+				active_ap_it->second->update_strength(value);
+			}
+		}
+	}
+}
+
 void DeviceWireless::on_get_property(DBus::InterfaceAdaptor &interface, const std::string &property, DBus::Variant &value)
 {
 	PropertiesAdaptor::on_get_property(interface, property, value);

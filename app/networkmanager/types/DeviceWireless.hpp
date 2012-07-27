@@ -136,6 +136,14 @@ public:
 	               const DBus::Path &connection_active,
 	               const DBus::Path &specific_object);
 
+
+	/**
+	 * Update parameters based on link reports.
+	 *
+	 * @param rpt_list The report list.
+	 */
+	void parameters_report(const mih::link_param_rpt_list &rpt_list);
+
 protected:
 	/**
 	 * @see DBus::PropertyAdaptor

@@ -215,6 +215,8 @@ public:
 	                     const boost::optional<mih::ip_addr_list> &dns_list,
 	                     const boost::optional<mih::fqdn_list> &domain_list);
 
+	virtual void parameters_report(const mih::link_param_rpt_list &rpt_list);
+
 	/**
 	 * Get the device address;
 	 */

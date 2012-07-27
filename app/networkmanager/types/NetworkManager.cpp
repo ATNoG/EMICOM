@@ -387,7 +387,7 @@ void NetworkManager::link_up(const mih::mac_addr &dev, const boost::optional<mih
 			case Device::NM_DEVICE_TYPE_WIFI:
 			{
 				std::shared_ptr<DeviceWireless> d = std::static_pointer_cast<DeviceWireless>(it->second);
-				if (d->HwAddress() == dev.address()) {
+				if (d->address() == dev.address()) {
 					match = true;
 					d->link_up(poa);
 				}
@@ -397,7 +397,7 @@ void NetworkManager::link_up(const mih::mac_addr &dev, const boost::optional<mih
 			case Device::NM_DEVICE_TYPE_ETHERNET:
 			{
 				std::shared_ptr<DeviceWired> d = std::static_pointer_cast<DeviceWired>(it->second);
-				if (d->HwAddress() == dev.address()) {
+				if (d->address() == dev.address()) {
 					match = true;
 					d->link_up(poa);
 				}
@@ -407,7 +407,7 @@ void NetworkManager::link_up(const mih::mac_addr &dev, const boost::optional<mih
 			case Device::NM_DEVICE_TYPE_WIMAX:
 			{
 				std::shared_ptr<DeviceWiMax> d = std::static_pointer_cast<DeviceWiMax>(it->second);
-				if (d->HwAddress() == dev.address()) {
+				if (d->address() == dev.address()) {
 					match = true;
 					d->link_up(poa);
 				}
@@ -490,10 +490,23 @@ void NetworkManager::links_detected(const std::vector<mih::link_det_info> &ldil)
 		for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
 			if (it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI) {
 				std::shared_ptr<DeviceWireless> d = std::static_pointer_cast<DeviceWireless>(it->second);
-				if (boost::iequals(d->HwAddress(), dev_addr.address())) {
+				if (boost::iequals(d->address(), dev_addr.address())) {
 					d->add_ap(ldi);
 				}
 			}
+		}
+	}
+}
+
+void NetworkManager::parameters_report(const mih::link_tuple_id &lti,
+                                       const mih::link_param_rpt_list &rpt_list)
+{
+	std::string device_address = boost::get<mih::mac_addr>(lti.addr).address();
+
+	for (auto it = _device_map.begin(); it != _device_map.end(); ++it) {
+		if (boost::iequals(it->second->address(), device_address)) {
+			it->second->parameters_report(rpt_list);
+			break;
 		}
 	}
 }
@@ -838,9 +851,8 @@ void NetworkManager::clear_connections(const DBus::Path &device)
 
 void NetworkManager::event_handler(mih::message &msg, const boost::system::error_code &ec)
 {
-	log_(0, "Event received, status: ", ec.message());
-
 	if (ec) {
+		log_(0, "Error event received, status: ", ec.message());
 		return;
 	}
 
@@ -922,8 +934,19 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 	break;
 
 	case mih::indication::link_parameters_report:
+	{
 		log_(0, "Received a link_parameters report");
-		break;
+
+		mih::link_tuple_id lti;
+		mih::link_param_rpt_list rpt_list;
+
+		msg >> mih::indication()
+			& mih::tlv_link_identifier(lti)
+			& mih::tlv_link_param_rpt_list(rpt_list);
+
+		_io.dispatch(boost::bind(&NetworkManager::parameters_report, this, lti, rpt_list));
+	}
+	break;
 
 	case mih::indication::link_going_down:
 		// TODO

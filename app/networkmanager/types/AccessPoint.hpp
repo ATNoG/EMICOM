@@ -83,6 +83,11 @@ public:
 	void Update(mih::link_det_info i);
 
 	/**
+	 * Update just the RSSI from this AP.
+	 */
+	void update_strength(mih::sig_strength &s);
+
+	/**
 	 * Get the elapsed time since the last change on this object.
 	 *
 	 * @return The time that elapsed since the creation or last change.

@@ -209,6 +209,14 @@ private:
 	void links_detected(const std::vector<mih::link_det_info> &ldil);
 
 	/**
+	 * Method to act on various link parameter reports.
+	 *
+	 * @param lti      The link to which the parameters refer.
+	 * @param rpt_list The report list.
+	 */
+	void parameters_report(const mih::link_tuple_id &lti, const mih::link_param_rpt_list &rpt_list);
+
+	/**
 	 * Default MIH event handler.
 	 *
 	 * @param msg Received message.
