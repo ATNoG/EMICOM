@@ -388,10 +388,16 @@ void NetworkManager::link_up(const mih::mac_addr &dev, const boost::optional<mih
 
 		it->second->link_up(poa);
 
-		// if there was an active connection for this device, L2 is now up, so proceed with L3
+		// if there was an active connection for this device with state unknown, L2 is now up, so proceed with L3
 		auto device_active_connection_it = _device_active_connection.find(it->first);
 		if (device_active_connection_it != _device_active_connection.end()) {
-			l3_conf(it->first, device_active_connection_it->second);
+			auto active_connection_it = _active_connections.find(device_active_connection_it->second);
+			if (active_connection_it != _active_connections.end()) {
+				if (active_connection_it->second->State() == ConnectionActive::NM_ACTIVE_CONNECTION_STATE_UNKNOWN) {
+					log_(0, "Recovering lost connection");
+					l3_conf(it->first, device_active_connection_it->second);
+				}
+			}
 		} else {
 			// TODO if wired, might just try a saved configuration
 		}
