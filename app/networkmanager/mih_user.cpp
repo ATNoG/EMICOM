@@ -25,6 +25,7 @@ using namespace odtone::networkmanager;
 
 mih_user::mih_user(const mih::config &cfg, boost::asio::io_service &io,
                    const default_handler &h, const new_device_handler &d) :
+	_io(io),
 	_mihf(cfg, io, h),
 	log_("mih_usr", std::cout),
 	_device_handler(d),
@@ -214,7 +215,7 @@ void mih_user::capability_discover_confirm(mih::message& msg, const boost::syste
 		li.type = boost::get<mih::link_type>(l.nettype.link);
 		li.addr = l.addr;
 
-		_device_handler(l.nettype, l.addr);
+		_io.dispatch(boost::bind(_device_handler, l.nettype, l.addr));
 
 		// attempt to subscribe events of interest
 		mih::mih_evt_list wanted_evts;

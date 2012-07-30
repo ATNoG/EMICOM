@@ -125,6 +125,7 @@ protected:
 	void configure_thresholds_response(mih::message &msg, const boost::system::error_code &ec);
 
 private:
+	boost::asio::io_service &_io;
 	sap::user _mihf; /**< User SAP helper. */
 	logger    log_;
 
