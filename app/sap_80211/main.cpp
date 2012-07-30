@@ -841,8 +841,12 @@ void handle_link_actions(boost::asio::io_service &ios,
 			}
 			try {
 				dhc->release(dhcp::dhcpclient::DHCPv4);
+			} catch (...) {
+				//
+			}
+			try {
 				dhc->release(dhcp::dhcpclient::DHCPv6);
-			} catch (DBus::Error &e) {
+			} catch (...) {
 				//
 			}
 		}
@@ -933,6 +937,8 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 		log_(0, "(command) Clearing previous configurations");
 
 		// clear addresses
+		dhc->release(dhcp::dhcpclient::DHCPv4);
+		dhc->release(dhcp::dhcpclient::DHCPv6);
 		fi.clear_addresses();
 
 		// clear routes

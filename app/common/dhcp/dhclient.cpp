@@ -37,8 +37,14 @@ dhclient::~dhclient()
 
 void dhclient::bind(DHCP_VERSION v)
 {
+	std::stringstream pidfile;
+	pidfile << "dhclient_" << _dev << "_" << v << ".pid";
+
 	std::stringstream command;
-	command << DHCLIENT_EXECUTABLE << " -" << v << " -1 " << _dev;
+	command << DHCLIENT_EXECUTABLE
+	        << " -" << v
+	        << " -pf " << pidfile.str()
+	        << " -1 " << _dev;
 
 	int result = system(command.str().c_str());
 	if (result) {
@@ -48,8 +54,14 @@ void dhclient::bind(DHCP_VERSION v)
 
 void dhclient::release(DHCP_VERSION v)
 {
+	std::stringstream pidfile;
+	pidfile << "dhclient_" << _dev << "_" << v << ".pid";
+
 	std::stringstream command;
-	command << DHCLIENT_EXECUTABLE << " -" << v << " -x " << _dev;
+	command << DHCLIENT_EXECUTABLE
+	        << " -x"
+	        << " -pf " << pidfile.str()
+	        << " -n"; // do not "configure" any interface
 
 	int result = system(command.str().c_str());
 	if (result) {
