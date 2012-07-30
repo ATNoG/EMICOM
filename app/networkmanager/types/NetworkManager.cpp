@@ -95,6 +95,8 @@ std::map< std::string, std::string > NetworkManager::GetPermissions()
 
 void NetworkManager::Enable(const bool& enable)
 {
+	log_(0, enable ? "Global enabling" : "Global disable");
+
 	NetworkingEnabled = enable;
 	PropertiesChanged(map_list_of("NetworkingEnabled", to_variant(NetworkingEnabled())));
 
@@ -210,7 +212,9 @@ void NetworkManager::AddAndActivateConnection(
 {
 	log_(0, "Activating connection");
 
-	state(NM_STATE_CONNECTING);
+	if (State() < NM_STATE_CONNECTING) {
+		state(NM_STATE_CONNECTING);
+	}
 
 	::DBus::Path active_connection;
 
@@ -438,19 +442,21 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 	}
 
 	// update the NetworkManager state
-	NM_STATE newstate = NM_STATE_DISCONNECTED;
+	NM_STATE beststate = NM_STATE_DISCONNECTED;
+	bool activating = false;
 
 	// if the current state is connected or connecting, check for still existing ConnectionActive
 	if (State() > NM_STATE_DISCONNECTED) {
 		for (auto it = _active_connections.begin();
-		     it != _active_connections.end() && newstate != NM_STATE_CONNECTED_GLOBAL;
+		     it != _active_connections.end() && !activating;
 		     ++it) {
 			// upgrade to STATE_CONNECTING if any ACTIVATING found,
 			// and to CONNECTED_GLOBAL if any ACTIVATED found.
 			if (it->second->State() == ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATING) {
-				newstate = NM_STATE_CONNECTING;
+				beststate = NM_STATE_CONNECTING;
 			} else if (it->second->State() == ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED) {
-				newstate = NM_STATE_CONNECTED_GLOBAL;
+				activating = true;
+				//beststate = NM_STATE_CONNECTED_GLOBAL;
 
 				// restore IP configuration for this connection
 				if (it->second->Devices().size() > 0) {
@@ -459,7 +465,9 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 			}
 		}
 	}
-	state(newstate);
+	if (!activating) {
+		state(beststate);
+	}
 }
 
 void NetworkManager::links_detected(const std::vector<mih::link_det_info> &ldil)
@@ -565,12 +573,13 @@ void NetworkManager::link_conf(const DBus::Path &device, const DBus::Path &conne
 
 	// respond
 	dev->second->link_conf(
-		[&, device, connection_active](bool success) {
+		[&, device, dev, connection_active](bool success) {
 			if (success) {
 				log_(0, "Authentication success");
 				l3_conf(device, connection_active);
 			} else {
 				log_(0, "Authentication failure");
+				dev->second->Disconnect();
 				clear_connections(device);
 				// TODO?
 			}
@@ -784,7 +793,7 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 	}
 
 	dev->second->l3_conf(
-		[&, device, connection_active](bool success) {
+		[&, device, dev, connection_active](bool success) {
 			if (success) {
 				log_(0, "Success configuring L3");
 
@@ -803,6 +812,7 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 				state(NM_STATE_CONNECTED_GLOBAL);
 			} else {
 				log_(0, "Error configuring L3");
+				dev->second->Disconnect();
 				clear_connections(device);
 				// TODO?
 			}
@@ -816,6 +826,7 @@ void NetworkManager::l3_conf(const DBus::Path &device, const DBus::Path &connect
 
 void NetworkManager::clear_connections(const DBus::Path &device)
 {
+	log_(0, "Clearing connections for device ", device);
 	// WARNING when changing this method, check for the effects on every usage!
 
 	// clear the active connections for this device

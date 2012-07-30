@@ -117,7 +117,7 @@ void Device::link_down()
 {
 	log_(0, "Link down, device is now disconnected");
 
-	if (State() != NM_DEVICE_STATE_DISCONNECTED && State() != NM_DEVICE_STATE_UNAVAILABLE) {
+	if (State() > NM_DEVICE_STATE_DISCONNECTED) {
 		state(NM_DEVICE_STATE_DISCONNECTED, NM_DEVICE_STATE_REASON_UNKNOWN);
 	}
 }
