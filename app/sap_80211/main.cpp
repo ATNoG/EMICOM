@@ -101,6 +101,29 @@ std::vector<std::unique_ptr<periodic_report_data>> period_rpt_list;
 //// Event dispatchers
 ///////////////////////////////////////////////////////////////////////////////
 
+void clean_l2()
+{
+	// l2
+	try {
+		wpa_interface->Disconnect();
+	} catch (DBus::Error &e) {
+		// was probably already disconnected
+	}
+}
+
+void clean_l3(if_80211 &fi)
+{
+	// l3
+	fi.clear_addresses();
+	fi.clear_routes();
+	dhc->release(dhcp::dhcpclient::DHCPv4);
+	dhc->release(dhcp::dhcpclient::DHCPv6);
+
+	// dns
+	{ boost::filesystem::ofstream dns_resolv(resolv_conf_file, std::ios_base::trunc);
+	}
+}
+
 void dispatch_link_up(mih::link_tuple_id &lid,
 	boost::optional<mih::link_addr> &old_router,
 	boost::optional<mih::link_addr> &new_router,
@@ -220,7 +243,7 @@ void dispatch_link_parameters_report(mih::link_tuple_id lid, mih::link_param_rpt
 	ls->async_send(m);
 }
 
-void dispatch_link_conf_completion(odtone::uint16 tid, bool connected)
+void dispatch_link_conf_completion(if_80211 &fi, odtone::uint16 tid, bool connected)
 {
 	mih::message m;
 	m.tid(tid);
@@ -233,11 +256,7 @@ void dispatch_link_conf_completion(odtone::uint16 tid, bool connected)
 	} else {
 		log_(0, "(command) Dispatching link_conf status failure");
 
-		try {
-			wpa_interface->Disconnect();
-		} catch (DBus::Error &e) {
-			// was probably already disconnected
-		}
+		clean_l2();
 
 		m << mih::confirm(mih::confirm::link_conf)
 			& mih::tlv_status(mih::status(mih::status_failure));
@@ -834,21 +853,8 @@ void handle_link_actions(boost::asio::io_service &ios,
 
 		if (   action.type == mih::link_ac_type_power_down
 		    || action.type == mih::link_ac_type_disconnect) {
-			try {
-				wpa_interface->Disconnect();
-			} catch (DBus::Error &e) {
-				// already disconnected
-			}
-			try {
-				dhc->release(dhcp::dhcpclient::DHCPv4);
-			} catch (...) {
-				//
-			}
-			try {
-				dhc->release(dhcp::dhcpclient::DHCPv6);
-			} catch (...) {
-				//
-			}
+			clean_l2();
+			clean_l3(fi);
 		}
 
 		log_(0, "(command) Dispatching status success");
@@ -909,7 +915,7 @@ void handle_link_conf(const boost::asio::io_service &ios,
 
 		try {
 			DBus::Path wpa_network = wpa_interface->AddNetwork(network_map);
-			wpa_interface->add_completion_handler(boost::bind(dispatch_link_conf_completion, tid, _1));
+			wpa_interface->add_completion_handler(boost::bind(dispatch_link_conf_completion, boost::ref(fi), tid, _1));
 			wpa_interface->SelectNetwork(wpa_network);
 		} catch (DBus::Error &e) {
 			log_(0, "(command) DBus error \"", e.name(), ": ", e.message(), "\"");
@@ -936,17 +942,8 @@ void handle_l3_conf(const boost::asio::io_service &ios,
 	try {
 		log_(0, "(command) Clearing previous configurations");
 
-		// clear addresses
-		dhc->release(dhcp::dhcpclient::DHCPv4);
-		dhc->release(dhcp::dhcpclient::DHCPv6);
-		fi.clear_addresses();
-
-		// clear routes
-		fi.clear_routes();
-
-		// clear dns servers and domains
-		//{ boost::filesystem::ofstream dns_resolv(resolv_conf_file, std::ios_base::trunc);
-		//}
+		// cleanup previous configurations
+		clean_l3(fi);
 
 		// handle automatic configurations
 		if (cfg_methods.get(mih::ip_cfg_ipv4_dynamic)) {
