@@ -32,10 +32,16 @@ namespace networkmanager {
 /**
  * Configuration parameters
  */
-static const char* const kConf_DBus_Name     = "networkmanager.dbus_name";
-static const char* const kConf_DBus_Path     = "networkmanager.dbus_path";
-static const char* const kConf_Settings_Path = "networkmanager.settings_path";
-static const char* const kConf_Version       = "networkmanager.version";
+static const char* const DBUS_NAME     = "org.freedesktop.NetworkManager";
+static const char* const DBUS_PATH     = "/org/freedesktop/NetworkManager";
+
+static const char* const kConf_Settings_Path = "nm.settings_path";
+static const char* const kConf_Version       = "nm.version";
+
+static const char* const kConf_Networking_Enabled = "nm.networking_enabled";
+static const char* const kConf_Wireless_Enabled   = "nm.wireless_enabled";
+static const char* const kConf_Wimax_Enabled      = "nm.wimax_enabled";
+static const char* const kConf_Wwan_Enabled       = "nm.wwan_enabled";
 
 class NetworkManager : boost::noncopyable,
 // NetworkManager D-Bus
@@ -278,7 +284,6 @@ private:
 private:
 	boost::asio::io_service &_io;
 	DBus::Connection &_connection;
-	std::string       _dbus_path;
 	std::string       _settings_path;
 
 	Settings          _settings;

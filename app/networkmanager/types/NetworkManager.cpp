@@ -30,14 +30,13 @@ using namespace odtone::networkmanager;
 using namespace boost::assign;
 
 NetworkManager::NetworkManager(DBus::Connection &connection, const mih::config &cfg, boost::asio::io_service &io) :
-	DBus::ObjectAdaptor(connection, cfg.get<std::string>(kConf_DBus_Path).c_str()),
+	DBus::ObjectAdaptor(connection, DBUS_PATH),
 	_io(io),
 	_connection(connection),
-	_dbus_path(cfg.get<std::string>(kConf_DBus_Path)),
 	_settings_path(cfg.get<std::string>(kConf_Settings_Path)),
-	_settings(_connection, std::string(_dbus_path).append("/Settings").c_str(), _settings_path.c_str()),
-	_agent_manager(_connection, std::string(_dbus_path).append("/AgentManager").c_str()),
-	log_(_dbus_path.c_str(), std::cout),
+	_settings(_connection, std::string(DBUS_PATH).append("/Settings").c_str(), _settings_path.c_str()),
+	_agent_manager(_connection, std::string(DBUS_PATH).append("/AgentManager").c_str()),
+	log_(DBUS_PATH, std::cout),
 	_mih_user(cfg, io,
 	          boost::bind(&NetworkManager::event_handler, this, _1, _2),
 	          boost::bind(&NetworkManager::new_device, this, _1, _2))
@@ -47,11 +46,11 @@ NetworkManager::NetworkManager(DBus::Connection &connection, const mih::config &
 	NetworkManager_adaptor::Version = cfg.get<std::string>(kConf_Version);
 	NetworkManager_adaptor::ActiveConnections = std::vector< ::DBus::Path >();
 	NetworkManager_adaptor::WimaxHardwareEnabled = false;
-	NetworkManager_adaptor::WimaxEnabled = false;
+	NetworkManager_adaptor::WimaxEnabled = cfg.get<bool>(kConf_Wimax_Enabled);
 	NetworkManager_adaptor::WwanHardwareEnabled = false;
-	NetworkManager_adaptor::WwanEnabled = false;
+	NetworkManager_adaptor::WwanEnabled = cfg.get<bool>(kConf_Wwan_Enabled);
 	NetworkManager_adaptor::WirelessHardwareEnabled = false;
-	NetworkManager_adaptor::WirelessEnabled = false;
+	NetworkManager_adaptor::WirelessEnabled = cfg.get<bool>(kConf_Wireless_Enabled);
 	NetworkManager_adaptor::NetworkingEnabled = true;
 }
 
@@ -225,7 +224,7 @@ void NetworkManager::AddAndActivateConnection(
 		settings_map settings = _settings.GetSettings(connection);
 		std::string uuid = settings.find("connection")->second.find("uuid")->second;
 		boost::algorithm::erase_all(uuid, "-"); // remove dashes
-		active_connection = std::string(_dbus_path + "/ActiveConnections/" + uuid);
+		active_connection = std::string(DBUS_PATH) + "/ActiveConnections/" + uuid;
 
 		std::vector<DBus::Path> devices;
 		devices.push_back(device);
@@ -323,7 +322,7 @@ void NetworkManager::add_802_11_device(mih::mac_addr &address)
 
 	// determine the D-Bus path
 	std::stringstream path;
-	path << _dbus_path << "/Devices/" << boost::algorithm::erase_all_copy(address.address(), ":");
+	path << DBUS_PATH << "/Devices/" << boost::algorithm::erase_all_copy(address.address(), ":");
 
 	std::shared_ptr<Device> d(
 		new DeviceWireless(_connection, path.str().c_str(), _mih_user, lti));
@@ -332,6 +331,7 @@ void NetworkManager::add_802_11_device(mih::mac_addr &address)
 	if (!NetworkManager_adaptor::NetworkingEnabled() || !NetworkManager_adaptor::WirelessEnabled()) {
 		d->Disable();
 	} else {
+		d->Enable();
 		// TODO
 		// attempt to connect? if disconnected?
 	}
@@ -360,7 +360,7 @@ void NetworkManager::add_ethernet_device(mih::mac_addr &address)
 
 	// determine the D-Bus path
 	std::stringstream path;
-	path << _dbus_path << "/Devices/" << boost::algorithm::replace_all_copy(address.address(), ":", "");
+	path << DBUS_PATH << "/Devices/" << boost::algorithm::replace_all_copy(address.address(), ":", "");
 
 	std::shared_ptr<Device> d(
 		new DeviceWired(_connection, path.str().c_str(), _mih_user, lti));
@@ -969,7 +969,7 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 
 		mih::mac_addr address = boost::get<mih::mac_addr>(lti.addr);
 		std::stringstream path;
-		path << _dbus_path << "/Devices/" << boost::algorithm::erase_all_copy(address.address(), ":");
+		path << DBUS_PATH << "/Devices/" << boost::algorithm::erase_all_copy(address.address(), ":");
 		DBus::Path device = path.str();
 
 		boost::optional<DBus::Path> connection;

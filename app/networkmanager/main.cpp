@@ -53,14 +53,18 @@ int main(int argc, char *argv[])
 		(sap::kConf_MIHF_Ip, po::value<std::string>()->default_value("127.0.0.1"), "Local MIHF IP address")
 		(sap::kConf_MIHF_Local_Port, po::value<ushort>()->default_value(1025), "Local MIHF communication port")
 		(sap::kConf_MIH_SAP_dest, po::value<std::string>()->default_value(""), "MIHF destination")
-		(nm::kConf_DBus_Name, po::value<std::string>()->default_value("org.freedesktop.NetworkManager"),
-		                  "DBus name for NetworkManager bus")
-		(nm::kConf_DBus_Path, po::value<std::string>()->default_value("/org/freedesktop/NetworkManager21"),
-		                  "DBus path for NetworkManager object")
 		(nm::kConf_Settings_Path, po::value<std::string>()->default_value("./settings"),
-		                      "System path for NetworkManager connection persistence")
-		(nm::kConf_Version, po::value<std::string>()->default_value("0.9.4.0"),
-		                      "NetworkManager version to mimic");
+		                          "System path for NetworkManager connection persistence")
+		(nm::kConf_Version,       po::value<std::string>()->default_value("0.9.4.0"),
+		                          "NetworkManager version to mimic")
+		(nm::kConf_Networking_Enabled, po::value<bool>()->default_value(true),
+		                               "NetworkingEnabled property initial value")
+		(nm::kConf_Wireless_Enabled,   po::value<bool>()->default_value(true),
+		                               "WirelessEnabled property initial value")
+		(nm::kConf_Wimax_Enabled,      po::value<bool>()->default_value(true),
+		                               "WirelessEnabled property initial value")
+		(nm::kConf_Wwan_Enabled,       po::value<bool>()->default_value(true),
+		                               "WirelessEnabled property initial value");
 
 	odtone::mih::config cfg(desc);
 	cfg.parse(argc, argv, odtone::sap::kConf_File);
@@ -75,7 +79,7 @@ int main(int argc, char *argv[])
 	DBus::default_dispatcher = &dispatcher;
 
 	DBus::Connection conn = DBus::Connection::SystemBus();
-	conn.request_name(cfg.get<std::string>(nm::kConf_DBus_Name).c_str());
+	conn.request_name(nm::DBUS_NAME);
 
 	// launch the service
 	boost::asio::io_service ios;
