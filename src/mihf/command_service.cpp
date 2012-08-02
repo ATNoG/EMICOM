@@ -1347,7 +1347,7 @@ bool command_service::l3_conf_request(meta_message_ptr &in,
 
 		// Set the timer that will be responsible for responding to this request
 		boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(_io);
-		timer->expires_from_now(boost::posix_time::milliseconds(kConf_MIHF_Link_Response_Time_Value * 5));
+		timer->expires_from_now(boost::posix_time::milliseconds(kConf_MIHF_Link_Response_Time_Value * 10));
 		timer->async_wait(boost::bind(&command_service::l3_conf_response_handler, this, _1, in));
 		{
 			boost::mutex::scoped_lock lock(_mutex);
