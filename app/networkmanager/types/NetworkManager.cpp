@@ -66,10 +66,11 @@ uint32_t NetworkManager::state()
 void NetworkManager::state(NM_STATE newstate)
 {
 	// store
-	NetworkManager_adaptor::State = newstate;
+	State = newstate;
 
 	// signal
-	NetworkManager_adaptor::StateChanged(State());
+	StateChanged(State());
+	PropertiesChanged(map_list_of("State", to_variant(State())));
 }
 
 void NetworkManager::SetLogging(const std::string& level, const std::string& domains)
