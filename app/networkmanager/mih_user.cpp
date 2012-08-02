@@ -240,8 +240,16 @@ void mih_user::capability_discover_confirm(mih::message& msg, const boost::syste
 		mih::link_cfg_param       lcp;
 		mih::link_cfg_param_list  lcpl;
 
+		// PoA RSSI
 		mih::link_param_802_11 lp = mih::link_param_802_11_rssi;
 		lcp.type = lp;
+		lcp.timer_interval = 5000; // every 5 sec
+		lcp.action = mih::th_action_normal;
+		lcpl.push_back(lcp);
+
+		// PoA link data rate
+		mih::link_param_gen lpg = mih::link_param_gen_data_rate;
+		lcp.type = lpg;
 		lcp.timer_interval = 5000; // every 5 sec
 		lcp.action = mih::th_action_normal;
 		lcpl.push_back(lcp);

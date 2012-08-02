@@ -166,15 +166,25 @@ void DeviceWireless::parameters_report(const mih::link_param_rpt_list &rpt_list)
 	log_(0, "Handling parameters report");
 
 	for (auto it = rpt_list.begin(); it != rpt_list.end(); ++it) {
-		mih::link_param_802_11 param_802_11 = boost::get<mih::link_param_802_11>(it->param.type);
-		if (param_802_11 == mih::link_param_802_11_rssi) {
+		mih::link_param_type lpt = it->param.type;
+		mih::link_param_val  v   = boost::get<mih::link_param_val>(it->param.value);
+
+		// PoA RSSI
+		mih::link_param_802_11 *param_802_11 = boost::get<mih::link_param_802_11>(&lpt);
+		if (param_802_11 && (*param_802_11 == mih::link_param_802_11_rssi)) {
 			boost::shared_lock<boost::shared_mutex> lock(_access_points_map_mutex);
 			auto active_ap_it = _access_points_map.find(ActiveAccessPoint());
 			if (active_ap_it != _access_points_map.end()) {
-				mih::link_param_val _value = boost::get<mih::link_param_val>(it->param.value);
-				mih::sig_strength value = static_cast<odtone::sint8>(_value);
+				mih::sig_strength value = static_cast<odtone::sint8>(v);
 				active_ap_it->second->update_strength(value);
 			}
+		}
+
+		// PoA link data rate
+		mih::link_param_gen *param_gen = boost::get<mih::link_param_gen>(&lpt);
+		if (param_gen && (*param_gen == mih::link_param_gen_data_rate)) {
+			Bitrate = v;
+			PropertiesChanged(map_list_of("Bitrate", to_variant(Bitrate())));
 		}
 	}
 }
