@@ -201,7 +201,6 @@ void NetworkManager::AddAndActivateConnection(
 		// TODO output/result parameters
 	} catch (std::exception &e) {
 		log_(0, "Exception: ", e.what());
-		throw;
 	}
 }
 
