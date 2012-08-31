@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 		(sap::kConf_MIH_SAP_dest, po::value<std::string>()->default_value(""), "MIHF destination")
 		(nm::kConf_Settings_Path, po::value<std::string>()->default_value("./settings"),
 		                          "System path for NetworkManager connection persistence")
-		(nm::kConf_Version,       po::value<std::string>()->default_value("0.9.4.0"),
+		(nm::kConf_Version,       po::value<std::string>()->default_value("0.9.6.0"),
 		                          "NetworkManager version to mimic")
 		(nm::kConf_Networking_Enabled, po::value<bool>()->default_value(true),
 		                               "NetworkingEnabled property initial value")
