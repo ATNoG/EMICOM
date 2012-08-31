@@ -41,43 +41,50 @@ public:
 		bind_property(ActiveAccessPoint, "o", true, false);
 		bind_property(WirelessCapabilities, "u", true, false);
 		register_method(Wireless_adaptor, GetAccessPoints, _GetAccessPoints_stub);
+		register_method(Wireless_adaptor, RequestScan, _RequestScan_stub);
 	}
 
-	::DBus::IntrospectedInterface *introspect() const 
+	::DBus::IntrospectedInterface *introspect() const
 	{
-		static ::DBus::IntrospectedArgument GetAccessPoints_args[] = 
+		static ::DBus::IntrospectedArgument GetAccessPoints_args[] =
 		{
 			{ "access_points", "ao", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument PropertiesChanged_args[] = 
+		static ::DBus::IntrospectedArgument RequestScan_args[] =
+		{
+			{ "options", "a{sv}", true },
+			{ 0, 0, 0 }
+		};
+		static ::DBus::IntrospectedArgument PropertiesChanged_args[] =
 		{
 			{ "properties", "a{sv}", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument AccessPointAdded_args[] = 
+		static ::DBus::IntrospectedArgument AccessPointAdded_args[] =
 		{
 			{ "access_point", "o", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedArgument AccessPointRemoved_args[] = 
+		static ::DBus::IntrospectedArgument AccessPointRemoved_args[] =
 		{
 			{ "access_point", "o", false },
 			{ 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedMethod Wireless_adaptor_methods[] = 
+		static ::DBus::IntrospectedMethod Wireless_adaptor_methods[] =
 		{
 			{ "GetAccessPoints", GetAccessPoints_args },
+			{ "RequestScan", RequestScan_args },
 			{ 0, 0 }
 		};
-		static ::DBus::IntrospectedMethod Wireless_adaptor_signals[] = 
+		static ::DBus::IntrospectedMethod Wireless_adaptor_signals[] =
 		{
 			{ "PropertiesChanged", PropertiesChanged_args },
 			{ "AccessPointAdded", AccessPointAdded_args },
 			{ "AccessPointRemoved", AccessPointRemoved_args },
 			{ 0, 0 }
 		};
-		static ::DBus::IntrospectedProperty Wireless_adaptor_properties[] = 
+		static ::DBus::IntrospectedProperty Wireless_adaptor_properties[] =
 		{
 			{ "HwAddress", "s", true, false },
 			{ "PermHwAddress", "s", true, false },
@@ -87,7 +94,7 @@ public:
 			{ "WirelessCapabilities", "u", true, false },
 			{ 0, 0, 0, 0 }
 		};
-		static ::DBus::IntrospectedInterface Wireless_adaptor_interface = 
+		static ::DBus::IntrospectedInterface Wireless_adaptor_interface =
 		{
 			"org.freedesktop.NetworkManager.Device.Wireless",
 			Wireless_adaptor_methods,
@@ -115,6 +122,7 @@ public:
 	 * you will have to implement them in your ObjectAdaptor
 	 */
 	virtual std::vector< ::DBus::Path > GetAccessPoints() = 0;
+	virtual void RequestScan(const std::map< std::string, ::DBus::Variant >& options) = 0;
 
 public:
 
@@ -156,7 +164,16 @@ private:
 		wi << argout1;
 		return reply;
 	}
+	::DBus::Message _RequestScan_stub(const ::DBus::CallMessage &call)
+	{
+		::DBus::MessageIter ri = call.reader();
+
+		std::map< std::string, ::DBus::Variant > argin1; ri >> argin1;
+		RequestScan(argin1);
+		::DBus::ReturnMessage reply(call);
+		return reply;
+	}
 };
 
-} } } } 
+} } } }
 #endif //__dbusxx_____adaptors_DeviceWireless_hpp__ADAPTOR_MARSHAL_H

@@ -101,8 +101,10 @@ public:
 
 	/**
 	 * Trigger a scan on this device.
+	 *
+	 * @note Options are ignored.
 	 */
-	void Scan();
+	void RequestScan(const std::map<std::string, DBus::Variant> &options);
 
 	/**
 	 * Update the access point list.

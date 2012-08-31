@@ -124,12 +124,12 @@ void DeviceWireless::Enable()
 			if (st != mih::status_success) {
 				state(NM_DEVICE_STATE_UNKNOWN, NM_DEVICE_STATE_REASON_UNKNOWN);
 			} else {
-				Scan();
+				RequestScan(std::map<std::string, DBus::Variant>());
 			}
 		}, _lti, false);
 }
 
-void DeviceWireless::Scan()
+void DeviceWireless::RequestScan(const std::map<std::string, DBus::Variant> &options)
 {
 	log_(0, "Scanning");
 
