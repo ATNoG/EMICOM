@@ -218,6 +218,11 @@ void NetworkManager::AddAndActivateConnection(
 	::DBus::Path active_connection;
 
 	try {
+		// check if device exists
+		if (_device_map.find(device) == _device_map.end()) {
+			throw DBus::Error("org.freedesktop.NetworkManager.Error.UnknownDevice", "Unknown device");
+		}
+
 		// clear the active connections for this device
 		clear_connections(device);
 
@@ -251,12 +256,6 @@ void NetworkManager::AddAndActivateConnection(
 		std::vector<DBus::Path> active_connection_list = active_connections();
 		ActiveConnections = active_connection_list;
 		PropertiesChanged(map_list_of("ActiveConnections", to_variant(active_connection_list)));
-
-		// TODO check if device exists
-		auto d = _device_map.find(device);
-		if (d == _device_map.end()) {
-			throw DBus::Error("org.freedesktop.NetworkManager.Error.UnknownDevice", "Unknown device");
-		}
 
 		link_conf(device, active_connection);
 	} catch (std::exception &e) {
@@ -426,36 +425,36 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 			|| (!WirelessEnabled() && it->second->DeviceType() == Device::NM_DEVICE_TYPE_WIFI)) {
 				// there's another, untestable condition, which is power off on the hardware
 			clear_connections(it->first);
-		} else {
+		} else if (it->second->State() > Device::NM_DEVICE_STATE_SECONDARIES) {
 			DBus::Path active_connection_path = it->second->ActiveConnection();
 			auto active_connection_it = _active_connections.find(active_connection_path);
 			if (active_connection_it != _active_connections.end()) {
 				active_connection_it->second->state(ConnectionActive::NM_ACTIVE_CONNECTION_STATE_UNKNOWN);
 			}
 
+			it->second->link_down();
 			// TODO reconnect, or simply wait!!!
 		}
-
-		it->second->link_down();
 
 		break;
 	}
 
 	// update the NetworkManager state
 	NM_STATE beststate = NM_STATE_DISCONNECTED;
-	bool activating = false;
+	bool acting = false;
 
 	// if the current state is connected or connecting, check for still existing ConnectionActive
 	if (State() > NM_STATE_DISCONNECTED) {
 		for (auto it = _active_connections.begin();
-		     it != _active_connections.end() && !activating;
+		     it != _active_connections.end() && !acting;
 		     ++it) {
 			// upgrade to STATE_CONNECTING if any ACTIVATING found,
 			// and to CONNECTED_GLOBAL if any ACTIVATED found.
 			if (it->second->State() == ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATING) {
 				beststate = NM_STATE_CONNECTING;
+				acting = true;
 			} else if (it->second->State() == ConnectionActive::NM_ACTIVE_CONNECTION_STATE_ACTIVATED) {
-				activating = true;
+				acting = true;
 				//beststate = NM_STATE_CONNECTED_GLOBAL;
 
 				// restore IP configuration for this connection
@@ -465,7 +464,7 @@ void NetworkManager::link_down(const mih::mac_addr &dev)
 			}
 		}
 	}
-	if (!activating) {
+	if (!acting) {
 		state(beststate);
 	}
 }

@@ -33,7 +33,7 @@ DeviceWireless::DeviceWireless(DBus::Connection &connection,
                                const char* path,
                                mih_user &ctrl,
                                mih::link_tuple_id &lti)
-	: Device(connection, path, ctrl, lti), _access_point_count(0)
+	: Device(connection, path, ctrl, lti)
 {
 	// FIXME
 	// inherited from Device adaptor
@@ -198,36 +198,31 @@ void DeviceWireless::add_ap(mih::link_det_info ldi)
 {
 	boost::unique_lock<boost::shared_mutex> lock(_access_points_map_mutex);
 
+	// Get PoA's MAC address
+	mih::mac_addr poa_addr = boost::get<mih::mac_addr>(boost::get<mih::link_addr>(ldi.id.poa_addr));
+
+	// Generate D-Bus path
+	std::stringstream path_str;
+	path_str << _dbus_path << "/AccessPoints/" << boost::algorithm::erase_all_copy(poa_addr.address(), ":");
+	DBus::Path path_dbus = path_str.str();
+
+	// If it exists, update, else add new
+	auto it = _access_points_map.find(path_dbus);
+	if (it != _access_points_map.end()) {
+		it->second->Update(ldi);
+	} else {
+		log_(0, "Adding AP ", path_str.str(), " with SSID ", ldi.network_id);
+
+		_access_points_map[path_dbus] = std::shared_ptr<AccessPoint>(
+			new AccessPoint(_connection, path_str.str().c_str(), ldi));
+
+		// announce addition
+		Wireless_adaptor::AccessPointAdded(path_dbus);
+	}
+
 	// TODO make this configurable
 	// clean older scan results
 	remove_aps_older_than(boost::posix_time::seconds(30));
-
-	// if it exists in the list, update
-	for (auto it = _access_points_map.begin(); it != _access_points_map.end(); ++it) {
-		std::string map_addr = it->second->HwAddress();
-		mih::mac_addr poa_addr = boost::get<mih::mac_addr>(boost::get<mih::link_addr>(ldi.id.poa_addr));
-
-		if (boost::iequals(map_addr, poa_addr.address())) {
-			// update AP
-			it->second->Update(ldi);
-
-			return;
-		}
-	}
-
-	// not found
-	// add AccessPoint to the list
-	std::stringstream path_str;
-	path_str << _dbus_path << "/AccessPoints/" << ++_access_point_count;
-
-	DBus::Path path_dbus = path_str.str();
-	_access_points_map[path_dbus] = std::shared_ptr<AccessPoint>(
-		new AccessPoint(_connection, path_str.str().c_str(), ldi));
-
-	log_(0, "Adding AP ", path_str.str(), " with SSID ", ldi.network_id);
-
-	// announce addition
-	Wireless_adaptor::AccessPointAdded(path_dbus);
 }
 
 void DeviceWireless::remove_aps_older_than(boost::posix_time::time_duration d)

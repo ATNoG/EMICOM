@@ -159,8 +159,6 @@ protected:
 	void state(NM_DEVICE_STATE newstate, NM_DEVICE_STATE_REASON reason);
 
 private:
-	unsigned int     _access_point_count;
-
 	boost::shared_mutex _access_points_map_mutex;
 	std::map<DBus::Path, std::shared_ptr<AccessPoint>> _access_points_map;
 };
