@@ -96,6 +96,11 @@ public:
 	 */
 	void PropertiesChanged(const std::map< std::string, ::DBus::Variant >& properties);
 
+	/**
+	 * NetworkRequest event handler.
+	 */
+	void NetworkRequest(const ::DBus::Path& path, const std::string &field, const std::string &txt);
+
 private:
 	boost::shared_mutex             _completion_handlers_mutex;
 	std::vector<completion_handler> _buffered_completion_handlers;

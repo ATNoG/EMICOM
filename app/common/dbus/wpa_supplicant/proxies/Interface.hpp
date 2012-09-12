@@ -42,6 +42,7 @@ public:
 		connect_signal(Interface_proxy, NetworkRemoved, _NetworkRemoved_stub);
 		connect_signal(Interface_proxy, NetworkSelected, _NetworkSelected_stub);
 		connect_signal(Interface_proxy, PropertiesChanged, _PropertiesChanged_stub);
+		connect_signal(Interface_proxy, NetworkRequest, _NetworkRequest_stub);
 	}
 
 public:
@@ -420,6 +421,7 @@ public:
 	virtual void NetworkRemoved(const ::DBus::Path& path) = 0;
 	virtual void NetworkSelected(const ::DBus::Path& path) = 0;
 	virtual void PropertiesChanged(const std::map< std::string, ::DBus::Variant >& properties) = 0;
+	virtual void NetworkRequest(const ::DBus::Path& path, const std::string &field, const std::string &txt) = 0;
 
 private:
 
@@ -500,6 +502,18 @@ private:
 		std::map< std::string, ::DBus::Variant > properties;
 		ri >> properties;
 		PropertiesChanged(properties);
+	}
+	void _NetworkRequest_stub(const ::DBus::SignalMessage &sig)
+	{
+		::DBus::MessageIter ri = sig.reader();
+
+		::DBus::Path path;
+		ri >> path;
+		std::string field;
+		ri >> field;
+		std::string txt;
+		ri >> txt;
+		NetworkRequest(path, field, txt);
 	}
 };
 
