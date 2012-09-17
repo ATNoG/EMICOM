@@ -21,6 +21,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
+#include <odtone/mih/types/address.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -177,7 +178,8 @@ std::map<std::string, std::string> Connection::supplicant_conf()
 
 	// bssid
 	if (s.set_wireless._bssid) {
-		supp["bssid"] = std::string(s.set_wireless._bssid.get().begin(), s.set_wireless._bssid.get().end());
+		std::vector<unsigned char> bssid_vector = s.set_wireless._bssid.get();
+		supp["bssid"] = odtone::mih::mac_addr(&bssid_vector[0], bssid_vector.size()).address();
 	}
 
 	//
