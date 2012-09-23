@@ -300,6 +300,14 @@ void if_8023::add_routes(const std::vector<mih::ip_info> &routes)
 	}
 }
 
+odtone::uint if_8023::get_packet_error_rate()
+{
+	nlwrap::rtnl_link_cache cache;
+	nlwrap::rtnl_link link(cache.get_by_ifindex(_ctx._ifindex));
+
+	return link.tx_errors() / link.tx_packets();
+}
+
 void if_8023::link_up_callback(const link_up_handler &h)
 {
 	_ctx._up_handler = h;

@@ -56,12 +56,12 @@ struct periodic_report_data {
 	std::unique_ptr<timer_task> task;
 	void _report_value(boost::asio::io_service &ios, if_80211 &fi);
 
-	mih::link_param_802_11 type;
+	mih::link_param_type type;
 };
 
 struct threshold_cross_data {
 	bool one_shot;
-	mih::link_param_802_11 type;
+	mih::link_param_type type;
 	mih::threshold th;
 };
 
@@ -265,6 +265,78 @@ void dispatch_link_conf_completion(if_80211 &fi, odtone::uint16 tid, bool connec
 	ls->async_send(m);
 }
 
+bool link_parameter_supported(mih::link_param_type &pt) {
+	bool r = false;
+
+	mih::link_param_802_11 *param_802_11 = boost::get<mih::link_param_802_11>(&pt);
+	if (param_802_11) {
+		if (*param_802_11 == mih::link_param_802_11_rssi) {
+			r = true;
+		}
+	}
+
+	mih::link_param_gen *param_gen = boost::get<mih::link_param_gen>(&pt);
+	if (param_gen) {
+		if (   *param_gen == mih::link_param_gen_data_rate
+		    || *param_gen == mih::link_param_gen_signal_strength
+		    || *param_gen == mih::link_param_gen_packet_error_rate) {
+			r = true;
+		}
+	}
+
+	return r;
+}
+
+boost::optional<mih::link_param> link_get_parameter(if_80211 &fi, mih::link_param_type &pt) {
+	boost::optional<mih::link_param> r;
+	mih::link_param status_param;
+
+	poa_info ap_info = fi.get_poa_info();
+
+	mih::link_param_802_11 *param_802_11 = boost::get<mih::link_param_802_11>(&pt);
+	if (param_802_11) {
+		status_param.type = *param_802_11;
+
+		if (*param_802_11 == mih::link_param_802_11_rssi) {
+			if (mih::percentage *v = boost::get<mih::percentage>(&ap_info.signal)) {
+				status_param.value = (odtone::uint)*v;
+			} else if (odtone::sint8 *v = boost::get<odtone::sint8>(&ap_info.signal)) {
+				status_param.value = *v;
+			}
+			r.reset(status_param);
+		} else if (*param_802_11 == mih::link_param_802_11_no_qos) {
+			status_param.value = !ap_info.net_capabilities.get(mih::net_caps_qos_0);
+			r.reset(status_param);
+		//} else if (*param_802_11 == mih::link_param_802_11_multicast_packet_loss_rate) {
+		}
+	}
+
+	mih::link_param_gen *param_gen = boost::get<mih::link_param_gen>(&pt);
+	if (param_gen) {
+		status_param.type = *param_gen;
+
+		if (*param_gen == mih::link_param_gen_data_rate) {
+			mih::mac_addr addr = boost::get<mih::mac_addr>(boost::get<mih::link_addr>(ap_info.id.poa_addr));
+			status_param.value = fi.get_current_data_rate(addr);
+			r.reset(status_param);
+		} else if (*param_gen == mih::link_param_gen_signal_strength) {
+			if (mih::percentage *v = boost::get<mih::percentage>(&ap_info.signal)) {
+				status_param.value = (odtone::uint)*v;
+			} else if (odtone::sint8 *v = boost::get<odtone::sint8>(&ap_info.signal)) {
+				status_param.value = *v;
+			}
+			r.reset(status_param);
+		} else if (*param_gen == mih::link_param_gen_packet_error_rate) {
+			status_param.value = fi.get_packet_error_rate();
+			r.reset(status_param);
+		//} else if (*param_gen == mih::link_param_gen_sinr) {
+		//} else if (*param_gen == mih::link_param_gen_throughput) {
+		}
+	}
+
+	return r;
+}
+
 // For cross-value-alert threshold types
 void global_thresholds_check(boost::asio::io_service &ios, if_80211 &fi)
 {
@@ -275,16 +347,8 @@ void global_thresholds_check(boost::asio::io_service &ios, if_80211 &fi)
 	log_(0, "(cmd) Performing periodic threshold check");
 
 	try {
-		poa_info i = fi.get_poa_info();
-
-		mih::link_tuple_id lid = i.id;
+		mih::link_tuple_id lid = fi.link_tuple_id();
 		mih::link_param_rpt_list rpt_list;
-
-		odtone::sint8 *d_signal = boost::get<odtone::sint8>(&i.signal);
-		if (!d_signal) {
-			log_(0, "(cmd) Periodic data did not include RSSI");
-			return;
-		}
 
 		boost::unique_lock<boost::shared_mutex> lock(_th_list_mutex);
 
@@ -292,22 +356,22 @@ void global_thresholds_check(boost::asio::io_service &ios, if_80211 &fi)
 		while (th_it != th_cross_list.end()) {
 			boost::optional<boost::variant<mih::link_param_val, mih::qos_param_val>> value;
 
-			if (th_it->type == mih::link_param_802_11_rssi) {
-				odtone::sint8 t_signal = static_cast<odtone::sint8>(th_it->th.threshold_val);
+			boost::optional<mih::link_param> status_param = link_get_parameter(fi, th_it->type);
 
-				if (th_it->th.threshold_x_dir == mih::threshold::above_threshold) {
-					if (*d_signal > t_signal) {
-						log_(0, "(link) Current RSSI (", (int)*d_signal, ") above ", (int)t_signal);
-						value = static_cast<odtone::uint16>(*d_signal);
-					}
-				} else /*if (the.threshold_x_dir == mih::threshold::below_threshold) */{
-					if (*d_signal < t_signal) {
-						log_(0, "(link) Current RSSI (", (int)*d_signal, ") below ", (int)t_signal);
-						value = static_cast<odtone::uint16>(*d_signal);
-					}
+			if (!status_param) {
+				continue;
+			}
+
+			uint16 uintval = boost::get<mih::link_param_val>(status_param.get().value);
+
+			if (th_it->th.threshold_x_dir == mih::threshold::above_threshold) {
+				if (uintval > th_it->th.threshold_val) {
+					value = status_param.get().value;
 				}
-	//		} else {
-	//			// No other supported
+			} else if (th_it->th.threshold_x_dir == mih::threshold::below_threshold) {
+				if (uintval < th_it->th.threshold_val) {
+					value = status_param.get().value;
+				}
 			}
 
 			if (value) {
@@ -348,30 +412,15 @@ void periodic_report_data::_report_value(boost::asio::io_service &ios, if_80211 
 	try {
 		boost::shared_lock<boost::shared_mutex> lock(_th_list_mutex);
 
-		mih::link_param_rpt_list rpt_list;
-		mih::link_tuple_id lid;
-
-		if (type == mih::link_param_802_11_rssi) {
-			poa_info i = fi.get_poa_info();
-
+		boost::optional<mih::link_param> status_param = link_get_parameter(fi, type);
+		if (status_param) {
 			mih::link_param_report rpt;
+			rpt.param = status_param.get();
 
-			rpt.param.type = type;
-
-			lid = i.id;
-
-			odtone::sint8 *d_signal = boost::get<odtone::sint8>(&i.signal);
-			rpt.param.value = *d_signal;
-
+			mih::link_param_rpt_list rpt_list;
 			rpt_list.push_back(rpt);
-//		} else if (type == mih::link_param_802_11_no_qos) {
-//			// not supported
-//		} else if (type == mih::link_param_802_11_multicast_packet_loss_rate) {
-//			// not supported
-		}
 
-		if (rpt_list.size() > 0) {
-			ios.dispatch(boost::bind(&dispatch_link_parameters_report, lid, rpt_list));
+			ios.dispatch(boost::bind(&dispatch_link_parameters_report, fi.link_tuple_id(), rpt_list));
 		}
 	} catch (const std::exception &e) {
 		log_(0, "(cmd) Error handling periodic report: ", e.what());
@@ -508,107 +557,22 @@ void handle_link_get_parameters(if_80211 &fi,
 
 	try {
 		mih::link_param_list status_list;
-		mih::link_param status_param;
 
 		BOOST_FOREACH (mih::link_param_type &pt, param_list) {
-			mih::link_param_802_11 *param_802_11 = boost::get<mih::link_param_802_11>(&pt);
-			if (param_802_11) {
-				status_param.type = *param_802_11;
-
-				if (*param_802_11 == mih::link_param_802_11_rssi) {
-					poa_info ap_info = fi.get_poa_info();
-
-					if (mih::percentage *v = boost::get<mih::percentage>(&ap_info.signal)) {
-						status_param.value = (odtone::uint)*v;
-					} else if (odtone::sint8 *v = boost::get<odtone::sint8>(&ap_info.signal)) {
-						status_param.value = *v;
-					}
-				} else if (*param_802_11 == mih::link_param_802_11_no_qos) {
-					poa_info ap_info = fi.get_poa_info();
-
-					status_param.value = !ap_info.net_capabilities.get(mih::net_caps_qos_0);
-				} else if (*param_802_11 == mih::link_param_802_11_multicast_packet_loss_rate) {
-					// not supported
-					log_(0, "(command) No support for specified link_param_802_11_multicast_packet_loss_rate");
-
-					// toggle comments to fail
-					continue;
-					//dispatch_status_failure(tid, mih::confirm::link_get_parameters);
-					//return;
-				} else {
-					// huh??
-					log_(0, "(command) Unknown link_param_802_11");
-
-					// toggle comments to fail
-					continue;
-					//dispatch_status_failure(tid, mih::confirm::link_get_parameters);
-					//return;
-				}
-
-				status_list.push_back(status_param);
-				continue;
+			boost::optional<mih::link_param> status_param = link_get_parameter(fi, pt);
+			if (status_param) {
+				status_list.push_back(status_param.get());
+			} else {
+				log_(0, "(command) No support for specified link_param");
 			}
-
-			mih::link_param_gen *param_gen = boost::get<mih::link_param_gen>(&pt);
-			if (param_gen) {
-				status_param.type = *param_gen;
-
-				if (*param_gen == mih::link_param_gen_data_rate) {
-					poa_info i = fi.get_poa_info();
-					mih::mac_addr addr = boost::get<mih::mac_addr>(boost::get<mih::link_addr>(i.id.poa_addr));
-					status_param.value = fi.get_current_data_rate(addr);
-				} else if (*param_gen == mih::link_param_gen_signal_strength) {
-					poa_info ap_info = fi.get_poa_info();
-
-					if (mih::percentage *v = boost::get<mih::percentage>(&ap_info.signal)) {
-						status_param.value = (odtone::uint)*v;
-					} else if (odtone::sint8 *v = boost::get<odtone::sint8>(&ap_info.signal)) {
-						status_param.value = *v;
-					}
-				} else if (*param_gen == mih::link_param_gen_sinr) {
-					// not supported
-					log_(0, "(command) No support for specified link_param_gen_sinr");
-
-					// toggle comments to fail
-					continue;
-					//dispatch_status_failure(tid, mih::confirm::link_get_parameters);
-					//return;
-				} else if (*param_gen == mih::link_param_gen_throughput) {
-					// not supported
-					log_(0, "(command) No support for specified link_param_gen_throughput");
-
-					// toggle comments to fail
-					continue;
-					//dispatch_status_failure(tid, mih::confirm::link_get_parameters);
-					//return;
-				} else if (*param_gen == mih::link_param_gen_packet_error_rate) {
-					status_param.value = fi.get_packet_error_rate();
-				} else {
-					// huh??
-					log_(0, "(command) Unknown link_param_gen");
-					// toggle comments to fail
-					continue;
-					//dispatch_status_failure(tid, mih::confirm::link_get_parameters);
-					//return;
-				}
-
-				status_list.push_back(status_param);
-				continue;
-			}
-
-			// huh??
-			log_(0, "(command) No support for specified link_param");
-			// leave commented to keep parsing
-			//dispatch_status_failure(tid, mih::confirm::link_get_parameters);
-			//return;
 		}
 
 		mih::link_states_rsp_list states_list;
 		mih::link_states_rsp states_param;
 
-		if (states_req.get(mih::link_states_req_channel_id)) {
-			poa_info ap_info = fi.get_poa_info();
+		poa_info ap_info = fi.get_poa_info();
 
+		if (states_req.get(mih::link_states_req_channel_id)) {
 			states_param = ap_info.channel_id;
 			states_list.push_back(states_param);
 		}
@@ -619,16 +583,12 @@ void handle_link_get_parameters(if_80211 &fi,
 
 		mih::link_desc_rsp_list desc_list;
 		if (desc_req.get(mih::link_desc_req_classes_of_service_supported)) {
-			// not supported
 			log_(0, "(command) No support for specified link_desc_req");
-			// toggle comments to fail
 			//dispatch_status_failure(tid, mih::confirm::link_get_parameters);
 			//return;
 		}
 		if (desc_req.get(mih::link_desc_req_queues_supported)) {
-			// not supported
 			log_(0, "(command) No support for specified link_desc_req");
-			// toggle comments to fail
 			//dispatch_status_failure(tid, mih::confirm::link_get_parameters);
 			//return;
 		}
@@ -668,16 +628,11 @@ void handle_link_configure_thresholds(boost::asio::io_service &ios,
 	std::vector<std::unique_ptr<periodic_report_data>>::iterator rpt_it;
 
 	BOOST_FOREACH (mih::link_cfg_param &param, param_list) {
-		mih::link_param_802_11 *type = boost::get<mih::link_param_802_11>(&param.type);
-		if (!type) {
-			log_(0, "(command) No link_param_802_11 link_param_type specified");
-			continue;
-		}
-
-		if (*type != mih::link_param_802_11_rssi) {
-			log_(0, "(command) No support for specified link_param_802_11");
+		// check for support
+		if (!link_parameter_supported(param.type)) {
+			log_(0, "(command) No support for specified link_param_type");
 			mih::link_cfg_status status;
-			status.type = *type;
+			status.type = param.type;
 			status.status = false;
 			status_list.push_back(status);
 			continue;
@@ -686,11 +641,11 @@ void handle_link_configure_thresholds(boost::asio::io_service &ios,
 		boost::unique_lock<boost::shared_mutex> lock(_th_list_mutex);
 		if (param.action == mih::th_action_cancel) { // cancel thresholds
 			if (param.threshold_list.size() == 0) { // cancel all of type 'type'
-				log_(0, "(command) Cancelling all configured thresholds of type ", *type);
+				log_(0, "(command) Cancelling all configured thresholds of type ", param.type);
 
 				cross_it = th_cross_list.begin();
 				while (cross_it != th_cross_list.end()) {
-					if (cross_it->type == *type) {
+					if (cross_it->type == param.type) {
 						cross_it = th_cross_list.erase(cross_it);
 					} else {
 						++cross_it;
@@ -699,7 +654,7 @@ void handle_link_configure_thresholds(boost::asio::io_service &ios,
 
 				rpt_it = period_rpt_list.begin();
 				while (rpt_it != period_rpt_list.end()) {
-					if (rpt_it->get()->type == *type) {
+					if (rpt_it->get()->type == param.type) {
 						rpt_it = period_rpt_list.erase(rpt_it);
 					} else {
 						++rpt_it;
@@ -707,16 +662,16 @@ void handle_link_configure_thresholds(boost::asio::io_service &ios,
 				}
 
 				mih::link_cfg_status status;
-				status.type = *type;
+				status.type = param.type;
 				status.status = true;
 				status_list.push_back(status);
 			} else { // cancel specific only.
-				log_(0, "(command) Cancelling some thresholds of type ", *type);
+				log_(0, "(command) Cancelling some thresholds of type ", param.type);
 
 				BOOST_FOREACH (mih::threshold &th, param.threshold_list) {
 					cross_it = th_cross_list.begin();
 					while (cross_it != th_cross_list.end()) {
-						if (cross_it->type == *type
+						if (cross_it->type == param.type
 							&& cross_it->th.threshold_val == th.threshold_val
 							&& cross_it->th.threshold_x_dir == th.threshold_x_dir) {
 							cross_it = th_cross_list.erase(cross_it);
@@ -726,7 +681,7 @@ void handle_link_configure_thresholds(boost::asio::io_service &ios,
 					}
 
 					mih::link_cfg_status status;
-					status.type = *type;
+					status.type = param.type;
 					status.thold = th;
 					status.status = true;
 					status_list.push_back(status);
@@ -739,7 +694,7 @@ void handle_link_configure_thresholds(boost::asio::io_service &ios,
 				log_(0, "(command) Inserting periodic report");
 
 				std::unique_ptr<periodic_report_data> p(new periodic_report_data);
-				p->type = *type;
+				p->type = param.type;
 				p->task.reset(new timer_task(ios, *period,
 					boost::bind(&periodic_report_data::_report_value, p.get(), boost::ref(ios), boost::ref(fi))));
 
@@ -753,12 +708,12 @@ void handle_link_configure_thresholds(boost::asio::io_service &ios,
 
 				threshold_cross_data t;
 				t.one_shot = (param.action == mih::th_action_one_shot);
-				t.type = *type;
+				t.type = param.type;
 				t.th = th;
 				th_cross_list.push_back(t);
 
 				mih::link_cfg_status status;
-				status.type = *type;
+				status.type = param.type;
 				status.thold = th;
 				status.status = true;
 				status_list.push_back(status);
@@ -1239,7 +1194,7 @@ int main(int argc, char** argv)
 	boost::asio::io_service ios;
 
 	if_80211 fi(ios, mih::mac_addr(cfg.get<std::string>(sap::kConf_Interface_Addr)));
-	mih::link_id id = fi.link_id();
+	mih::link_id id = fi.link_tuple_id();
 
 	ls.reset(new sap::link(cfg, ios, boost::bind(&default_handler, boost::ref(ios), boost::ref(fi), _1, _2)));
 	mihf_sap_init(id);
