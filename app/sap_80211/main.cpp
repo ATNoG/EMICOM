@@ -614,7 +614,6 @@ void handle_link_get_parameters(if_80211 &fi,
 }
 
 // Dispatch a link_configure_thresholds confirm
-// Partially supported. Only RSSI, for now!
 void handle_link_configure_thresholds(boost::asio::io_service &ios,
 	if_80211 &fi,
 	odtone::uint16 tid,
@@ -1256,6 +1255,12 @@ int main(int argc, char** argv)
 		m.lock();
 		dispatcher.dispatch();
 	}
+
+	fi.link_up_callback(boost::bind(&dispatch_link_up, _1, _2, _3, _4, _5));
+	fi.link_down_callback(boost::bind(&dispatch_link_down, _1, _2, _3));
+	fi.link_detected_callback(boost::bind(&dispatch_link_detected, _1));
+
+	ios.run();
 }
 
 // EOF ////////////////////////////////////////////////////////////////////////
