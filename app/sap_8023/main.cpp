@@ -1095,6 +1095,11 @@ int main(int argc, char** argv)
 	set_supported_event_list();
 	set_supported_command_list();
 
+	// start dbus service
+ 	DBus::BusDispatcher dispatcher;
+ 	DBus::default_dispatcher = &dispatcher;
+ 	DBus::Connection dbus_connection = DBus::Connection::SystemBus();
+
 	boost::asio::io_service ios;
 
 	if_8023 fi(ios, mih::mac_addr(cfg.get<std::string>(sap::kConf_Interface_Addr)));
@@ -1109,7 +1114,43 @@ int main(int argc, char** argv)
 	fi.link_up_callback(boost::bind(&dispatch_link_up, _1, _2, _3, _4, _5));
 	fi.link_down_callback(boost::bind(&dispatch_link_down, _1, _2, _3));
 
-	ios.run();
+	devname = fi.ifname();
+
+ 	// checking wpa_supplicant and dhcpcd
+ 	sleep(1); // TODO: "ensure" the d-bus dispatcher has started
+
+ 	dhc.reset(new dhcp::dhclient(devname));
+
+ 	wpa_supplicant::WPASupplicant wpa(dbus_connection, "/fi/w1/wpa_supplicant1", "fi.w1.wpa_supplicant1");
+
+ 	DBus::Path wpa_interface_path;
+ 	try {
+ 		wpa_interface_path = wpa.GetInterface(devname);
+ 	} catch (DBus::Error &e) {
+ 		log_(0, "Error getting ", devname, " interface from WPA Supplicant. Adding it myself.");
+ 		log_(0, "Message was \"", e.name(), ": ", e.message(), "\"");
+
+ 		std::map<std::string, DBus::Variant> m;
+
+ 		m["Ifname"] = to_variant(devname);
+ 		m["Driver"] = to_variant(std::string("wired"));
+
+ 		wpa_interface_path = wpa.CreateInterface(m);
+
+ 		log_(0, "Apparently successul, at ", wpa_interface_path);
+ 	}
+
+ 	wpa_interface.reset(
+ 		new wpa_supplicant::Interface(dbus_connection, wpa_interface_path.c_str(), "fi.w1.wpa_supplicant1"));
+
+ 	boost::thread io(boost::bind(&boost::asio::io_service::run, &ios));
+
+ 	boost::mutex m;
+ 	while (true) {
+ 		ios.dispatch(boost::bind(&dbus_dispatch_pending, boost::ref(dispatcher), boost::ref(m)));
+ 		m.lock();
+ 		dispatcher.dispatch();
+ 	}
 }
 
 // EOF ////////////////////////////////////////////////////////////////////////
