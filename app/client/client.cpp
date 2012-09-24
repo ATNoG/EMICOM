@@ -292,15 +292,20 @@ void send_link_configure_thresholds_request(handler &sap, const char *dst)
 	mih::link_cfg_param			lcp;
 	mih::link_cfg_param_list 	lcpl;
 
-	mac.address("00:11:22:33:44:55");
+	mac.address("00:27:10:7d:5f:30");
 	li.type = mih::link_type_802_11;
 	li.addr = mac;
 
+	mih::threshold th;
+	th.threshold_x_dir = mih::threshold::below_threshold;
+	th.threshold_val = -30;
+
 	std::vector<mih::threshold> th_list;
+	th_list.push_back(th);
 
 	mih::link_param_802_11 lp = mih::link_param_802_11_rssi;
 	lcp.type = lp;
-	lcp.timer_interval = 1234;
+	//lcp.timer_interval = 1234;
 	lcp.action = mih::th_action_normal;
 	lcp.threshold_list = th_list;
 	lcpl.push_back(lcp);
@@ -400,7 +405,7 @@ void send_event_unsubscribe_request(handler &sap, const char *dst)
 	mih::link_tuple_id 	li;
 	mih::mac_addr      	mac;
 
-	mac.address("00:11:22:33:44:55");
+	mac.address("00:27:10:7d:5f:30");
 	li.type = mih::link_type_802_11;
 	li.addr = mac;
 	odtone::mih::mih_evt_list evt;
@@ -429,13 +434,14 @@ void send_event_subscribe_request(handler &sap, const char *dst)
 	mih::link_tuple_id 	li;
 	mih::mac_addr      	mac;
 
-	mac.address("00:11:22:33:44:55");
+	mac.address("00:27:10:7d:5f:30");
 	li.type = mih::link_type_802_11;
 	li.addr = mac;
 	odtone::mih::mih_evt_list evt;
 	evt.set(odtone::mih::mih_evt_link_up);
 	evt.set(odtone::mih::mih_evt_link_detected);
 	evt.set(odtone::mih::mih_evt_link_down);
+	evt.set(odtone::mih::mih_evt_link_parameters_report);
 
 	p << mih::request(mih::request::event_subscribe)
 		& odtone::mih::tlv_link_identifier(li)
