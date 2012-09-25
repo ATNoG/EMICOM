@@ -33,13 +33,14 @@ class Interface : boost::noncopyable,
 	public DBus::ObjectProxy
 {
 	typedef boost::function<void(bool success)> completion_handler;
+	typedef boost::function<void(const std::string &field, const std::string &txt)> network_request_handler;
 
 public:
 
 	/**
 	 * Public interface constructor.
 	 */
-	Interface(DBus::Connection &connection, const char *path, const char *name);
+	Interface(DBus::Connection &connection, const char *path, const char *name, const network_request_handler &h);
 
 	/**
 	 * Add a new completion handler for this connection.
@@ -105,6 +106,7 @@ private:
 	boost::shared_mutex             _completion_handlers_mutex;
 	std::vector<completion_handler> _buffered_completion_handlers;
 	std::vector<completion_handler> _completion_handlers;
+	network_request_handler         _network_request_handler;
 	bool                            _wired;
 };
 

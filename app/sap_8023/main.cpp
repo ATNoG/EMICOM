@@ -191,6 +191,27 @@ void dispatch_link_down(mih::link_tuple_id &lid,
 	ls->async_send(m);
 }
 
+void dispatch_link_conf_required(mih::link_tuple_id &lid, const std::string &field, const std::string &txt)
+{
+	if (!subscribed_event_list.get(mih::evt_link_conf_required)) {
+		return;
+	}
+
+	log_(0, "(event) Dispatching link_conf_required message. \"", field, "\" - \"", txt, "\"");
+
+	mih::configuration_list lconf;
+	mih::configuration conf;
+
+	lconf.push_back(conf);
+
+	mih::message m;
+	m << mih::indication(mih::indication::link_conf_required)
+		& mih::tlv_link_identifier(lid)
+		& mih::tlv_configuration_list(lconf);
+
+	ls->async_send(m);
+}
+
 void dispatch_link_conf_completion(if_8023 &fi, odtone::uint16 tid, bool connected)
 {
 	mih::message m;
@@ -1103,7 +1124,7 @@ int main(int argc, char** argv)
 	boost::asio::io_service ios;
 
 	if_8023 fi(ios, mih::mac_addr(cfg.get<std::string>(sap::kConf_Interface_Addr)));
-	mih::link_id id = fi.link_tuple_id();
+	mih::link_tuple_id id = fi.link_tuple_id();
 
 	ls.reset(new sap::link(cfg, ios, boost::bind(&default_handler, boost::ref(ios), boost::ref(fi), _1, _2)));
 	mihf_sap_init(id);
@@ -1140,8 +1161,10 @@ int main(int argc, char** argv)
  		log_(0, "Apparently successul, at ", wpa_interface_path);
  	}
 
- 	wpa_interface.reset(
- 		new wpa_supplicant::Interface(dbus_connection, wpa_interface_path.c_str(), "fi.w1.wpa_supplicant1"));
+ 	wpa_interface.reset(new wpa_supplicant::Interface(dbus_connection,
+ 	                                                  wpa_interface_path.c_str(),
+ 	                                                  "fi.w1.wpa_supplicant1",
+ 	                                                  boost::bind(&dispatch_link_conf_required, boost::ref(id), _1, _2)));
 
  	boost::thread io(boost::bind(&boost::asio::io_service::run, &ios));
 

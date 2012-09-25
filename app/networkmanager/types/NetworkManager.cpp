@@ -977,7 +977,8 @@ void NetworkManager::event_handler(mih::message &msg, const boost::system::error
 		if (ac != _device_active_connection.end()) {
 			_io.dispatch(boost::bind(&NetworkManager::link_conf, this, device, ac->first));
 		} else {
-			throw std::runtime_error("No ongoing connection on this link");
+			log_(0, "Link configuration not supported.");
+			//throw std::runtime_error("No ongoing connection on this link");
 			// TODO this is from
 		}
 	}

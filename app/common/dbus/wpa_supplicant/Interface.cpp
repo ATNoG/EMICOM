@@ -22,8 +22,8 @@
 namespace odtone {
 namespace wpa_supplicant {
 
-Interface::Interface(DBus::Connection &connection, const char *path, const char *name)
-	: DBus::ObjectProxy(connection, path, name), _wired(false)
+Interface::Interface(DBus::Connection &connection, const char *path, const char *name, const network_request_handler &h)
+	: DBus::ObjectProxy(connection, path, name), _network_request_handler(h), _wired(false)
 {
 	_wired = boost::iequals(Driver(), "wired") == true;
 }
@@ -101,13 +101,17 @@ void Interface::PropertiesChanged(const std::map< std::string, ::DBus::Variant >
 
 void Interface::NetworkRequest(const ::DBus::Path& path, const std::string &field, const std::string &txt)
 {
-	boost::unique_lock<boost::shared_mutex> lock(_completion_handlers_mutex);
+	{
+		boost::unique_lock<boost::shared_mutex> lock(_completion_handlers_mutex);
 
-	for (auto it = _completion_handlers.begin();
-		it != _completion_handlers.end();
-		it = _completion_handlers.erase(it)) {
-		(*it)(false);
+		for (auto it = _completion_handlers.begin();
+			it != _completion_handlers.end();
+			it = _completion_handlers.erase(it)) {
+			(*it)(false);
+		}
 	}
+
+	_network_request_handler(field, txt);
 }
 
 }; };
