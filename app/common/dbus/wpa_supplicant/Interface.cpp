@@ -107,7 +107,7 @@ void Interface::NetworkRequest(const ::DBus::Path& path, const std::string &fiel
 		for (auto it = _completion_handlers.begin();
 			it != _completion_handlers.end();
 			it = _completion_handlers.erase(it)) {
-			(*it)(false);
+			(*it)(true);
 		}
 	}
 
