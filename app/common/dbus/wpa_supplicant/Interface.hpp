@@ -22,6 +22,8 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/function.hpp>
 
+#include <odtone/mih/types/base.hpp>
+
 using namespace fi::w1::wpa_supplicant1;
 
 namespace odtone {
@@ -32,7 +34,7 @@ class Interface : boost::noncopyable,
 	public DBus::IntrospectableProxy,
 	public DBus::ObjectProxy
 {
-	typedef boost::function<void(bool success)> completion_handler;
+	typedef boost::function<void(mih::status &s)> completion_handler;
 	typedef boost::function<void(const std::string &field, const std::string &txt)> network_request_handler;
 
 public:

@@ -92,7 +92,8 @@ void Interface::PropertiesChanged(const std::map< std::string, ::DBus::Variant >
 				for (auto it = _completion_handlers.begin();
 					 it != _completion_handlers.end();
 					 it = _completion_handlers.erase(it)) {
-					(*it)(success);
+					mih::status s = success ? mih::status_success : mih::status_failure;
+					(*it)(s);
 				}
 			}
 		}
@@ -107,7 +108,8 @@ void Interface::NetworkRequest(const ::DBus::Path& path, const std::string &fiel
 		for (auto it = _completion_handlers.begin();
 			it != _completion_handlers.end();
 			it = _completion_handlers.erase(it)) {
-			(*it)(true);
+			mih::status s(mih::status_authorization_failure);
+			(*it)(s);
 		}
 	}
 

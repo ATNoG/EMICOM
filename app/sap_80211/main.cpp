@@ -264,24 +264,18 @@ void dispatch_link_conf_required(mih::link_tuple_id &lid, const std::string &fie
 	ls->async_send(m);
 }
 
-void dispatch_link_conf_completion(if_80211 &fi, odtone::uint16 tid, bool connected)
+void dispatch_link_conf_completion(odtone::uint16 tid, mih::status &status)
 {
 	mih::message m;
 	m.tid(tid);
 
-	if (connected) {
-		log_(0, "(command) Dispatching link_conf status success");
-
-		m << mih::confirm(mih::confirm::link_conf)
-			& mih::tlv_status(mih::status(mih::status_success));
-	} else {
-		log_(0, "(command) Dispatching link_conf status failure");
-
+	if (status != mih::status_success) {
 		clean_l2();
-
-		m << mih::confirm(mih::confirm::link_conf)
-			& mih::tlv_status(mih::status(mih::status_failure));
 	}
+
+	log_(0, "(command) Dispatching link_conf status ", status);
+	m << mih::confirm(mih::confirm::link_conf)
+		& mih::tlv_status(status);
 
 	ls->async_send(m);
 }
@@ -890,7 +884,7 @@ void handle_link_conf(const boost::asio::io_service &ios,
 
 		try {
 			DBus::Path wpa_network = wpa_interface->AddNetwork(network_map);
-			wpa_interface->add_completion_handler(boost::bind(dispatch_link_conf_completion, boost::ref(fi), tid, _1));
+			wpa_interface->add_completion_handler(boost::bind(dispatch_link_conf_completion, tid, _1));
 			wpa_interface->SelectNetwork(wpa_network);
 		} catch (DBus::Error &e) {
 			log_(0, "(command) DBus error \"", e.name(), ": ", e.message(), "\"");
