@@ -68,6 +68,7 @@ struct threshold_cross_data {
 
 static const char* const kConf_Sap_Verbosity = "link.verbosity";
 static const char* const kConf_Default_Threshold_Period = "link.default_th_period";
+static const char* const kConf_Resolv_Conf_File = "sys.resolv_conf_file";
 
 static logger log_("sap_8023", std::cout);
 
@@ -1091,7 +1092,8 @@ int main(int argc, char** argv)
 		(sap::kConf_MIHF_Ip, po::value<std::string>()->default_value("127.0.0.1"), "Local MIHF Ip")
 		(sap::kConf_MIHF_Local_Port, po::value<odtone::ushort>()->default_value(1025), "MIHF Local Communications Port")
 		(sap::kConf_MIHF_Id, po::value<std::string>()->default_value("local-mihf"), "Local MIHF Id")
-		(sap::kConf_MIH_SAP_id, po::value<std::string>()->default_value("link"), "Link SAP Id");
+		(sap::kConf_MIH_SAP_id, po::value<std::string>()->default_value("link"), "Link SAP Id")
+		(kConf_Resolv_Conf_File, po::value<std::string>()->default_value("/etc/resolv.conf"), "System's resolv.conf location");
 
 	mih::config cfg(desc);
 	cfg.parse(argc, argv, sap::kConf_File);
@@ -1100,6 +1102,8 @@ int main(int argc, char** argv)
 		std::cerr << desc << std::endl;
 		return EXIT_SUCCESS;
 	}
+
+	resolv_conf_file = cfg.get<std::string>(kConf_Resolv_Conf_File);
 
 	odtone::uint th_period = cfg.get<odtone::uint>(kConf_Default_Threshold_Period);
 	if (th_period == 0) {
