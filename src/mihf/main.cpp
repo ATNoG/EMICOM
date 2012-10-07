@@ -78,6 +78,10 @@ static const char* const kConf_MIHF_Transport_List     = "mihf.transport";
 static const char* const kConf_MIHF_Remote_Port        = "mihf.remote_port";
 static const char* const kConf_MIHF_Local_Port         = "mihf.local_port";
 static const char* const kConf_MIHF_Link_Response_Time = "mihf.link_response_time";
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+static const char* const kConf_MIHF_Link_Conf_Response_Time = "mihf.link_conf_response_time";
+static const char* const kConf_MIHF_L3_Conf_Response_Time   = "mihf.l3_conf_response_time";
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 static const char* const kConf_MIHF_Link_Delete        = "mihf.link_delete";
 static const char* const kConf_MIHF_Discover           = "mihf.discover";
 static const char* const kConf_MIHF_Multicast          = "enable_multicast";
@@ -86,6 +90,10 @@ static const char* const kConf_MIHF_Verbosity          = "log";
 
 uint16 kConf_MIHF_Link_Response_Time_Value;
 uint16 kConf_MIHF_Link_Delete_Value;
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+uint16 kConf_MIHF_Link_Conf_Response_Time_Value;
+uint16 kConf_MIHF_L3_Conf_Response_Time_Value;
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 
 /**
  * Remove a character from the string.
@@ -634,6 +642,10 @@ int main(int argc, char **argv)
 		(kConf_MIHF_Links_List, po::value<std::string>()->default_value(""), "List of local Links SAPs")
 		(kConf_MIHF_Transport_List, po::value<std::string>()->default_value("udp"), "List of supported transport protocols")
 		(kConf_MIHF_Link_Response_Time, po::value<uint16>()->default_value(3000), "Link SAP response time (milliseconds)")
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+		(kConf_MIHF_Link_Conf_Response_Time, po::value<uint16>()->default_value(10000), "Link Conf response time (milliseconds)")
+		(kConf_MIHF_L3_Conf_Response_Time, po::value<uint16>()->default_value(10000), "L3 Conf response time (milliseconds)")
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 		(kConf_MIHF_Link_Delete, po::value<uint16>()->default_value(2), "Link SAP response fails to forget")
 		(kConf_MIHF_Discover, po::value<std::string>()->default_value(""), "MIHF Discovery Mechanisms Order")
 		(kConf_MIHF_Multicast,  "Allows multicast messages")
@@ -662,6 +674,10 @@ int main(int argc, char **argv)
 	mih::octet_string id = cfg.get<mih::octet_string>(kConf_MIHF_Id);
 	uint16 loglevel = cfg.get<uint16>(kConf_MIHF_Verbosity);
 	kConf_MIHF_Link_Response_Time_Value = cfg.get<uint16>(kConf_MIHF_Link_Response_Time);
+#ifndef MIH_DISABLE_NETWORKMANAGER_SUPPORT
+	kConf_MIHF_Link_Conf_Response_Time_Value = cfg.get<uint16>(kConf_MIHF_Link_Conf_Response_Time);
+	kConf_MIHF_L3_Conf_Response_Time_Value = cfg.get<uint16>(kConf_MIHF_L3_Conf_Response_Time);
+#endif /* MIH_DISABLE_NETWORKMANAGER_SUPPORT */
 	kConf_MIHF_Link_Delete_Value = cfg.get<uint16>(kConf_MIHF_Link_Delete);
 	std::vector<std::string> dscv_order = parse_discover_order(cfg);
 	//
