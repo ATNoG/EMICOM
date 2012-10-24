@@ -1,6 +1,6 @@
 [/==============================================================================
- / Brief   : sap_80211 Link SAP Documentation
- / Authors : André Prata <aprata@av.it.pt>
+ / Brief   : sap_8023 Link SAP Documentation
+ / Authors : André Prata <andreprata@av.it.pt>
  /------------------------------------------------------------------------------
  / ODTONE - Open Dot Twenty One
  /
@@ -15,15 +15,15 @@
  / This software is distributed without any warranty.
  /=============================================================================]
 
-[section:sap_80211_index sap_80211 Link SAP]
+[section:sap_8023_index sap_8023 Link SAP]
 
-The sap_80211 Link SAP is a Linux implementation of a Link SAP for 802.11 interfaces.
+The sap_8023 Link SAP is a Linux implementation of a Link SAP for 802.3 interfaces.
 
 [section Conceptual view]
 
 The following Figure shows a conceptual view of the Link SAP for Linux-based devices:
 
-[$./images/link_sap_conceptual_view.png]
+[$./images/link_8023_conceptual_view.png]
 
 Each component is further described in the Support section.
 
@@ -32,11 +32,10 @@ Each component is further described in the Support section.
 [section Requirements]
 
 This module has been tested with Linux versions 2.6.38-3.6.2 setup.
-The following adapters have been tested:
 
-* Intel 6200-agn
+The following adapter has been tested:
 
-* Ubiquiti SRX abg express card
+* Intel PRO/1000 CT
 
 For implementation details and considerations, please check the Support section.
 
@@ -53,7 +52,7 @@ in the command line.
 ``
 	MIH Link SAP Configuration:
 		--help                                Display configuration options
-		--conf.file arg (=sap_80211.conf)     Configuration File
+		--conf.file arg (=sap_8023.conf)      Configuration File
 		--conf.recv_buff_len arg (=4096)      Receive Buffer Length
 
 		--mihf.ip arg (=127.0.0.1)            Local MIHF Ip
@@ -61,7 +60,6 @@ in the command line.
 		--mihf.id arg (=local-mihf)           Local MIHF Id
 
 		--link.verbosity arg (=2)             Log level [0-2]
-		--link.sched_scan_period arg (=0)     Scheduled scan interval (millis)
 		--link.default_th_period arg (=1000)  Default threshold checking interval (millis)
 		--link.link_addr arg                  Interface address
 		--link.port arg (=1235)               Port
@@ -72,16 +70,7 @@ Some parameters are mostly self-explanatory.
 The configuration should usually hold the same parameters of the example configuration file,
 except that the MAC address of the interface to be controlled needs to be indicated for each link/system.
 
-The sched_scan_period and default_th_period are implemented because of the following.
-
-[*sched_scan_period:]
-
-[*Link_Detected] events will only be generated after scans are triggered.
-Scans are usually triggered only when a userspace application requests so.
-The sched_scan_period parameter allows setting an interval, in milliseconds,
-at which the Link SAP itself will trigger a scan on the device.
-
-Usage: sched_scan_period = <time in ms>
+The default_th_period is implemented because of the following.
 
 [*default_th_period:]
 
@@ -102,7 +91,7 @@ The running parameters can be configured via command line or a configuration fil
 The Link SAP will bind commands and events to the network device with the given MAC Address.
 
 ``
-	$ ./sap_80211
+	$ ./sap_8023
 ``
 
 [note
@@ -115,7 +104,7 @@ The Link SAP should be launched with root permissions if such features are requi
 
 [endsect]
 
-[section:sap_80211_support Support]
+[section:sap_8023_support Support]
 This section is a reading on special considerations for the structuring of the code, and how to hack specific features.
 
 The code comprises the following components:
@@ -155,32 +144,18 @@ Not supported.
 [endsect]
 
 [section Link_Detected.indication:]
-
-Every time a scan is finished, the kernel sends either a [c++] `NL80211_CMD_NEW_SCAN_RESULTS` or a [c++] `NL80211_CMD_SCAN_ABORTED` message.
-if_80211 captures this message and invokes the [c++] `dispatch_link_detected()` callback for each scan result.
-The attributes for the Link_Detected message are obtained via the [c++] `NL80211_CMD_GET_SCAN` command.
-
-[note
-Two APs with the same SSID are contained in a single scan result, only one is announced,
-namely the one with the higher signal energy, which should correspond to the first detected on entering the BSS.
-]
-
-[note
-When parsing the scan results, there's no indication of SINR, since no driver informs of the "Interference" component of the formula,
-and only a few drivers return "Noise" information, through the [c++] `NL80211_CMD_GET_SURVEY` command.
-]
+Not supported.
 [endsect]
 
-
 [section Link_Up.indication:]
-This event is generated for every successful [c++] `NL80211_CMD_CONNECT` event received by if_80211.
+This event is generated whenever the [c++] `IF_OPER_UP` `LINK` flag gets set, and received by if_8023.
 It will automatically call the [c++] `dispatch_link_up()` callback from [*main] with the appropriate attributes.
 [endsect]
 
 
 [section Link_Down.indication:]
-This event is generated for every [c++] `NL80211_CMD_DISCONNECT` event.
-The [c++] `dispatch_link_down()` calback from [*main] is called on every occurrence.
+This event is generated when the [c++] `IF_OPER_UP` `LINK` flag is unset.
+The [c++] `dispatch_link_down()` calback from [*main] is called automatically.
 [endsect]
 
 
@@ -191,23 +166,18 @@ For configured thresholds, a threshold check is performed periodically, accordin
 to the [*default_th_period] launching parameter. A [c++] `Link_Parameters_Report` message is sent everytime
 one of these checks detects a crossing of the subscribed nature.
 
-The parameters for this event are usually obtained via the
-[c++] `NL80211_CMD_GET_SCAN` and [c++] `NL80211_CMD_GET_STATION` nl80211 commands.
-
 Statistical counts for packets and bytes are obtained via the [c++] `RTNL_GET_LINK` Netlink command.
 
 Currently, not all parameters types are supported. Only the following:
 
-* ['LINK_PARAM_80211]
+* ['LINK_PARAM_ETH]
 
-	* ['RSSI]: actually, it's the signal energy in dBm.
+	* there is none defined yet, actually.
 
 
 * ['LINK_PARAM_GEN]
 
 	* ['DATA_RATE]
-
-	* ['SIGNAL_STRENGTH]: same as ['RSSI].
 
 	* ['PACKET_ERROR_RATE]: note, this is an all-time statistic
 	(i.e., calculated from overall packet transmission and error counts)!
@@ -263,22 +233,17 @@ If the request is used to remove thresholds, the indicated ones are removed from
 
 
 [section Link_Action.request:]
-This command is translated to kernel invocations, via the [*if_80211] module.
+This command is translated to kernel invocations, via the [*if_8023] module.
 
-Every ['LINK_AC_TYPE] is supported:
+Only the following ['LINK_AC_TYPE] actions are supported:
 
 * ['LINK_DISCONNECT]
-
-* ['LINK_LOW_POWER]: some older kernels do not support this.
 
 * ['LINK_POWER_DOWN]
 
 * ['LINK_POWER_UP]
 
-Only one ['LINK_AC_ATTR] is supported:
-
-* ['LINK_SCAN]
-
+No ['LINK_AC_ATTR] is supported:
 
 [endsect]
 
